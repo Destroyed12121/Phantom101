@@ -21,12 +21,12 @@ class PhantomChat {
         this.abortController = null;
         this.storageKey = 'phantom_ai_data';
 
+        this.cacheDOM();
         this.loadState();
         this.init();
     }
 
     init() {
-        this.cacheDOM();
         this.bindEvents();
         this.fetchModels();
         this.render();
@@ -292,7 +292,7 @@ class PhantomChat {
         this.scrollToBottom();
 
         try {
-            const systemPrompt = "You are Phantom AI. Use Markdown. For Math, use $...$ for inline and $$...$$ for block.";
+            const systemPrompt = "You are Phantom AI. Use Markdown. For Math, use $...$ for inline and $$...$$ for block. Respond concisely and with a simple tone";
             const history = conv.messages.filter(m => m.type !== 'image').map(m => `${m.role}: ${m.content}`).join('\n');
             const fullPrompt = `System: ${systemPrompt}\n\n${history}`;
 

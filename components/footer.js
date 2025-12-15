@@ -147,6 +147,19 @@
     if (versionBtn) versionBtn.onclick = openChangelog;
 
     // ==========================================
+    // AUTO SHOW CHANGELOG ON UPDATE
+    // ==========================================
+    const currentVersion = config.version;
+    const lastVersion = settings.lastVersion;
+    if (settings.showChangelogOnUpdate && lastVersion && lastVersion !== currentVersion) {
+        // Show changelog on update
+        setTimeout(() => openChangelog(), 1000); // Delay to ensure page is loaded
+    }
+    // Update last version
+    settings.lastVersion = currentVersion;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+
+    // ==========================================
     // 2. GLOBAL PANIC KEY
     // ==========================================
     if (settings.panicKey) {

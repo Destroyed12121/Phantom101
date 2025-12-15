@@ -197,13 +197,19 @@
         const loadingScreen = document.getElementById('loading-screen');
         const iframe = document.getElementById('main-frame');
         let loadStartTime = Date.now();
+        let fallbackTimer = setTimeout(hideLoading, 3500);
 
         function showLoading() {
             loadingScreen.classList.remove('hidden');
             loadStartTime = Date.now();
+
+            clearTimeout(fallbackTimer);
+            fallbackTimer = setTimeout(hideLoading, 3500);
         }
 
         function hideLoading() {
+            clearTimeout(fallbackTimer);
+
             // Min time 0.5s (500ms)
             const minTime = 500;
             const elapsed = Date.now() - loadStartTime;
@@ -274,6 +280,8 @@
                             win.document.head.appendChild(link);
                         }
                         doRedirect();
+                    } else {
+                        alert("ENABLE POPUPS");
                     }
                 }
             }

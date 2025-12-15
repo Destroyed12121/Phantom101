@@ -5,18 +5,13 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.2",
+    version: "1.0.3",
 
     // Changelog
     changelog: [
-        "movies and chat should be fixxed in this week",
-        "FIXXED APPEARENCE SETTINGS NOT APPLYING",
-        "added first visit white screen press c to get around it",
-        "changed ai chatbot ui",
-        "changed loading in proxy",
-        "added secondary text for appearence settings, ill try to fix these settings soon",
-        "add leave comformation setting option",
-        "many more small fixxes and features",
+        "most things are fixxed, i cannot fix movies",
+        "added first visit white screen + aboutblank auto cloaking",
+        "JOIN THE DISCORD"
     ],
 
     // Discord
@@ -25,11 +20,11 @@ window.SITE_CONFIG = {
         widgetServer: "1334648765679800442",
         widgetChannel: "1334648766292164731"
     },
-    firstVisitCloak: false,
+    firstVisitCloak: true,
 
     // Default settings
     defaults: {
-        cloakMode: "none",
+        cloakMode: "about:blank",
         tabTitle: "New tab",
         tabFavicon: "https://www.google.com/chrome/static/images/chrome-logo-m100.svg",
         cloakRotation: false,
@@ -42,6 +37,8 @@ window.SITE_CONFIG = {
         discordWidget: true,
         miniplayer: true,
         leaveConfirmation: false,
+        autoAboutBlank: true,
+        showChangelogOnUpdate: true,
 
         // Theme colors
         accentColor: "#ffffff",
@@ -203,18 +200,29 @@ window.SITE_CONFIG = {
 (function () {
     const STORAGE_KEY = 'void_settings';
 
-    const getDefaults = () => window.SITE_CONFIG?.defaults || {};
+    const getDefaults = () => {
+        return window.SITE_CONFIG?.defaults || {};
+    };
 
     const load = () => {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
-                return { ...getDefaults(), ...JSON.parse(stored) };
+                const parsed = JSON.parse(stored);
+                const settings = { ...getDefaults(), ...parsed };
+                if (settings.autoAboutBlank) {
+                    settings.cloakMode = "about:blank";
+                }
+                return settings;
             }
         } catch (e) {
             console.warn('Failed to load settings:', e);
         }
-        return getDefaults();
+        const defaults = getDefaults();
+        if (defaults.autoAboutBlank) {
+            defaults.cloakMode = "about:blank";
+        }
+        return defaults;
     };
 
     const save = (settings) => {
@@ -235,6 +243,9 @@ window.SITE_CONFIG = {
         get(key) { return _settings[key]; },
         set(key, value) {
             _settings[key] = value;
+            if (key === 'autoAboutBlank' && value) {
+                _settings.cloakMode = 'about:blank';
+            }
             save(_settings);
             return value;
         },

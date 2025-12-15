@@ -363,6 +363,13 @@
                             <option value="blob">Blob URL</option>
                         </select>
                     </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Auto About:Blank</div>
+                            <div class="setting-desc">Automatically set cloak mode to about:blank</div>
+                        </div>
+                        <div class="toggle" id="auto-about-blank-toggle"></div>
+                    </div>
 
 
                 </div>
@@ -534,6 +541,16 @@
                         <div class="toggle active" id="miniplayer-toggle"></div>
                     </div>
                 </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Updates</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Show Changelog on Update</div>
+                            <div class="setting-desc">Automatically show changelog when Phantom is updated</div>
+                        </div>
+                        <div class="toggle active" id="changelog-toggle"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="settings-panel" id="panel-data">
@@ -695,6 +712,9 @@
         if (settings.miniplayer !== false) document.getElementById('miniplayer-toggle').classList.add('active');
         else document.getElementById('miniplayer-toggle').classList.remove('active');
         if (settings.leaveConfirmation) document.getElementById('leave-confirm-toggle').classList.add('active');
+        if (settings.autoAboutBlank) document.getElementById('auto-about-blank-toggle').classList.add('active');
+        if (settings.showChangelogOnUpdate !== false) document.getElementById('changelog-toggle').classList.add('active');
+        else document.getElementById('changelog-toggle').classList.remove('active');
 
         // Rotating Cloaks
         if (settings.rotateCloaks) {
@@ -717,6 +737,8 @@
         document.getElementById('discord-toggle').onclick = function () { this.classList.toggle('active'); settings.discordWidget = this.classList.contains('active'); saveSettings(settings); };
         document.getElementById('miniplayer-toggle').onclick = function () { this.classList.toggle('active'); settings.miniplayer = this.classList.contains('active'); saveSettings(settings); };
         document.getElementById('leave-confirm-toggle').onclick = function () { this.classList.toggle('active'); settings.leaveConfirmation = this.classList.contains('active'); saveSettings(settings); };
+        document.getElementById('auto-about-blank-toggle').onclick = function () { this.classList.toggle('active'); settings.autoAboutBlank = this.classList.contains('active'); saveSettings(settings); };
+        document.getElementById('changelog-toggle').onclick = function () { this.classList.toggle('active'); settings.showChangelogOnUpdate = this.classList.contains('active'); saveSettings(settings); };
 
         document.getElementById('rotate-toggle').onclick = function () {
             this.classList.toggle('active');
