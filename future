@@ -1,0 +1,21 @@
+
+
+8. In ai chat completely change everything to integrate it into the project fully, its very broken right now and id like you to consilidate alot of the code btu make sure it supports math symbols and make it look very good for UX and rename it to phantom ai.
+9. in player for movies make it show the movie description under the movie title above the quotes, and in movies.html or js make it show description on hovor so when you click on a movie it just gets it from what was already shown instead of making a new api request.
+10. in movies add more movies (40) that fit in with the movies that are already there such as adding creed or the dark knight or any other movie that fits in with the theme of the predefined movies that are aalreaedy there.
+11. fix up games.html, when you search it takes a really long time and it freezes ur computer until it works perfectly after and for UGS make it all work perfectly, you can find a example implementation thats very bad at /pages/exampleUGSimplementation.html and use /components/UGSfiles.js for the ugs files name.
+12. in terms.html fix the back to home button i dont think its working but if it is great
+13. fix the /search currently i have no idea whats wrong with it but stuff just never load, make the content area look like how embed.html does with the skip icon and stuff, make it look just like embed.html
+14. in the index2.html make the games open perfectly, make it open player and go straight to the right game.
+15. in games.html or js for UGS make it make the game titles prettier such as taking out spaces or "cl" and things like that.
+16. fix download button in player.html, currently its just taking u to a cdn.jsdelivr instead of easily downloading the code from cdnjsdelivr.
+17.in player.html make the enable proxy button a switch instead of a checkbox.
+18. in music.html fix soundcloud soit really uses soundcloud instead of itunes and make youtube option the default.
+19. in moies make the movies name rating titel and such cached so it doesnt take a long time to load but make sure its implemented in a very nice way so cache deletes in a week, it caches titlles for each genre and button such as now playing not benig the same as top rated and then i need u to add more genres.
+20. i need appearence settings to save across all pages and i need it to work across all pages, currently it only works in settings.
+21.html completely revamp code.html, i might have deleted it but make it fit in yk and use notifciations for page opened, make it have a terminaland use monaco editor, make it have a fix code button to use biome.js and make it have a save button to save the code to a file and a export project button, im not sure if u can but try to allow drag and dropping of entire folders and files, maybe u can use react arborist idek nothing about this tho so im letting u do what u think is best.
+22.html in music make playeback work and make sure arrow keys work to fast forward and make youtube video not shown to people unless proxy mode is enabled cuz then i dont thik its possible to skip or pause and stuff, but ucan mess around with embed.html to try and make that possible but i just dont want the youtube player to be shown unless proxy mode is enabled cuz then u cant skip or pause or do anything else to the video. 
+23.html for panic eey when u press it mae it quicly change the content of the screen to resemble closely google classroom until the real one loads.
+
+// i need to add a single file
+// i need to fix tmdb

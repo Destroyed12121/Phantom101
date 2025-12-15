@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phantom AI</title>
+
+  <!-- Dependencies -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../components/topbar.css">
+  <link rel="stylesheet" href="../styles/chat.css">
+</head>
+
+<body>
+
+  <!-- Scripts (Config & Base) -->
+  <script src="../config.js"></script>
+  <script src="../scripts/settings.js"></script>
+  <script src="../scripts/notifications.js"></script>
+
+  <div class="app-container" id="chatApp">
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="chatSidebar">
+      <div class="sidebar-header">
+        <div class="brand-section">
+          <i data-lucide="ghost"></i> Phantom AI
+        </div>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn">
+        <i class="fas fa-plus"></i> New Chat
+      </button>
+
+      <div class="conversations" id="conversationsList">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="sidebar-footer" style="padding: 0;"></div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="main-content">
+
+      <!-- Local Chat Header -->
+      <header class="chat-header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <span class="chat-title" id="chatTitle">New Chat</span>
+        </div>
+
+        <div class="header-right">
+          <select id="modelSelector" class="select input">
+            <option value="loading">Loading Models...</option>
+          </select>
+        </div>
+      </header>
+
+      <!-- Chat Messages -->
+      <div class="chat-body" id="chatBody">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Zero State / Hero -->
+      <div class="hero-section" id="heroSection">
+        <h1 class="hero-title">Phantom AI</h1>
+        <p class="hero-subtitle">I can generate text, code, math, and images</p>
+      </div>
+
+      <!-- Input Area -->
+      <div class="chat-footer">
+        <div class="input-container">
+
+          <div class="input-actions" style="margin-bottom: 4px; margin-left: 4px; display:flex; gap: 6px;">
+            <button class="mode-pill mode-btn active" data-mode="text" title="Text Mode">
+              <i class="fas fa-comment-alt"></i> <span>Text</span>
+            </button>
+            <button class="mode-pill mode-btn" data-mode="image" title="Image Mode">
+              <i class="fas fa-image"></i> <span>Image</span>
+            </button>
+          </div>
+
+          <textarea id="chatInput" class="chat-input" placeholder="Message Phantom AI..." rows="1"></textarea>
+
+          <div class="input-actions" style="margin-bottom: 4px; margin-right: 4px;">
+            <button id="sendBtn" class="send-btn" disabled>
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- App Scripts -->
+  <script src="../components/topbar.js"></script>
+  <script src="../components/footer.js"></script>
+  <script src="../scripts/chat.js"></script>
+
+  <script>
+    if (window.lucide) lucide.createIcons();
+  </script>
+
+  <script>
+    // Apply Global Settings
+    Settings.apply();
+  </script>
+</body>
+
+</html>

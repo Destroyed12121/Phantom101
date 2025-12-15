@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Unblocked</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-5LMBC27Z');</script>
+    <!-- End Google Tag Manager -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg, #0a0a0a);
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        /* First Visit Cloak Overlay */
+        #fv-cloak {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 10000;
+            display: none;
+            /* Hidden by default, shown via script if needed */
+        }
+
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg, #0a0a0a);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease-out;
+        }
+
+        .loading-logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .loading-logo i {
+            color: var(--text-muted, #a1a1aa);
+        }
+
+        .loading-logo span {
+            background: linear-gradient(90deg, var(--text, #e4e4e7) 0%, var(--text-muted, #a1a1aa) 40%, var(--text-dim, #52525b) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border, #1f1f1f);
+            border-top-color: var(--text-muted, #71717a);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: var(--text-dim, #52525b);
+            font-size: 0.875rem;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LMBC27Z" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- First Visit Cloak Layer -->
+    <div id="fv-cloak"></div>
+
+    <!-- Config must be loaded before cloak logic checks it -->
+    <script src="config.js"></script>
+
+    <!-- Init scripts -->
+    <script src="scripts/cloak-init.js"></script>
+
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-logo">
+            <i class="fa-solid fa-ghost"></i>
+            <span>Phantom</span>
+        </div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <iframe id="main-frame"></iframe>
+
+    <!-- First Visit Cloak Logic -->
+    <script>
+        (function () {
+            var STORAGE_KEY = 'phantom_fv';
+            var overlay = document.getElementById('fv-cloak');
+            var iframe = document.getElementById('main-frame');
+
+            // Check config
+            var cloakEnabled = window.SITE_CONFIG && window.SITE_CONFIG.firstVisitCloak !== false;
+            var isCloaked = cloakEnabled && !localStorage.getItem(STORAGE_KEY);
+
+            if (isCloaked) {
+                // Show white screen
+                overlay.style.display = 'block';
+                document.title = '';
+
+                // Hide favicon
+                var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+                link.type = 'image/x-icon';
+                link.rel = 'shortcut icon';
+                var oldIcon = link.href;
+                link.href = 'data:image/x-icon;base64,';
+                document.getElementsByTagName('head')[0].appendChild(link);
+
+                var onKey = function (e) {
+                    if (e.key.toLowerCase() === 'c') {
+                        // Uncloak
+                        overlay.style.display = 'none';
+                        localStorage.setItem(STORAGE_KEY, '1');
+                        document.removeEventListener('keydown', onKey);
+                        document.title = 'Phantom Unblocked';
+
+                        // Restore favicon
+                        link.href = 'favicon.svg';
+                        link.type = 'image/svg+xml';
+
+                        // Load the app content NOW
+                        iframe.src = 'index2.html';
+
+                        // Analytics
+                        window.dataLayer = window.dataLayer || [];
+                        window.dataLayer.push({ event: 'cloak_bypass_pressed' });
+                        if (typeof gtag === 'function') {
+                            gtag('event', 'cloak_bypass', {
+                                'event_category': 'engagement',
+                                'event_label': 'first_visit_cloak'
+                            });
+                        }
+                    }
+                };
+                document.addEventListener('keydown', onKey);
+            } else {
+                // No cloak needed, load immediately
+                iframe.src = 'index2.html';
+            }
+        })();
+    </script>
+
+    <script>
+        const loadingScreen = document.getElementById('loading-screen');
+        const iframe = document.getElementById('main-frame');
+        let loadStartTime = Date.now();
+
+        function showLoading() {
+            loadingScreen.classList.remove('hidden');
+            loadStartTime = Date.now();
+        }
+
+        function hideLoading() {
+            // Min time 0.5s (500ms)
+            const minTime = 500;
+            const elapsed = Date.now() - loadStartTime;
+            const remaining = Math.max(0, minTime - elapsed);
+
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+            }, remaining);
+
+            // Re-attach listener to the new window for next navigation
+            try {
+                if (iframe.contentWindow) {
+                    iframe.contentWindow.removeEventListener('unload', showLoading);
+                    iframe.contentWindow.addEventListener('unload', () => {
+                        requestAnimationFrame(showLoading);
+                    });
+                }
+            } catch (e) { }
+        }
+
+        // Listen for iframe load events
+        iframe.addEventListener('load', hideLoading);
+
+        // Expose to children if needed
+        window.showLoading = showLoading;
+        window.hideLoading = hideLoading;
+    </script>
+    <script src="scripts/settings.js"></script>
+    <script src="scripts/cloaking.js"></script>
+    <script>
+        (function () {
+            const STORAGE_KEY = 'void_settings';
+
+            // Cloak application handled by scripts/cloaking.js automatically now
+
+            // Handle about:blank / blob mode on startup
+            let settings = {};
+            try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
+            const cloakMode = settings.cloakMode || 'none';
+
+            if (window.top === window.self && cloakMode !== 'none') {
+                const currentUrl = window.location.href;
+                const doRedirect = () => {
+                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
+                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                    window.location.replace(randomTarget);
+                };
+
+                if (cloakMode === 'blob') {
+                    fetch(currentUrl).then(r => r.text()).then(html => {
+                        const blob = new Blob([html], { type: 'text/html' });
+                        const win = window.open(URL.createObjectURL(blob), '_blank');
+                        if (win) doRedirect();
+                    }).catch(() => { });
+                } else if (cloakMode === 'about:blank') {
+                    const win = window.open('about:blank', '_blank');
+                    if (win) {
+                        win.document.open();
+                        win.document.write('<iframe src="' + currentUrl + '" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>');
+                        win.document.close();
+
+                        // Copy disguised title/icon to new window
+                        if (settings.tabTitle) win.document.title = settings.tabTitle;
+                        if (settings.tabFavicon) {
+                            const link = win.document.createElement('link');
+                            link.rel = 'icon';
+                            link.href = settings.tabFavicon;
+                            win.document.head.appendChild(link);
+                        }
+                        doRedirect();
+                    }
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

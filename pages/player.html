@@ -1,0 +1,450 @@
+ <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <style>
+        .player-page {
+            min-height: 100vh;
+            padding: 70px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-frame-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            /* 16:9 Aspect Ratio */
+            background: #000;
+        }
+
+        .player-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .player-controls {
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: flex-end;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .player-info {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .player-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .player-desc {
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.875rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .control-btn:hover {
+            background: var(--border);
+            color: #fff;
+        }
+
+        .provider-select {
+            padding: 8px 12px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.875rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            margin-right: 8px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--surface-hover);
+            border: 1px solid var(--border);
+            transition: .4s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--text-muted);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(18px);
+            background-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="../components/topbar.js"></script>
+
+    <div class="player-page">
+        <div class="player-container">
+            <div class="player-frame-wrapper" id="frame-wrapper">
+                <iframe class="player-frame" id="game-frame" allowfullscreen></iframe>
+            </div>
+
+            <div class="player-controls" id="controls">
+                <!-- Dynamic Controls -->
+                <div id="movie-controls" style="display:none; gap:12px; align-items:center; margin-right:auto;">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Provider</span>
+                        <select id="provider-select" class="provider-select"></select>
+                    </div>
+
+                    <label style="display:flex; align-items:center; cursor:pointer;" title="Toggle Proxy">
+                        <div class="switch">
+                            <input type="checkbox" id="proxy-toggle">
+                            <span class="slider"></span>
+                        </div>
+                        <span style="font-size:0.875rem; color:var(--text);">Proxy</span>
+                    </label>
+                </div>
+
+                <button class="control-btn" id="btn-download" style="display:none;">
+                    <i class="fa-solid fa-download"></i> Download
+                </button>
+                <button class="control-btn" id="btn-reload">
+                    <i class="fa-solid fa-rotate-right"></i> Reload
+                </button>
+                <button class="control-btn" id="btn-newtab">
+                    <i class="fa-solid fa-up-right-from-square"></i> Open in New Tab
+                </button>
+                <button class="control-btn" id="btn-fullscreen">
+                    <i class="fa-solid fa-expand"></i> Fullscreen
+                </button>
+            </div>
+
+            <div class="player-info">
+                <h1 class="player-title" id="player-title">Loading...</h1>
+                <p class="player-desc" id="player-desc"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/notifications.js"></script>
+    <script src="../scripts/quotes.js"></script>
+    <script src="../components/footer.js"></script>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type'); // 'game' or 'movie'
+        const id = params.get('id');
+        const title = params.get('title');
+        const urlParam = params.get('url');
+
+        // Movie specific params
+        const season = params.get('season');
+        const episode = params.get('episode');
+
+        const frame = document.getElementById('game-frame');
+        const titleEl = document.getElementById('player-title');
+        const descEl = document.getElementById('player-desc');
+        const proxyToggle = document.getElementById('proxy-toggle');
+
+        // Providers
+        const PROVIDERS = [
+            { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}?autoplay=true', tv: 'https://player.vidify.top/embed/tv/{id}&s={season}&e={episode}' }, isActive: true },
+            { id: 'vidplus', name: 'Vidplus', urls: { movie: 'https://player.vidplus.to/embed/movie/{id}', tv: 'https://player.vidplus.to/embed/tv/{id}/{season}/{episode}' }, isActive: true },
+            { id: 'vidfast', name: 'Vidfast', urls: { movie: 'https://vidfast.to/embed/movie/{id}', tv: 'https://vidfast.to/embed/tv/{id}&s={season}&e={episode}' }, isActive: true },
+            { id: 'vidsrccx', name: 'VidsrcCX', urls: { movie: 'https://vidsrc.cx/embed/movie/{id}', tv: 'https://vidsrc.cx/embed/tv/{id}/{season}/{episode}' }, isActive: true },
+            { id: 'vidsrcicu', name: 'VidSrc.icu', urls: { movie: 'https://vidsrc.icu/embedv2/movie/{id}', tv: 'https://vidsrc.icu/embedv2/tv/{id}/{season}/{episode}' }, isActive: true },
+        ];
+
+        let currentUrl = '';
+
+        function init() {
+            if (type === 'game') {
+                document.getElementById('btn-download').style.display = 'flex';
+                currentUrl = urlParam || '';
+                titleEl.textContent = title || 'Game';
+
+                if (window.QUOTES) {
+                    descEl.textContent = window.QUOTES[Math.floor(Math.random() * window.QUOTES.length)];
+                } else {
+                    descEl.textContent = 'Enjoy the game!';
+                }
+
+                if (currentUrl) {
+                    loadGame(currentUrl);
+                }
+            } else if (type === 'movie' || type === 'tv') {
+                document.getElementById('movie-controls').style.display = 'flex';
+                titleEl.textContent = title || (type === 'tv' ? `S${season} E${episode}` : 'Movie');
+
+                const select = document.getElementById('provider-select');
+                PROVIDERS.filter(p => p.isActive).forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name;
+                    select.appendChild(opt);
+                });
+
+                select.onchange = () => loadProvider(select.value);
+
+                if (proxyToggle) {
+                    proxyToggle.onchange = () => loadProvider(select.value);
+                }
+
+                loadProvider(PROVIDERS[0].id);
+
+                let descText = 'No description available.';
+                try {
+                    const stored = sessionStorage.getItem('currentMovie');
+                    if (stored) {
+                        const data = JSON.parse(stored);
+                        if (data.id == id && data.overview) {
+                            descText = data.overview;
+                        }
+                    }
+                } catch (e) { }
+
+                if (window.QUOTES) {
+                    const randomQuote = window.QUOTES[Math.floor(Math.random() * window.QUOTES.length)];
+                    descText += '\n\n"' + randomQuote + '"';
+                }
+                descEl.style.whiteSpace = 'pre-line';
+                descEl.textContent = descText;
+            }
+        }
+
+        async function loadGame(url) {
+            try {
+                if (window.Notify) window.Notify.info('Game', 'Loading game...');
+
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Failed to fetch game');
+                const html = await res.text();
+
+                const doc = frame.contentDocument || frame.contentWindow.document;
+                doc.open();
+                doc.write(html);
+                doc.close();
+
+                currentUrl = url;
+            } catch (e) {
+                console.error("Game load error", e);
+                if (url.startsWith('http')) frame.src = url;
+                else if (window.Notify) window.Notify.error('Error', 'Failed to load game');
+            }
+        }
+
+        function loadProvider(providerId) {
+            const provider = PROVIDERS.find(p => p.id === providerId);
+            if (!provider) return;
+
+            let u = '';
+            if (type === 'movie') {
+                u = provider.urls.movie.replace('{id}', id);
+            } else {
+                u = provider.urls.tv.replace('{id}', id).replace('{season}', season).replace('{episode}', episode);
+            }
+
+            if (proxyToggle && proxyToggle.checked) {
+                u = '../staticsjv2/embed.html#' + u;
+            }
+
+            currentUrl = u;
+            frame.src = u;
+        }
+
+        document.getElementById('btn-reload').onclick = () => {
+            if (type === 'game') {
+                loadGame(currentUrl);
+            } else {
+                frame.src = frame.src;
+            }
+        };
+
+        document.getElementById('btn-fullscreen').onclick = () => {
+            if (frame.requestFullscreen) frame.requestFullscreen();
+            else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+            else if (frame.mozRequestFullScreen) frame.mozRequestFullScreen();
+            else document.getElementById('frame-wrapper').requestFullscreen();
+        };
+
+        document.getElementById('btn-newtab').onclick = async () => {
+            const btn = document.getElementById('btn-newtab');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+            btn.disabled = true;
+
+            try {
+                const settings = tryGetSettings();
+                let openMethod = 'about:blank';
+                if (settings.cloak === 'blob' || settings.openIn === 'blob') {
+                    openMethod = 'blob';
+                }
+
+                let finalUrl = currentUrl;
+
+                if (type === 'game' || openMethod === 'blob') {
+                    const win = window.open('about:blank', '_blank');
+                    if (!win) throw new Error('Popup blocked');
+
+                    const iframeStyle = "position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;";
+
+                    // Safe HTML construction to avoid parser errors with template literals
+                    const htmlParts = [
+                        '<!DOCTYPE html>',
+                        '<html>',
+                        '<head><title>' + (title || 'Phantom') + '</title><style>body{margin:0;background:#000;}</style></head>',
+                        '<body>',
+                        '<iframe src="' + finalUrl + '" style="' + iframeStyle + '" allowfullscreen></iframe>',
+                        '</body>',
+                        '</html>'
+                    ];
+                    const htmlContent = htmlParts.join('\n');
+
+                    if (openMethod === 'blob') {
+                        const blob = new Blob([htmlContent], { type: 'text/html' });
+                        win.location.href = URL.createObjectURL(blob);
+                    } else {
+                        win.document.write(htmlContent);
+                        win.document.close();
+                    }
+
+                } else {
+                    window.open(finalUrl, '_blank');
+                }
+
+            } catch (e) {
+                console.error(e);
+                if (window.Notify) window.Notify.error('Error', 'Failed to open in new tab');
+                else alert('Failed to open');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        document.getElementById('btn-download').onclick = async () => {
+            const btn = document.getElementById('btn-download');
+            const originalText = btn.innerHTML;
+
+            try {
+                if (type !== 'game') return;
+
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';
+
+                const res = await fetch(currentUrl);
+                if (!res.ok) throw new Error('Failed to fetch game code');
+                const code = await res.text();
+
+                const blob = new Blob([code], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (title || 'game').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                if (window.Notify) window.Notify.success('Success', 'Download started');
+
+            } catch (e) {
+                console.error(e);
+                if (window.Notify) window.Notify.error('Error', 'Failed to download game');
+                else alert('Download failed');
+            } finally {
+                btn.innerHTML = originalText;
+            }
+        };
+
+        function tryGetSettings() {
+            try {
+                return JSON.parse(localStorage.getItem('void_settings')) || {};
+            } catch { return {}; }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Unblocked</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="components/topbar.css">
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        .home-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px 40px;
+            text-align: center;
+        }
+
+        .site-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #e4e4e7 0%, #a1a1aa 40%, #52525b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .site-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            min-height: 24px;
+        }
+
+        /* Search Bar */
+        .search-container {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 48px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .search-bar:hover {
+            background: var(--surface-hover);
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--text-muted);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-bar i {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Featured Section */
+        .featured-section {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .star-icon {
+            color: #fbbf24;
+            font-size: 0.875rem;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .featured-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .featured-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+        }
+
+        .featured-card-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            overflow: hidden;
+        }
+
+        .featured-card-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .featured-card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Footer - Centered */
+        .site-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-link {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .footer-link:hover {
+            color: var(--text);
+        }
+
+        .footer-version {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* Offline Banner */
+        .offline-banner {
+            display: none;
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            padding: 8px 14px;
+            background: var(--surface);
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            color: var(--warning);
+            z-index: 9999;
+        }
+
+        .offline-banner.show {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Discord Widget - Closable */
+        .discord-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .discord-btn {
+            width: 50px;
+            height: 50px;
+            background: #5865F2;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(88, 101, 242, 0.4);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .discord-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .discord-popup {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .discord-popup.show {
+            display: block;
+        }
+
+        .discord-popup iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 640px) {
+            .site-title {
+                font-size: 1.75rem;
+            }
+
+            .featured-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .discord-popup {
+                width: 280px;
+                height: 380px;
+                right: 10px;
+                bottom: 70px;
+            }
+        }
+    </style>
+    <script src="config.js"></script>
+    <script src="scripts/quotes.js"></script>
+    <script src="scripts/notifications.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
+    <script type="module">
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+        window.BareMux = BareMux;
+    </script>
+</head>
+
+<body>
+    <div class="offline-banner" id="offline-banner">
+        <i class="fa-solid fa-wifi-slash"></i>
+        <span>You're offline</span>
+    </div>
+
+    <div class="home-page">
+        <script src="components/topbar.js"></script>
+
+        <main class="main-content">
+            <h1 class="site-title">Phantom Unblocked</h1>
+            <p class="site-subtitle" id="subtitle"></p>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <form class="search-bar" onsubmit="handleSearch(event)">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search the web..." autocomplete="off">
+                </form>
+            </div>
+
+            <!-- Featured -->
+            <section class="featured-section">
+                <div class="section-header">
+                    <i class="fa-solid fa-star star-icon"></i>
+                    <span class="section-title">Featured</span>
+                </div>
+                <div class="featured-grid" id="featured-grid"></div>
+            </section>
+        </main>
+
+        <!-- Footer - Centered -->
+
+    </div>
+
+    <!-- Discord Widget -->
+    <div class="discord-widget" id="discord-widget">
+        <button class="discord-btn" id="discord-btn" title="Discord">
+            <i class="fa-brands fa-discord" id="discord-icon"></i>
+        </button>
+    </div>
+
+    <div class="discord-popup" id="discord-popup">
+        <iframe id="discord-frame" src="about:blank"></iframe>
+    </div>
+
+    <script>
+        // Featured games
+        const featuredGames = [
+            { name: 'Fortnite', icon: 'fa-solid fa-crosshairs', url: 'staticsjv2/embed.html#https://nowgg.fun/' },
+            { name: 'Roblox', icon: 'fa-solid fa-cubes', url: 'staticsjv2/embed.html#https://nowgg.fun/' },
+            { name: '1v1.LOL', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/1v1-lol.png', url: 'pages/games.html?game=1v1lol' },
+            { name: 'Retro Bowl', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/retro-bowl.png', url: 'pages/games.html?game=retrobowl' },
+            { name: 'Slope', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/slope.png', url: 'pages/games.html?game=slope' },
+            { name: 'Subway Surfers', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/subway-surfers.png', url: 'pages/games.html?game=subwaysurfers' },
+            { name: 'Run 3', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/run-3.png', url: 'pages/games.html?game=run3' },
+            { name: 'Basket Random', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/basket-random.png', url: 'pages/games.html?game=basketrandom' },
+            { name: 'Drift Hunters', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/drift-hunters.png', url: 'pages/games.html?game=drifthunters' },
+            { name: 'Moto X3M', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/moto-x3m.png', url: 'pages/games.html?game=motox3m' },
+            { name: 'Code Runner', icon: 'fa-solid fa-code', url: 'pages/code.html' },
+            { name: 'All Games', icon: 'fa-solid fa-layer-group', url: 'pages/games.html' }
+        ];
+
+        const grid = document.getElementById('featured-grid');
+        featuredGames.forEach(g => {
+            const card = document.createElement('a');
+            card.href = g.url;
+            card.className = 'featured-card';
+            card.innerHTML = `
+                <div class="featured-card-icon" style="background: ${g.img ? 'transparent' : 'var(--surface-hover)'}; color: var(--text-muted);">
+                    ${g.img ? `<img src="${g.img}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-gamepad\\'></i>'">` : `<i class="${g.icon}"></i>`}
+                </div>
+                <div class="featured-card-title">${g.name}</div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Quote
+        const subtitle = document.getElementById('subtitle');
+        if (window.QUOTES?.length) {
+            subtitle.textContent = window.QUOTES[Math.floor(Math.random() * window.QUOTES.length)];
+        }
+
+        // Search → staticsjv2/index.html
+        function handleSearch(e) {
+            e.preventDefault();
+            const query = document.getElementById('search-input').value.trim();
+            if (!query) return;
+
+            // Open staticsjv2 browser with search
+            let url;
+            if (query.includes('.') && !query.includes(' ')) {
+                url = query.startsWith('http') ? query : 'https://' + query;
+            } else {
+                url = 'https://search.brave.com/search?q=' + encodeURIComponent(query);
+            }
+
+            // Navigate to staticsjv2/index.html
+            // The tab will open with the searched URL
+            window.location.href = 'staticsjv2/index.html#' + encodeURIComponent(url);
+        }
+
+        // Discord widget toggle
+        let discordOpen = false;
+        const discordBtn = document.getElementById('discord-btn');
+        const discordIcon = document.getElementById('discord-icon');
+        const discordPopup = document.getElementById('discord-popup');
+        const discordFrame = document.getElementById('discord-frame');
+
+        discordBtn.onclick = () => {
+            discordOpen = !discordOpen;
+            if (discordOpen) {
+                discordPopup.classList.add('show');
+                discordIcon.className = 'fa-solid fa-xmark';
+                // Load via staticsjv2
+                discordFrame.src = 'staticsjv2/embed.html#' + window.location.origin + '/pages/chat.html';
+            } else {
+                discordPopup.classList.remove('show');
+                discordIcon.className = 'fa-brands fa-discord';
+                discordFrame.src = 'about:blank';
+            }
+        };
+
+        // Check setting
+        try {
+            const settings = JSON.parse(localStorage.getItem('void_settings') || '{}');
+            if (settings.discordWidget === false) {
+                document.getElementById('discord-widget').style.display = 'none';
+            }
+        } catch (e) { }
+
+
+        // Offline
+        const offlineBanner = document.getElementById('offline-banner');
+        function updateOffline() {
+            offlineBanner.classList.toggle('show', !navigator.onLine);
+        }
+        window.addEventListener('online', updateOffline);
+        window.addEventListener('offline', updateOffline);
+        updateOffline();
+    </script>
+    <script src="components/footer.js"></script>
+
+    <script>
+        (async function initScramjet() {
+            try {
+                if (window.Notify) {
+                    window.Notify.info("Initializing", "Starting proxy service...");
+                }
+
+                const DEFAULT_WISP = "wss://dash.goip.de/wisp/";
+                if (!localStorage.getItem("proxServer")) {
+                    localStorage.setItem("proxServer", DEFAULT_WISP);
+                }
+
+                // 1. Check for BareMux (Module scripts take time)
+                let attempts = 0;
+                while (!window.BareMux && attempts < 60) {
+                    await new Promise(r => setTimeout(r, 100));
+                    attempts++;
+                }
+
+                if (!window.BareMux) {
+                    throw new Error("BareMux library failed to load (Timeout)");
+                }
+
+                // 2. Check Scramjet
+                if (typeof $scramjetLoadController === 'undefined') {
+                    throw new Error("Scramjet library failed to load");
+                }
+
+                const { ScramjetController } = $scramjetLoadController();
+                // Use absolute paths to avoid ambiguity
+                const scramjetPrefix = "/staticsjv2/scramjet/";
+                const swPath = "/staticsjv2/sw.js";
+                const scope = "/staticsjv2/";
+                const bareWorkerPath = "/staticsjv2/bareworker.js";
+
+                const scramjet = new ScramjetController({
+                    prefix: scramjetPrefix,
+                    files: {
+                        wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
+                        all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
+                        sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
+                    }
+                });
+
+                await scramjet.init();
+
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.register(swPath, { scope: scope });
+
+                    // Wait for active
+                    if (!reg.active) {
+                        await new Promise(resolve => {
+                            const check = () => {
+                                if (reg.active) resolve();
+                                else setTimeout(check, 100);
+                            };
+                            check();
+                        });
+                    }
+
+                    const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
+                    reg.active.postMessage({ type: "config", wispurl: wispUrl });
+
+                    const connection = new BareMux.BareMuxConnection(bareWorkerPath);
+                    await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: wispUrl }]);
+
+                    if (window.Notify) {
+                        setTimeout(() => {
+                            window.Notify.success("Ready", "Proxy service initialized");
+                        }, 1000);
+                    }
+                } else {
+                    throw new Error("Service Worker not supported");
+                }
+            } catch (error) {
+                console.error("Scramjet Init Error:", error);
+                if (window.Notify) {
+                    window.Notify.error("Initialization Failed", error.message);
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

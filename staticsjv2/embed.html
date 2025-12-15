@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a0a;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        #iframe-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        #embed-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        .message-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #e4e4e7;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .message-content {
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .message-content h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .message-content p {
+            color: #71717a;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .spinner {
+            border: 2px solid #1f1f1f;
+            border-top-color: #fff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #skip-btn {
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: transparent;
+            color: #71717a;
+            border: 1px solid #1f1f1f;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s;
+            display: none;
+        }
+
+        #skip-btn:hover {
+            border-color: #333;
+            color: #fff;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
+    <script type="module">
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+        window.BareMux = BareMux;
+    </script>
+</head>
+
+<body>
+    <div id="loading" class="message-container">
+        <div class="message-content">
+            <div class="spinner"></div>
+            <h1 id="loading-title">Connecting</h1>
+            <p id="loading-url">Initializing proxy...</p>
+            <button id="skip-btn">Skip</button>
+        </div>
+    </div>
+    <div id="error" class="message-container" style="display: none;">
+        <div class="message-content">
+            <h1>Connection Error</h1>
+            <p id="error-message">An error occurred.</p>
+        </div>
+    </div>
+    <div id="iframe-container"></div>
+
+    <script>
+        const loadingContainer = document.getElementById('loading');
+        const loadingTitle = document.getElementById('loading-title');
+        const loadingUrl = document.getElementById('loading-url');
+        const errorContainer = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        const iframeContainer = document.getElementById('iframe-container');
+        const skipBtn = document.getElementById('skip-btn');
+
+        let loadingTimeout = null;
+        let skipButtonTimeout = null;
+
+        function showError(message) {
+            if (loadingTimeout) clearTimeout(loadingTimeout);
+            if (skipButtonTimeout) clearTimeout(skipButtonTimeout);
+            loadingContainer.style.display = 'none';
+            iframeContainer.innerHTML = '';
+            errorMessage.textContent = message;
+            errorContainer.style.display = 'flex';
+        }
+
+        function showContent() {
+            if (loadingTimeout) clearTimeout(loadingTimeout);
+            if (skipButtonTimeout) clearTimeout(skipButtonTimeout);
+            loadingContainer.style.display = 'none';
+            iframeContainer.style.opacity = '1';
+        }
+
+        async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shouldSkip = urlParams.has('skip');
+            const targetUrl = window.location.hash.substring(1);
+            const basePath = location.pathname.replace(/[^/]*$/, '');
+
+            if (!targetUrl) {
+                showError("No URL provided. Use format: #https://example.com");
+                return;
+            }
+
+            let validatedUrl = targetUrl;
+            try {
+                const decoded = decodeURIComponent(targetUrl);
+                if (decoded !== targetUrl && (decoded.startsWith('http://') || decoded.startsWith('https://'))) {
+                    validatedUrl = decoded;
+                }
+            } catch (e) {
+                showError(`Invalid URL format: ${e.message}`);
+                return;
+            }
+
+            try {
+                new URL(validatedUrl);
+            } catch (e) {
+                showError(`Invalid URL: ${e.message}`);
+                return;
+            }
+
+            if (!validatedUrl.startsWith('http://') && !validatedUrl.startsWith('https://')) {
+                showError("Only HTTP/HTTPS URLs are supported.");
+                return;
+            }
+
+            if (shouldSkip) {
+                loadingContainer.style.display = 'none';
+                iframeContainer.style.opacity = '1';
+            }
+
+            try {
+                const { ScramjetController } = $scramjetLoadController();
+                const scramjet = new ScramjetController({
+                    prefix: basePath + "scramjet/",
+                    files: {
+                        wasm: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm',
+                        all: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js',
+                        sync: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js'
+                    }
+                });
+                await scramjet.init();
+                const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
+                const wispUrl = localStorage.getItem('proxServer') || 'wss://dash.goip.de/wisp/';
+
+                await navigator.serviceWorker.ready;
+                const sw = reg.active || navigator.serviceWorker.controller;
+                if (sw) sw.postMessage({ type: 'config', wispurl: wispUrl });
+                if (navigator.serviceWorker.controller && navigator.serviceWorker.controller !== sw) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'config', wispurl: wispUrl });
+                }
+
+                const connection = new BareMux.BareMuxConnection(basePath + 'bareworker.js');
+                await connection.setTransport('https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs', [{ wisp: wispUrl }]);
+
+                if (!shouldSkip) {
+                    loadingTitle.textContent = 'Loading';
+                    loadingUrl.textContent = validatedUrl;
+                }
+
+                const frame = scramjet.createFrame();
+                frame.frame.id = 'embed-frame';
+
+                if (!shouldSkip) {
+                    skipButtonTimeout = setTimeout(() => { skipBtn.style.display = 'inline-block'; }, 5000);
+                    skipBtn.addEventListener('click', showContent);
+
+                    const loadStartTime = Date.now();
+                    const MIN_LOADING_TIME = 1500;
+
+                    frame.frame.addEventListener('load', () => {
+                        const elapsed = Date.now() - loadStartTime;
+                        const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
+                        setTimeout(showContent, remaining);
+                    });
+
+                    frame.frame.addEventListener('error', () => {
+                        showError(`Failed to load: ${validatedUrl}`);
+                    });
+
+                    loadingTimeout = setTimeout(() => {
+                        if (!frame.frame.contentWindow || frame.frame.contentWindow.location.href === 'about:blank') {
+                            showError(`Timeout: Content took too long to load.`);
+                        }
+                    }, 60000);
+                }
+
+                iframeContainer.appendChild(frame.frame);
+                frame.go(validatedUrl);
+
+            } catch (err) {
+                showError(`Initialization error: ${err.message}`);
+            }
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+
+</html>

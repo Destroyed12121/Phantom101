@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <script src="../config.js"></script>
+    <script src="../scripts/notifications.js"></script>
+    <script src="../scripts/cloaking.js"></script>
+    <script src="../components/topbar.js"></script>
+    <style>
+        .settings-page {
+            min-height: 100vh;
+            padding: 80px 24px 40px;
+        }
+
+        .settings-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .settings-header {
+            margin-bottom: 32px;
+        }
+
+        .settings-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-header p {
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        .settings-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .settings-tab {
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .settings-tab:hover {
+            color: var(--text);
+            background: #1a1a1a;
+        }
+
+        .settings-tab.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
+        .settings-panel {
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .settings-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--text-muted);
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .setting-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .setting-select {
+            padding: 10px 32px 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: #444;
+        }
+
+        .setting-input {
+            padding: 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.8125rem;
+            width: 200px;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: #444;
+        }
+
+        .toggle {
+            width: 44px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: var(--text);
+            border-radius: 50%;
+            transition: transform 0.15s;
+        }
+
+        .toggle.active {
+            background: #3b82f6;
+        }
+
+        .toggle.active::after {
+            transform: translateX(20px);
+            background: #fff;
+        }
+
+        .cloaks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .cloak-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.6875rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .cloak-btn:hover {
+            border-color: #444;
+            color: var(--text);
+            background: #1a1a1a;
+        }
+
+        .cloak-btn.active {
+            border-color: #3b82f6;
+            color: var(--text);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .cloak-btn img {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .cloak-btn i {
+            font-size: 1.25rem;
+        }
+
+        .add-cloak-form {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .add-cloak-form.show {
+            display: block;
+        }
+
+        .add-cloak-form input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .add-cloak-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .key-capture {
+            padding: 10px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.75rem;
+            font-family: 'Consolas', monospace;
+            cursor: pointer;
+        }
+
+        .key-capture.capturing {
+            border-color: #3b82f6;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: #1a1a1a;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="settings-page">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h1><i class="fa-solid fa-gear"></i> Settings</h1>
+                <p>Customize your Phantom experience</p>
+            </div>
+
+            <div class="settings-nav">
+                <button class="settings-tab active" data-tab="cloak">Tab Cloak</button>
+                <button class="settings-tab" data-tab="appearance">Appearance</button>
+                <button class="settings-tab" data-tab="content">Content</button>
+                <button class="settings-tab" data-tab="widgets">Widgets</button>
+                <button class="settings-tab" data-tab="data">Data</button>
+            </div>
+
+            <div class="settings-panel active" id="panel-cloak">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-mask"></i> Cloaking Mode</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Cloak Mode</div>
+                            <div class="setting-desc">How the page should be opened</div>
+                        </div>
+                        <select class="setting-select" id="cloak-mode">
+                            <option value="none">None (Normal)</option>
+                            <option value="about:blank">about:blank (Default)</option>
+                            <option value="blob">Blob URL</option>
+                        </select>
+                    </div>
+
+
+                </div>
+
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Tab Cloaks</h2>
+                    <p style="color: var(--text-muted); font-size: 0.8125rem;">Choose a preset or add your own:</p>
+                    <div class="cloaks-grid" id="cloaks-grid"></div>
+
+                    <div class="setting-row"
+                        style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                        <div class="setting-info">
+                            <div class="setting-label">Rotating Cloaks</div>
+                            <div class="setting-desc">Automatically rotate tab title/icon</div>
+                        </div>
+                        <div class="toggle" id="rotate-toggle"></div>
+                    </div>
+
+                    <div class="setting-row" id="rotate-interval-row" style="display:none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Rotation Interval (s)</div>
+                            <div class="setting-desc">0.1s - 30s</div>
+                        </div>
+                        <input type="number" class="setting-input" id="rotate-interval" value="5" min="0.1" max="30"
+                            step="0.1" style="width: 80px;">
+                    </div>
+
+                    <button class="btn btn-secondary" id="add-cloak-btn" style="margin-top: 16px; width: 100%;"><i
+                            class="fa-solid fa-plus"></i> Add Custom Cloak</button>
+                    <div class="add-cloak-form" id="add-cloak-form">
+                        <input type="text" class="setting-input" id="new-cloak-name" placeholder="Name (e.g. Google)"
+                            style="width: 100%;">
+                        <input type="text" class="setting-input" id="new-cloak-title" placeholder="Tab title"
+                            style="width: 100%;">
+                        <input type="text" class="setting-input" id="new-cloak-icon"
+                            placeholder="Favicon URL (https://...)" style="width: 100%;">
+                        <div class="add-cloak-actions">
+                            <button class="btn btn-secondary" id="cancel-cloak">Cancel</button>
+                            <button class="btn btn-primary" id="save-cloak">Save Cloak</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Leave Confirmation</div>
+                            <div class="setting-desc">Ask before closing the tab</div>
+                        </div>
+                        <div class="toggle" id="leave-confirm-toggle"></div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-bolt"></i> Panic Key</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Keyboard Shortcut</div>
+                            <div class="setting-desc">Press to quickly exit</div>
+                        </div>
+                        <button class="key-capture" id="panic-key">Ctrl + Shift + Esc</button>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Redirect URL</div>
+                        </div>
+                        <input type="text" class="setting-input" id="panic-url"
+                            placeholder="https://classroom.google.com">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-appearance">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-swatchbook"></i> Presets</h2>
+                    <div class="presets-grid"
+                        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:10px; margin-bottom: 20px;">
+                        <!-- Presets injected by JS -->
+                    </div>
+
+                    <h2 class="section-title"><i class="fa-solid fa-palette"></i> Custom Theme</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Accent Color</div>
+                            <div class="setting-desc">Primary highlight color</div>
+                        </div>
+                        <input type="color" id="accent-color" value="#ffffff"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Surface Color</div>
+                            <div class="setting-desc">Card/Sidebar background</div>
+                        </div>
+                        <input type="color" id="surface-color" value="#0f0f0f"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Secondary Color</div>
+                            <div class="setting-desc">Secondary elements</div>
+                        </div>
+                        <input type="color" id="secondary-color" value="#2e2e33"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Text Color</div>
+                            <div class="setting-desc">Primary text color</div>
+                        </div>
+                        <input type="color" id="text-color" value="#e4e4e7"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Secondary Text Color</div>
+                            <div class="setting-desc">Muted/Description text color</div>
+                        </div>
+                        <input type="color" id="text-secondary-color" value="#71717a"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-content">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-film"></i> Movies</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Maximum Rating</div>
+                            <div class="setting-desc">Filter movies by rating</div>
+                        </div>
+                        <select class="setting-select" id="max-rating">
+                            <option value="G">G</option>
+                            <option value="PG">PG</option>
+                            <option value="PG-13">PG-13</option>
+                            <option value="R">R</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-gamepad"></i> Games</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Default Library</div>
+                        </div>
+                        <select class="setting-select" id="game-library">
+                            <option value="lib1">Library 1 (With covers)</option>
+                            <option value="lib2">Library 2 (More games)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-widgets">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-brands fa-discord"></i> Discord</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Show Discord Widget</div>
+                        </div>
+                        <div class="toggle active" id="discord-toggle"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-music"></i> Music</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Show Mini Player</div>
+                        </div>
+                        <div class="toggle active" id="miniplayer-toggle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-data">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-database"></i> Storage</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Clear Cache</div>
+                        </div>
+                        <button class="btn btn-danger" id="clear-cache"><i class="fa-solid fa-trash"></i> Clear</button>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Reset All Settings</div>
+                        </div>
+                        <button class="btn btn-danger" id="reset-settings"><i class="fa-solid fa-rotate-left"></i>
+                            Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../components/footer.js"></script>
+    <script>
+        // Use centralized Settings API
+        const config = window.SITE_CONFIG || { cloakPresets: [] };
+        let settings = Settings.getAll();
+        const saveSettings = (s) => {
+            Settings.update(s);
+            // Update local ref just in case
+            settings = Settings.getAll();
+        };
+
+        // Tabs
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+            };
+        });
+
+        // Render cloaks
+        function renderCloaks() {
+            const grid = document.getElementById('cloaks-grid');
+            const allCloaks = [...(config.cloakPresets || []), ...(settings.customCloaks || [])];
+            const activeCloak = settings.tabTitle || '';
+            grid.innerHTML = allCloaks.map(c => {
+                const isActive = c.title === activeCloak;
+                return '<button class="cloak-btn ' + (isActive ? 'active' : '') + '" data-title="' + c.title + '" data-icon="' + (c.icon || '') + '">' +
+                    (c.icon ? '<img src="' + c.icon + '" onerror="this.style.display=\'none\'">' : '<i class="fa-solid fa-globe"></i>') +
+                    '<span>' + c.name + '</span></button>';
+            }).join('');
+            grid.querySelectorAll('.cloak-btn').forEach(btn => {
+                btn.onclick = () => {
+                    settings.tabTitle = btn.dataset.title;
+                    settings.tabFavicon = btn.dataset.icon;
+                    saveSettings(settings);
+                    renderCloaks();
+                    // Instant update via postMessage is handled by Settings.update()
+                    document.title = settings.tabTitle;
+                };
+            });
+        }
+        renderCloaks();
+
+        // Add custom cloak
+        document.getElementById('add-cloak-btn').onclick = () => document.getElementById('add-cloak-form').classList.toggle('show');
+        document.getElementById('cancel-cloak').onclick = () => document.getElementById('add-cloak-form').classList.remove('show');
+        document.getElementById('save-cloak').onclick = () => {
+            const name = document.getElementById('new-cloak-name').value.trim();
+            const title = document.getElementById('new-cloak-title').value.trim();
+            const icon = document.getElementById('new-cloak-icon').value.trim();
+            if (name && title) {
+                settings.customCloaks = settings.customCloaks || [];
+                settings.customCloaks.push({ name, title, icon });
+                saveSettings(settings);
+                renderCloaks();
+                document.getElementById('add-cloak-form').classList.remove('show');
+                document.getElementById('new-cloak-name').value = '';
+                document.getElementById('new-cloak-title').value = '';
+                document.getElementById('new-cloak-icon').value = '';
+            }
+        };
+
+        // Load values
+        document.getElementById('cloak-mode').value = settings.cloakMode || 'about:blank';
+        document.getElementById('panic-url').value = settings.panicUrl || 'https://classroom.google.com';
+        document.getElementById('accent-color').value = settings.accentColor || '#ffffff';
+        document.getElementById('surface-color').value = settings.surfaceColor || '#0f0f0f';
+        document.getElementById('secondary-color').value = settings.secondaryColor || '#2e2e33';
+        document.getElementById('text-color').value = settings.textColor || '#e4e4e7';
+        document.getElementById('text-secondary-color').value = settings.textSecondaryColor || '#71717a';
+
+        document.getElementById('max-rating').value = settings.maxMovieRating || 'R';
+        document.getElementById('game-library').value = settings.gameLibrary || 'lib1';
+
+        // Theme Presets behavior
+        const presets = {
+            dark: { name: 'Dark (Default)', bg: { type: 'color', value: '#0a0a0a' }, surface: '#0f0f0f', surfaceHover: '#1a1a1a', surfaceActive: '#252525', secondary: '#2e2e33', border: '#1f1f1f', borderLight: '#2a2a2a', text: '#e4e4e7', textSec: '#71717a', textDim: '#52525b', accent: '#ffffff' },
+            forest: { name: 'Forest', bg: { type: 'color', value: '#0a1f0a' }, surface: '#1a2e1a', surfaceHover: '#2d4a2d', surfaceActive: '#3a5a3a', secondary: '#2d4a2d', border: '#1a2e1a', borderLight: '#2d4a2d', text: '#e8f5e8', textSec: '#a3c2a3', textDim: '#7a9b7a', accent: '#22c55e' },
+            sky: { name: 'Sky', bg: { type: 'color', value: '#0f1419' }, surface: '#1e293b', surfaceHover: '#334155', surfaceActive: '#475569', secondary: '#334155', border: '#1e293b', borderLight: '#334155', text: '#f1f5f9', textSec: '#94a3b8', textDim: '#64748b', accent: '#0ea5e9' },
+            blue: { name: 'Ocean', bg: { type: 'color', value: '#0f172a' }, surface: '#1e293b', surfaceHover: '#334155', surfaceActive: '#475569', secondary: '#334155', border: '#1e293b', borderLight: '#334155', text: '#f1f5f9', textSec: '#94a3b8', textDim: '#64748b', accent: '#3b82f6' },
+            purple: { name: 'Purple', bg: { type: 'color', value: '#1a0d2e' }, surface: '#2d1b4e', surfaceHover: '#4c2a85', surfaceActive: '#6b46c1', secondary: '#4c2a85', border: '#2d1b4e', borderLight: '#4c2a85', text: '#f3e8ff', textSec: '#c4b5fd', textDim: '#a78bfa', accent: '#a855f7' },
+            orange: { name: 'Sunset', bg: { type: 'color', value: '#1c1200' }, surface: '#292006', surfaceHover: '#443b0f', surfaceActive: '#5d4a1f', secondary: '#443b0f', border: '#292006', borderLight: '#443b0f', text: '#fef3c7', textSec: '#fcd34d', textDim: '#f59e0b', accent: '#f59e0b' },
+            red: { name: 'Crimson', bg: { type: 'color', value: '#1c0a0a' }, surface: '#2d1212', surfaceHover: '#4c1515', surfaceActive: '#7f1d1d', secondary: '#4c1515', border: '#2d1212', borderLight: '#4c1515', text: '#fef2f2', textSec: '#fca5a5', textDim: '#f87171', accent: '#ef4444' },
+            darker: { name: 'Darker', bg: { type: 'color', value: '#000000' }, surface: '#050505', surfaceHover: '#111111', surfaceActive: '#1a1a1a', secondary: '#111111', border: '#050505', borderLight: '#111111', text: '#ededed', textSec: '#a3a3a3', textDim: '#737373', accent: '#d4d4d4' },
+            phantom: { name: 'Phantom', bg: { type: 'color', value: '#0f0a14' }, surface: '#1a0f24', surfaceHover: '#2e1a40', surfaceActive: '#4c2a5c', secondary: '#2e1a40', border: '#1a0f24', borderLight: '#2e1a40', text: '#f3e8ff', textSec: '#d8b4fe', textDim: '#c084fc', accent: '#c084fc' }
+        };
+
+        const presetsContainer = document.querySelector('.presets-grid');
+        Object.entries(presets).forEach(([key, theme]) => {
+            const btn = document.createElement('button');
+            btn.className = 'cloak-btn'; /* Reuse styling */
+            btn.style.alignItems = 'flex-start';
+            btn.style.padding = '12px';
+            btn.innerHTML = `
+                <div style="width:100%; height:24px; background:${theme.bg.value}; border-radius:4px; margin-bottom:8px; border:1px solid var(--border)"></div>
+                <span style="font-weight:600">${theme.name}</span>
+            `;
+            btn.onclick = () => {
+                settings.background = theme.bg;
+                settings.surfaceColor = theme.surface;
+                settings.surfaceHoverColor = theme.surfaceHover;
+                settings.surfaceActiveColor = theme.surfaceActive;
+                settings.secondaryColor = theme.secondary;
+                settings.borderColor = theme.border;
+                settings.borderLightColor = theme.borderLight;
+                settings.textColor = theme.text;
+                settings.textSecondaryColor = theme.textSec;
+                settings.textDimColor = theme.textDim;
+                settings.accentColor = theme.accent;
+                saveSettings(settings); // This triggers Settings.apply() automatically
+
+                // Update inputs
+                document.getElementById('accent-color').value = theme.accent;
+                document.getElementById('surface-color').value = theme.surface;
+                document.getElementById('secondary-color').value = theme.secondary;
+                document.getElementById('text-color').value = theme.text;
+                document.getElementById('text-secondary-color').value = theme.textSec;
+                if (window.Notify) {
+                    Notify.success('Theme Applied', `Switched to ${theme.name} theme`);
+                } else {
+                    alert('Theme "' + theme.name + '" applied!');
+                }
+            };
+            presetsContainer.appendChild(btn);
+        });
+
+
+        const mods = settings.panicModifiers || ['ctrl', 'shift'];
+        const key = settings.panicKey || 'Escape';
+        document.getElementById('panic-key').textContent = mods.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' + ') + ' + ' + key;
+
+        if (settings.discordWidget !== false) document.getElementById('discord-toggle').classList.add('active');
+        else document.getElementById('discord-toggle').classList.remove('active');
+        if (settings.miniplayer !== false) document.getElementById('miniplayer-toggle').classList.add('active');
+        else document.getElementById('miniplayer-toggle').classList.remove('active');
+        if (settings.leaveConfirmation) document.getElementById('leave-confirm-toggle').classList.add('active');
+
+        // Rotating Cloaks
+        if (settings.rotateCloaks) {
+            document.getElementById('rotate-toggle').classList.add('active');
+            document.getElementById('rotate-interval-row').style.display = 'flex';
+        }
+        document.getElementById('rotate-interval').value = settings.rotateInterval || 5;
+
+        // Save handlers
+        document.getElementById('cloak-mode').onchange = e => { settings.cloakMode = e.target.value; saveSettings(settings); };
+
+        document.getElementById('panic-url').onchange = e => { settings.panicUrl = e.target.value; saveSettings(settings); };
+        document.getElementById('accent-color').onchange = e => { settings.accentColor = e.target.value; saveSettings(settings); };
+        document.getElementById('surface-color').onchange = e => { settings.surfaceColor = e.target.value; saveSettings(settings); };
+        document.getElementById('secondary-color').onchange = e => { settings.secondaryColor = e.target.value; saveSettings(settings); };
+        document.getElementById('text-color').onchange = e => { settings.textColor = e.target.value; saveSettings(settings); };
+        document.getElementById('text-secondary-color').onchange = e => { settings.textSecondaryColor = e.target.value; saveSettings(settings); };
+        document.getElementById('max-rating').onchange = e => { settings.maxMovieRating = e.target.value; saveSettings(settings); };
+        document.getElementById('game-library').onchange = e => { settings.gameLibrary = e.target.value; saveSettings(settings); };
+        document.getElementById('discord-toggle').onclick = function () { this.classList.toggle('active'); settings.discordWidget = this.classList.contains('active'); saveSettings(settings); };
+        document.getElementById('miniplayer-toggle').onclick = function () { this.classList.toggle('active'); settings.miniplayer = this.classList.contains('active'); saveSettings(settings); };
+        document.getElementById('leave-confirm-toggle').onclick = function () { this.classList.toggle('active'); settings.leaveConfirmation = this.classList.contains('active'); saveSettings(settings); };
+
+        document.getElementById('rotate-toggle').onclick = function () {
+            this.classList.toggle('active');
+            settings.rotateCloaks = this.classList.contains('active');
+            document.getElementById('rotate-interval-row').style.display = settings.rotateCloaks ? 'flex' : 'none';
+            saveSettings(settings);
+        };
+        document.getElementById('rotate-interval').onchange = e => {
+            let val = parseFloat(e.target.value);
+            if (val < 0.1) val = 0.1;
+            if (val > 30) val = 30;
+            settings.rotateInterval = val;
+            saveSettings(settings);
+        };
+
+        // Panic key
+        let capturing = false;
+        const panicKeyBtn = document.getElementById('panic-key');
+        panicKeyBtn.onclick = () => { capturing = true; panicKeyBtn.classList.add('capturing'); panicKeyBtn.textContent = 'Press keys...'; };
+        document.addEventListener('keydown', e => {
+            if (!capturing) return;
+            e.preventDefault();
+            const m = [];
+            if (e.ctrlKey) m.push('ctrl');
+            if (e.shiftKey) m.push('shift');
+            if (e.altKey) m.push('alt');
+            const k = e.key;
+            if (!['Control', 'Shift', 'Alt', 'Meta'].includes(k)) {
+                capturing = false;
+                panicKeyBtn.classList.remove('capturing');
+                panicKeyBtn.textContent = m.map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(' + ') + (m.length ? ' + ' : '') + k;
+                settings.panicKey = k;
+                settings.panicModifiers = m;
+                saveSettings(settings);
+            }
+        });
+
+        document.getElementById('clear-cache').onclick = async () => {
+            if (!confirm('Clear all cached data?')) return;
+            if ('caches' in window) { const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); }
+            if (window.Notify) Notify.success('Success', 'Cache cleared successfully!');
+            else alert('Cache cleared!');
+        };
+        document.getElementById('reset-settings').onclick = () => {
+            if (!confirm('Reset all settings?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        };
+    </script>
+</body>
+
+</html>

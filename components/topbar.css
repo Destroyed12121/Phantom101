@@ -1,0 +1,135 @@
+/* Topbar Styles - Clean & Dark */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg);
+    font-family: 'Inter', sans-serif;
+}
+
+#topbar-container {
+    position: fixed;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--surface);
+    border-radius: 9999px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    border: 1px solid var(--surface-hover);
+    height: 48px;
+    box-sizing: border-box;
+}
+
+#topbar-container::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    bottom: -7px;
+    left: -7px;
+    right: -7px;
+    z-index: -1;
+    border-radius: 9999px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    padding-right: 10px;
+    border-right: 1px solid var(--border);
+    height: 24px;
+}
+
+.logo-placeholder {
+    width: 28px;
+    height: 28px;
+    background-color: var(--surface-hover);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.logo-placeholder i,
+.logo-placeholder svg {
+    width: 16px;
+    height: 16px;
+}
+
+.nav-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-separator {
+    width: 1px;
+    height: 20px;
+    background-color: var(--border);
+    margin: 0 6px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 99px;
+    height: 32px;
+    box-sizing: border-box;
+    transition: color 0.15s, background-color 0.15s;
+    position: relative;
+}
+
+.nav-badge-beta {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--secondary);
+    padding: 2px 4px;
+    border-radius: 4px;
+    line-height: 1;
+    transform: translate(20%, -20%);
+    pointer-events: none;
+}
+
+.nav-btn:hover {
+    color: var(--text);
+    background-color: var(--surface-hover);
+}
+
+.nav-btn i,
+.nav-btn svg {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+}
+
+.nav-btn span {
+    max-width: 0;
+    opacity: 0;
+    margin-left: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-weight: 500;
+    font-size: 13px;
+    transition: max-width 0.23s ease, opacity 0.17s ease, margin-left 0.23s ease;
+}
+
+#topbar-container:hover .nav-btn span {
+    max-width: 70px;
+    opacity: 1;
+    margin-left: 8px;
+}
