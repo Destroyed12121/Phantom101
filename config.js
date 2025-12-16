@@ -25,8 +25,8 @@ window.SITE_CONFIG = {
     // Default settings
     defaults: {
         cloakMode: "about:blank",
-        tabTitle: "New tab",
-        tabFavicon: "https://www.google.com/chrome/static/images/chrome-logo-m100.svg",
+        tabTitle: "Phantom Unblocked",
+        tabFavicon: "favicon.svg",
         cloakRotation: false,
         cloakInterval: 5000,
         panicKey: "Escape",

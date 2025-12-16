@@ -310,55 +310,77 @@
             align-items: center;
             justify-content: center;
             background: var(--surface);
-            border: 2px dashed var(--border);
+            border: none;
             border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             min-height: 220px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            opacity: 0.9;
+            overflow: hidden;
         }
 
         .load-more-card:hover {
             background: var(--surface-hover);
-            border-color: var(--text);
+            transform: scale(1.05);
+            /* Slight growth */
+            opacity: 0.6;
+            /* Fade out effect */
+            z-index: 50;
         }
 
         .load-more-content {
             text-align: center;
             color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .load-more-card:hover .load-more-content {
+            color: var(--text);
         }
 
         .load-more-content i {
             display: block;
-            font-size: 2rem;
-            margin-bottom: 8px;
+            font-size: 3.5rem;
+            /* Much bigger icon */
+            margin-bottom: 12px;
         }
 
         /* Improved Card Typography & Rating */
         .media-card-overview {
-            font-size: 0.85rem;
-            line-height: 1.4;
+            font-size: 0.75rem;
+            line-height: 1.3;
             display: -webkit-box;
-            -webkit-line-clamp: 6;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 1);
             font-weight: 500;
+            margin-bottom: 4px;
         }
 
         .media-card-rating {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.85);
-            color: #fbbf24;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 700;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
             z-index: 20;
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .media-card:hover .media-card-rating {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.8);
         }
 
         /* Dropdown Styling */
