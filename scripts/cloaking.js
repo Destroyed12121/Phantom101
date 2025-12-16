@@ -152,6 +152,12 @@
     const init = () => {
         setupPanicKey();
 
+        // Check for first visit cloak
+        const fvKey = 'phantom_fv';
+        if (window.SITE_CONFIG?.firstVisitCloak && !localStorage.getItem(fvKey)) {
+            return;
+        }
+
         // Always apply cloak regardless of mode (visuals vs behavior)
         // const mode = window.Settings?.get('cloakMode') || 'none';
         // if (mode === 'none') { restore(); return; }

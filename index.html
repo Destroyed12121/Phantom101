@@ -137,14 +137,16 @@
             if (isCloaked) {
                 // Show white screen
                 overlay.style.display = 'block';
-                document.title = '';
+                // Remove title tag to show URL/filename
+                var titleTag = document.querySelector('title');
+                if (titleTag) titleTag.remove();
 
-                // Hide favicon
-                var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-                link.type = 'image/x-icon';
-                link.rel = 'shortcut icon';
-                var oldIcon = link.href;
-                link.href = 'data:image/x-icon;base64,';
+                // Remove favicon tags to show default icon
+                var iconLinks = document.querySelectorAll("link[rel*='icon']");
+                iconLinks.forEach(l => l.remove());
+                var link = document.createElement('link');
+                link.rel = 'icon';
+                link.href = 'data:image/x-icon;base64,'; // Empty
                 document.getElementsByTagName('head')[0].appendChild(link);
 
                 var onKey = function (e) {
@@ -153,11 +155,17 @@
                         overlay.style.display = 'none';
                         localStorage.setItem(STORAGE_KEY, '1');
                         document.removeEventListener('keydown', onKey);
-                        document.title = 'Phantom Unblocked';
+                        // Restore title
+                        var newTitle = document.createElement('title');
+                        newTitle.innerText = 'Phantom Unblocked';
+                        document.head.appendChild(newTitle);
 
                         // Restore favicon
-                        link.href = 'favicon.svg';
-                        link.type = 'image/svg+xml';
+                        var newLink = document.createElement('link');
+                        newLink.rel = 'icon';
+                        newLink.href = 'favicon.svg';
+                        newLink.type = 'image/svg+xml';
+                        document.head.appendChild(newLink);
 
                         // Load the app content NOW
                         iframe.src = 'index2.html';

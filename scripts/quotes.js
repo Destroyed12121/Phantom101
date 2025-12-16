@@ -6,5 +6,6 @@ window.QUOTES = [
     "FULL BOX",
     "FULL PIECE",
     "200!",
+    "press ctrl+shift+q+q for hacks",
     "TEACHERR!"
 ];
