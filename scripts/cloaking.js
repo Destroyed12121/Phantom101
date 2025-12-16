@@ -138,13 +138,30 @@
         panicShortcut = parseShortcut(key, modifiers);
     };
 
-    // Key listener
+    // Key listener for panic (hiding)
     document.addEventListener('keydown', (e) => {
         if (!panicShortcut) return;
 
         if (matchesShortcut(e, panicShortcut)) {
             e.preventDefault();
             panic();
+        }
+    });
+
+    // Key listener for spawning cloaked instance (c key)
+    document.addEventListener('keydown', (e) => {
+        // Ignore if user is typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+        if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            const mode = window.Settings?.get('cloakMode');
+            if (mode === 'about:blank') {
+                e.preventDefault();
+                window.Cloaking.openInBlank(window.location.href);
+            } else if (mode === 'blob') {
+                e.preventDefault();
+                window.Cloaking.openInBlob(window.location.href);
+            }
         }
     });
 
@@ -220,6 +237,11 @@
             const redirect = window.Settings?.get('redirectTarget');
             if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
             else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
+            else {
+                const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
+                const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                window.location.replace(randomTarget);
+            }
 
             return win;
         },
@@ -254,6 +276,11 @@
             const redirect = window.Settings?.get('redirectTarget');
             if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
             else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
+            else {
+                const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
+                const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                window.location.replace(randomTarget);
+            }
         },
 
         // Smart open - uses current cloak mode setting
