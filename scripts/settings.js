@@ -92,10 +92,40 @@
             this.apply();
         },
 
-        // Apply settings to DOM (non-theme settings)
+        // Apply settings to DOM (theme & other)
         apply() {
-            // Theme application is now handled by config.js
-            // This method kept for compatibility with settings page
+            const root = document.documentElement;
+            const s = _settings;
+            const d = window.SITE_CONFIG?.defaults || {};
+
+            // Apply variables (with fallbacks to defaults)
+            root.style.setProperty('--accent', s.accentColor || d.accentColor || '#ffffff');
+            root.style.setProperty('--surface', s.surfaceColor || d.surfaceColor || '#0f0f0f');
+            root.style.setProperty('--surface-hover', s.surfaceHoverColor || d.surfaceHoverColor || '#1a1a1a');
+            root.style.setProperty('--surface-active', s.surfaceActiveColor || d.surfaceActiveColor || '#252525');
+            root.style.setProperty('--secondary', s.secondaryColor || d.secondaryColor || '#2e2e33');
+            root.style.setProperty('--border', s.borderColor || d.borderColor || '#1f1f1f');
+            root.style.setProperty('--border-light', s.borderLightColor || d.borderLightColor || '#2a2a2a');
+            root.style.setProperty('--text', s.textColor || d.textColor || '#e4e4e7');
+            root.style.setProperty('--text-muted', s.textSecondaryColor || d.textSecondaryColor || '#71717a');
+            root.style.setProperty('--text-dim', s.textDimColor || d.textDimColor || '#52525b');
+
+            // Background
+            if (s.background) {
+                const bg = s.background;
+                if (bg.type === 'color') {
+                    root.style.setProperty('--bg', bg.value);
+                    root.style.setProperty('--bg-image', 'none');
+                } else if (bg.type === 'gradient') {
+                    root.style.setProperty('--bg', 'transparent');
+                    root.style.setProperty('--bg-image', bg.value);
+                } else if (bg.type === 'image' || bg.type === 'video') {
+                    root.style.setProperty('--bg-image', `url(${bg.value})`);
+                }
+            } else {
+                root.style.setProperty('--bg', d.background?.value || '#0a0a0a');
+                root.style.setProperty('--bg-image', 'none');
+            }
         },
 
         // Listen for changes
@@ -213,11 +243,6 @@
                 startRotation();
             }
         });
-    };
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
         // Leave Confirmation
         window.addEventListener('beforeunload', (e) => {
             if (_settings.leaveConfirmation) {
@@ -226,7 +251,11 @@
                 return '';
             }
         });
+    };
 
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
         init();
     }
 })();

@@ -107,6 +107,9 @@
             border: none;
         }
     </style>
+    <script src="config.js"></script>
+    <script src="scripts/settings.js"></script>
+    <script src="scripts/cloak-init.js"></script>
 </head>
 
 <body>
@@ -117,21 +120,6 @@
 
     <!-- First Visit Cloak Layer -->
     <div id="fv-cloak"></div>
-
-    <!-- Config must be loaded before cloak logic checks it -->
-    <script src="config.js"></script>
-
-    <!-- Init scripts -->
-    <script src="scripts/cloak-init.js"></script>
-
-    <div class="loading-screen" id="loading-screen">
-        <div class="loading-logo">
-            <i class="fa-solid fa-ghost"></i>
-            <span>Phantom</span>
-        </div>
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Loading...</div>
-    </div>
 
     <iframe id="main-frame"></iframe>
 
@@ -237,7 +225,7 @@
         window.showLoading = showLoading;
         window.hideLoading = hideLoading;
     </script>
-    <script src="scripts/settings.js"></script>
+
     <script src="scripts/cloaking.js"></script>
     <script>
         (function () {

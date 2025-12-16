@@ -12,6 +12,7 @@
     <script src="../config.js"></script>
     <script src="../scripts/notifications.js"></script>
     <script src="../scripts/cloaking.js"></script>
+    <script src="../scripts/settings.js"></script>
     <script src="../components/topbar.js"></script>
     <style>
         .settings-page {
@@ -363,13 +364,7 @@
                             <option value="blob">Blob URL</option>
                         </select>
                     </div>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <div class="setting-label">Auto About:Blank</div>
-                            <div class="setting-desc">Automatically set cloak mode to about:blank</div>
-                        </div>
-                        <div class="toggle" id="auto-about-blank-toggle"></div>
-                    </div>
+
 
 
                 </div>
@@ -487,6 +482,45 @@
                             <div class="setting-desc">Muted/Description text color</div>
                         </div>
                         <input type="color" id="text-secondary-color" value="#71717a"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Dim Text</div>
+                            <div class="setting-desc">Low priority text</div>
+                        </div>
+                        <input type="color" id="text-dim-color" value="#52525b"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+
+                    <h2 class="section-title" style="margin-top: 24px;"><i class="fa-solid fa-sliders"></i> Advanced
+                        Colors</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Surface Hover</div>
+                        </div>
+                        <input type="color" id="surface-hover-color" value="#1a1a1a"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Surface Active</div>
+                        </div>
+                        <input type="color" id="surface-active-color" value="#252525"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Border</div>
+                        </div>
+                        <input type="color" id="border-color" value="#1f1f1f"
+                            style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Border Light</div>
+                        </div>
+                        <input type="color" id="border-light-color" value="#2a2a2a"
                             style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
                     </div>
                 </div>
@@ -646,6 +680,11 @@
         document.getElementById('secondary-color').value = settings.secondaryColor || '#2e2e33';
         document.getElementById('text-color').value = settings.textColor || '#e4e4e7';
         document.getElementById('text-secondary-color').value = settings.textSecondaryColor || '#71717a';
+        document.getElementById('text-dim-color').value = settings.textDimColor || '#52525b';
+        document.getElementById('surface-hover-color').value = settings.surfaceHoverColor || '#1a1a1a';
+        document.getElementById('surface-active-color').value = settings.surfaceActiveColor || '#252525';
+        document.getElementById('border-color').value = settings.borderColor || '#1f1f1f';
+        document.getElementById('border-light-color').value = settings.borderLightColor || '#2a2a2a';
 
         document.getElementById('max-rating').value = settings.maxMovieRating || 'R';
         document.getElementById('game-library').value = settings.gameLibrary || 'lib1';
@@ -693,6 +732,11 @@
                 document.getElementById('secondary-color').value = theme.secondary;
                 document.getElementById('text-color').value = theme.text;
                 document.getElementById('text-secondary-color').value = theme.textSec;
+                document.getElementById('text-dim-color').value = theme.textDim;
+                document.getElementById('surface-hover-color').value = theme.surfaceHover;
+                document.getElementById('surface-active-color').value = theme.surfaceActive;
+                document.getElementById('border-color').value = theme.border;
+                document.getElementById('border-light-color').value = theme.borderLight;
                 if (window.Notify) {
                     Notify.success('Theme Applied', `Switched to ${theme.name} theme`);
                 } else {
@@ -712,7 +756,6 @@
         if (settings.miniplayer !== false) document.getElementById('miniplayer-toggle').classList.add('active');
         else document.getElementById('miniplayer-toggle').classList.remove('active');
         if (settings.leaveConfirmation) document.getElementById('leave-confirm-toggle').classList.add('active');
-        if (settings.autoAboutBlank) document.getElementById('auto-about-blank-toggle').classList.add('active');
         if (settings.showChangelogOnUpdate !== false) document.getElementById('changelog-toggle').classList.add('active');
         else document.getElementById('changelog-toggle').classList.remove('active');
 
@@ -732,12 +775,16 @@
         document.getElementById('secondary-color').onchange = e => { settings.secondaryColor = e.target.value; saveSettings(settings); };
         document.getElementById('text-color').onchange = e => { settings.textColor = e.target.value; saveSettings(settings); };
         document.getElementById('text-secondary-color').onchange = e => { settings.textSecondaryColor = e.target.value; saveSettings(settings); };
+        document.getElementById('text-dim-color').onchange = e => { settings.textDimColor = e.target.value; saveSettings(settings); };
+        document.getElementById('surface-hover-color').onchange = e => { settings.surfaceHoverColor = e.target.value; saveSettings(settings); };
+        document.getElementById('surface-active-color').onchange = e => { settings.surfaceActiveColor = e.target.value; saveSettings(settings); };
+        document.getElementById('border-color').onchange = e => { settings.borderColor = e.target.value; saveSettings(settings); };
+        document.getElementById('border-light-color').onchange = e => { settings.borderLightColor = e.target.value; saveSettings(settings); };
         document.getElementById('max-rating').onchange = e => { settings.maxMovieRating = e.target.value; saveSettings(settings); };
         document.getElementById('game-library').onchange = e => { settings.gameLibrary = e.target.value; saveSettings(settings); };
         document.getElementById('discord-toggle').onclick = function () { this.classList.toggle('active'); settings.discordWidget = this.classList.contains('active'); saveSettings(settings); };
         document.getElementById('miniplayer-toggle').onclick = function () { this.classList.toggle('active'); settings.miniplayer = this.classList.contains('active'); saveSettings(settings); };
         document.getElementById('leave-confirm-toggle').onclick = function () { this.classList.toggle('active'); settings.leaveConfirmation = this.classList.contains('active'); saveSettings(settings); };
-        document.getElementById('auto-about-blank-toggle').onclick = function () { this.classList.toggle('active'); settings.autoAboutBlank = this.classList.contains('active'); saveSettings(settings); };
         document.getElementById('changelog-toggle').onclick = function () { this.classList.toggle('active'); settings.showChangelogOnUpdate = this.classList.contains('active'); saveSettings(settings); };
 
         document.getElementById('rotate-toggle').onclick = function () {

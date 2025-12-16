@@ -122,4 +122,5 @@ Call `Settings.apply()` to load user's theme.
 
 ---
 
+*BUILD LIGHTWEIGHT AND MAINTAINABLE CODE.*
 *If a feature exists here, use it. Don't rebuild it.*

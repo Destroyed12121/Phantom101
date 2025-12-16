@@ -18,8 +18,12 @@
     // Get config and settings
     const config = window.SITE_CONFIG || { name: 'Phantom', version: '1.0.0', discord: { inviteUrl: '#' }, changelog: [], cloakPresets: [] };
     const STORAGE_KEY = 'void_settings';
-    let settings = {};
-    try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
+    let storedSettings = {};
+    try { storedSettings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
+
+    // Merge defaults with stored settings
+    // This ensures new defaults (like showChangelogOnUpdate: true) are respected if not overwritten by user
+    let settings = { ...(config.defaults || {}), ...storedSettings };
 
     // ==========================================
     // 1. FOOTER UI
@@ -151,13 +155,20 @@
     // ==========================================
     const currentVersion = config.version;
     const lastVersion = settings.lastVersion;
+
     if (settings.showChangelogOnUpdate && lastVersion && lastVersion !== currentVersion) {
         // Show changelog on update
-        setTimeout(() => openChangelog(), 1000); // Delay to ensure page is loaded
+        setTimeout(() => {
+            openChangelog();
+            // Update last version ONLY after showing
+            settings.lastVersion = currentVersion;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        }, 1000);
+    } else if (!lastVersion) {
+        // First run, just set version
+        settings.lastVersion = currentVersion;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     }
-    // Update last version
-    settings.lastVersion = currentVersion;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 
     // ==========================================
     // 2. GLOBAL PANIC KEY
@@ -169,11 +180,6 @@
             const pressedKey = e.key.toLowerCase();
 
             // Check modifiers
-            const ctrl = keys.includes('ctrl') ? e.ctrlKey : true;
-            const shift = keys.includes('shift') ? e.shiftKey : true;
-            const alt = keys.includes('alt') ? e.altKey : true;
-            // If modifier is in list, it MUST be pressed. If not in list, it DOESNT MATTER (actually normally strict means if not in list it shouldn, but simple logic: checks required ones)
-            // Let's match strict: keys.includes('ctrl') === e.ctrlKey
             const ctrlMatch = keys.includes('ctrl') === e.ctrlKey;
             const shiftMatch = keys.includes('shift') === e.shiftKey;
             const altMatch = keys.includes('alt') === e.altKey;
@@ -181,17 +187,13 @@
             if (ctrlMatch && shiftMatch && altMatch && pressedKey === triggerKey) {
                 e.preventDefault();
                 const url = settings.panicUrl || 'https://classroom.google.com';
-                // Try to redirect top window if possible
                 try { window.top.location.href = url; } catch { window.location.href = url; }
             }
         });
     }
 
     // ==========================================
-    // 3. ROTATING CLOAKS
-    // ==========================================
-    // ==========================================
-    // 3. ROTATING & STATIC CLOAKS
+    // 3. CLOAKING (STATIC & ROTATING)
     // ==========================================
     function applyCloak() {
         // Reload settings
@@ -200,11 +202,6 @@
         const presets = config.cloakPresets || [];
         const customs = settings.customCloaks || [];
         const allCloaks = [...presets, ...customs];
-
-        // Clear existing interval if any (wrapper variable needed if we fully restart logic, 
-        // but for now simpler: just handle static immediate update, rotation handles itself on reload or simple check)
-        // Actually, if we switch from static to rotating without reload, we need to handle interval.
-        // For "instant", let's focus on Static first as that's what user usually notices.
 
         if (!settings.rotateCloaks) {
             if (settings.tabTitle) document.title = settings.tabTitle;
@@ -218,38 +215,42 @@
                 link.href = settings.tabFavicon;
             }
         }
+
+        return allCloaks;
     }
 
-    // Apply immediately
-    applyCloak();
+    // Apply immediately and get cloaks
+    let allCloaks = applyCloak();
 
-    // Listen for changes from other tabs
+    // Listen for changes
     window.addEventListener('storage', (e) => {
-        if (e.key === STORAGE_KEY) applyCloak();
+        if (e.key === STORAGE_KEY) allCloaks = applyCloak();
     });
 
     // Expose for current tab settings page to call
-    window.updateCloakInstant = applyCloak;
+    window.updateCloakInstant = () => { allCloaks = applyCloak(); };
 
-    // Rotation Logic (Separated to avoid conflict with instant static updates, 
-    // real-time rotation toggle requires reload or more complex interval management)
-    if (settings.rotateCloaks) {
-        if (allCloaks.length > 0) {
-            let index = 0;
-            const interval = (settings.rotateInterval || 5) * 1000;
-            setInterval(() => {
-                // Check settings again inside interval in case they changed (pseudo-live)
-                // But efficient way is just reload.
-                const cloak = allCloaks[index];
-                document.title = cloak.title;
-                let link = document.querySelector("link[rel~='icon']");
-                if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-                link.href = cloak.icon || 'https://www.google.com/favicon.ico';
-                try { window.top.document.title = cloak.title; } catch { }
-                index = (index + 1) % allCloaks.length;
-            }, interval);
+    // Rotation Logic
+    let rotationIndex = 0;
+    setInterval(() => {
+        // Check setting live from local var (updated by storage listener)
+        if (settings.rotateCloaks && allCloaks.length > 0) {
+            const cloak = allCloaks[rotationIndex];
+            document.title = cloak.title || cloak.name;
+
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = cloak.icon || '';
+
+            try { window.top.document.title = document.title; } catch { }
+
+            rotationIndex = (rotationIndex + 1) % allCloaks.length;
         }
-    }
+    }, (settings.rotateInterval || 5) * 1000);
 
     // ==========================================
     // 4. LEAVE CONFIRMATION
