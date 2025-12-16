@@ -184,7 +184,7 @@ function createTab(makeActive = true) {
                 const skipBtn = document.getElementById('skip-btn');
                 if (skipBtn) skipBtn.style.display = 'inline-block';
             }
-        }, 5000); // 5 seconds before skip button appears
+        }, 1000); // 5 seconds before skip button appears
     });
 
     frame.frame.addEventListener('load', () => {
