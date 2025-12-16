@@ -206,9 +206,13 @@ const Games = {
 
         // Use a colorful gradient placeholder if no image
 
+        // Match index2.html style: Icon centered in a box with surface-hover background
+        const fallbackHTMLString = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="width:48px;height:48px;background:var(--surface-hover);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;"><i class="fa-solid fa-gamepad"></i></div></div>`;
+        const fallbackHTMLEscaped = `<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;\\'><div style=\\'width:48px;height:48px;background:var(--surface-hover);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;\\'><i class=\\'fa-solid fa-gamepad\\'></i></div></div>`;
+
         const imgHTML = game.img
-            ? `<img src="${game.img}" loading="lazy" alt="${game.name}" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;background:var(--surface-hover);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;\\'><i class=\\'fa-solid fa-gamepad\\'></i></div>'">`
-            : `<div style="width:100%;height:100%;background:var(--surface-hover);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;"><i class="fa-solid fa-gamepad"></i></div>`;
+            ? `<img src="${game.img}" loading="lazy" alt="${game.name}" onerror="this.parentElement.innerHTML='${fallbackHTMLEscaped}'">`
+            : fallbackHTMLString;
 
         div.innerHTML = `
             <div class="game-img-wrapper">

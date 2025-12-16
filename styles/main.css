@@ -1,8 +1,9 @@
 /* ============================================
-   VOID - UNIFIED DESIGN SYSTEM
+   PHANTOM - UNIFIED DESIGN SYSTEM
    ============================================
    A lightweight, cohesive design system with
    user-customizable themes and shared components.
+   USE THIS FOR STYLING RELATING TO THE WHOLE PROJECT, NOT SINGLE PAGES.
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -286,8 +287,8 @@ p {
 }
 
 /* ============================================
-   INPUTS
-   ============================================ */
+    INPUTS
+    ============================================ */
 .input {
     width: 100%;
     padding: var(--space-sm) var(--space-md);

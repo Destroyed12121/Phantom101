@@ -13,10 +13,14 @@
 
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/lucide@latest';
-    script.onload = initTopbar;
+    script.onload = () => {
+        if (window.lucide) lucide.createIcons();
+    };
     document.head.appendChild(script);
 
-    function initTopbar() {
+    initTopbar();
+
+    function createTopbar() {
         const topbarContainer = document.createElement('div');
         topbarContainer.id = 'topbar-container';
 
@@ -76,5 +80,13 @@
         document.body.prepend(topbarContainer);
 
         if (window.lucide) lucide.createIcons();
+    }
+
+    function initTopbar() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', createTopbar);
+        } else {
+            createTopbar();
+        }
     }
 })();
