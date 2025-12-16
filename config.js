@@ -9,7 +9,7 @@ window.SITE_CONFIG = {
 
     // Changelog
     changelog: [
-        "most things are fixxed now, i cannot fix movies",
+        "most things are fixxed now, MOVIES FIXXED",
         "added first visit white screen + aboutblank auto cloaking",
         "JOIN THE DISCORD"
     ],
@@ -17,8 +17,8 @@ window.SITE_CONFIG = {
     // Discord
     discord: {
         inviteUrl: "https://discord.gg/tHWx9NXp5p",
-        widgetServer: "1334648765679800442",
-        widgetChannel: "1334648766292164731"
+        widgetServer: "1447673724017971324",
+        widgetChannel: "1447673726228496617",
     },
     firstVisitCloak: true,
 

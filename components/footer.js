@@ -269,19 +269,49 @@
     // ==========================================
     // 5. DISCORD WIDGET (CRATE)
     // ==========================================
-    if (config.defaults.discordWidget && config.discord && config.discord.widgetServer && config.discord.widgetChannel) {
-        const crateScript = document.createElement('script');
-        crateScript.src = 'https://cdn.jsdelivr.net/npm/@widgetbot/crate@3';
-        crateScript.async = true;
-        crateScript.defer = true;
-        crateScript.onload = () => {
-            new Crate({
-                server: config.discord.widgetServer,
-                channel: config.discord.widgetChannel,
-                glyph: ['https://cdn.discordapp.com/embed/avatars/0.png', '100%'], // Default Discord logo or config
-                location: ['bottom', 'right']
-            });
-        };
-        document.body.appendChild(crateScript);
+    let crateInstance = null;
+
+    function initDiscord() {
+        if (settings.discordWidget && config.discord && config.discord.widgetServer && config.discord.widgetChannel) {
+            // Check if already loaded
+            if (document.querySelector('script[src*="@widgetbot/crate"]')) {
+                if (crateInstance) crateInstance.show();
+                return;
+            }
+
+            const crateScript = document.createElement('script');
+            crateScript.src = 'https://cdn.jsdelivr.net/npm/@widgetbot/crate@3';
+            crateScript.async = true;
+            crateScript.defer = true;
+            crateScript.onload = () => {
+                crateInstance = new Crate({
+                    server: config.discord.widgetServer,
+                    channel: config.discord.widgetChannel,
+                    glyph: ['https://cdn.discordapp.com/embed/avatars/0.png', '100%'],
+                    location: ['bottom', 'right']
+                });
+            };
+            document.body.appendChild(crateScript);
+        } else {
+            // Hide if disabled
+            if (crateInstance) crateInstance.hide();
+        }
     }
+
+    // Initialize
+    initDiscord();
+
+    // Listen for settings change to toggle dynamically
+    window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) {
+            try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
+            initDiscord();
+        }
+    });
+
+    // Listen for internal event
+    window.addEventListener('settings-changed', (e) => {
+        settings = e.detail;
+        initDiscord();
+    });
 })();
