@@ -44,6 +44,11 @@
                 doc.head.appendChild(link);
             }
             link.href = href;
+            link.onerror = () => {
+                if (href.includes('favicon.svg')) {
+                    link.href = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjUgMTMuNUMyMi41IDE4LjQ3NCAxOC40NzQgMjIuNSAxMy41IDIyLjVDOC41MjYgMjIuNS40NSAxOC40NzQuNDUgMTMuNUMuNDUgOC41MjYgOC41MjYuNDUgMTMuNS40NUMxOC40NzQuNDUgMjIuNS44NTI2IDIyLjUgMTMuNVoiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTEzLjUgMTYuNUMxNS4xMDQgMTYuNSAxNi41IDE1LjEwNCAxNi41IDEzLjVDMTYuNSAxMS44OTYgMTUuMTA0IDEwLjUgMTMuNSAxMC41QzExLjg5NiAxMC41IDEwLjUgMTEuODk2IDEwLjUgMTMuNUMxMC41IDE1LjEwNCAxMS44OTYgMTYuNSAxMy41IDE2LjVaIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=';
+                }
+            };
         };
 
         updateLink(document, url);
@@ -138,6 +143,204 @@
         panicShortcut = parseShortcut(key, modifiers);
     };
 
+    // First Visit Cloak
+    const initFirstVisitCloak = () => {
+        const STORAGE_KEY = 'phantom_fv';
+        const overlay = document.getElementById('fv-cloak');
+        const iframe = document.getElementById('main-frame');
+        const urlParams = new URLSearchParams(window.location.search);
+        const isFakeMode = urlParams.has('fake');
+        const cloakEnabled = window.SITE_CONFIG?.firstVisitCloak !== false;
+        const isCloaked = cloakEnabled && !localStorage.getItem(STORAGE_KEY) && !isFakeMode;
+
+        if (isFakeMode) {
+            // Show launch screen
+            const launchScreen = document.getElementById('launch-screen');
+            launchScreen.classList.remove('hidden');
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('launch-button').addEventListener('click', () => {
+                launchScreen.classList.add('hidden');
+                // Load settings
+                let settings = {};
+                try { settings = JSON.parse(localStorage.getItem('void_settings') || '{}'); } catch { }
+                const cloakMode = settings.cloakMode || 'none';
+                const realUrl = window.location.href.replace(/\?fake/, '');
+                const doRedirect = () => {
+                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
+                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                    window.location.replace(randomTarget);
+                };
+                let popupOpened = false;
+                if (cloakMode === 'blob') {
+                    fetch(realUrl).then(r => r.text()).then(html => {
+                        const blob = new Blob([html], { type: 'text/html' });
+                        const win = window.open(URL.createObjectURL(blob), '_blank');
+                        if (win) {
+                            popupOpened = true;
+                            doRedirect();
+                        } else {
+                            iframe.src = 'index2.html';
+                        }
+                    }).catch(() => {
+                        iframe.src = 'index2.html';
+                    });
+                } else if (cloakMode === 'about:blank') {
+                    const win = window.open('about:blank', '_blank');
+                    if (win) {
+                        popupOpened = true;
+                        win.document.open();
+                        win.document.write('<iframe src="' + realUrl + '" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>');
+                        win.document.close();
+                        // Copy disguised title/icon to new window
+                        if (settings.tabTitle) win.document.title = settings.tabTitle;
+                        if (settings.tabFavicon) {
+                            const link = win.document.createElement('link');
+                            link.rel = 'icon';
+                            link.href = settings.tabFavicon;
+                            win.document.head.appendChild(link);
+                        }
+                        doRedirect();
+                    } else {
+                        iframe.src = 'index2.html';
+                    }
+                } else {
+                    // No cloak, open directly
+                    const win = window.open(realUrl, '_blank');
+                    if (win) {
+                        popupOpened = true;
+                        doRedirect();
+                    } else {
+                        iframe.src = 'index2.html';
+                    }
+                }
+                // If popup was opened, check if it closed
+                if (popupOpened) {
+                    setTimeout(() => {
+                        if (win && win.closed) {
+                            // Show launch screen again or something
+                        }
+                    }, 1000);
+                }
+            });
+        } else if (isCloaked) {
+            // Show white screen
+            overlay.style.display = 'block';
+            // Remove title tag to show URL/filename
+            var titleTag = document.querySelector('title');
+            if (titleTag) titleTag.remove();
+            // Remove favicon tags to show default icon
+            var iconLinks = document.querySelectorAll("link[rel*='icon']");
+            iconLinks.forEach(l => l.remove());
+            var link = document.createElement('link');
+            link.rel = 'icon';
+            link.href = 'data:image/x-icon;base64,'; // Empty
+            document.getElementsByTagName('head')[0].appendChild(link);
+            var onKey = function (e) {
+                if (e.key.toLowerCase() === 'c') {
+                    // Uncloak
+                    overlay.style.display = 'none';
+                    localStorage.setItem(STORAGE_KEY, '1');
+                    document.removeEventListener('keydown', onKey);
+                    // Restore title
+                    var newTitle = document.createElement('title');
+                    newTitle.innerText = 'Phantom Unblocked';
+                    document.head.appendChild(newTitle);
+                    // Restore favicon
+                    var newLink = document.createElement('link');
+                    newLink.rel = 'icon';
+                    newLink.href = 'favicon.svg';
+                    newLink.type = 'image/svg+xml';
+                    document.head.appendChild(newLink);
+                    // Load the app content NOW
+                    iframe.src = 'index2.html';
+                    // Analytics
+                    window.dataLayer = window.dataLayer || [];
+                    window.dataLayer.push({ event: 'cloak_bypass_pressed' });
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'cloak_bypass', {
+                            'event_category': 'engagement',
+                            'event_label': 'first_visit_cloak'
+                        });
+                    }
+                }
+            };
+            document.addEventListener('keydown', onKey);
+        } else {
+            // No cloak needed, load immediately
+            iframe.src = 'index2.html';
+        }
+    };
+
+    // Startup cloak mode
+    const initStartupCloak = () => {
+        let settings = {};
+        try { settings = JSON.parse(localStorage.getItem('void_settings') || '{}'); } catch { }
+        const cloakMode = settings.cloakMode || 'none';
+        const urlParams = new URLSearchParams(window.location.search);
+        const isFakeMode = urlParams.has('fake');
+        if (isFakeMode) return; // Already handled
+        if (window.top === window.self && cloakMode !== 'none') {
+            const currentUrl = window.location.href;
+            const doRedirect = () => {
+                const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
+                const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                window.location.replace(randomTarget);
+            };
+            let popupOpened = false;
+            if (cloakMode === 'blob') {
+                fetch(currentUrl).then(r => r.text()).then(html => {
+                    const blob = new Blob([html], { type: 'text/html' });
+                    const win = window.open(URL.createObjectURL(blob), '_blank');
+                    if (win) {
+                        popupOpened = true;
+                        doRedirect();
+                    } else {
+                        showLaunchScreen();
+                    }
+                }).catch(() => {
+                    showLaunchScreen();
+                });
+            } else if (cloakMode === 'about:blank') {
+                const win = window.open('about:blank', '_blank');
+                if (win) {
+                    popupOpened = true;
+                    win.document.open();
+                    win.document.write('<iframe src="' + currentUrl + '" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>');
+                    win.document.close();
+                    // Copy disguised title/icon to new window
+                    if (settings.tabTitle) win.document.title = settings.tabTitle;
+                    if (settings.tabFavicon) {
+                        const link = win.document.createElement('link');
+                        link.rel = 'icon';
+                        link.href = settings.tabFavicon;
+                        win.document.head.appendChild(link);
+                    }
+                    doRedirect();
+                } else {
+                    showLaunchScreen();
+                }
+            }
+            // If popup was opened, check if it closed
+            if (popupOpened) {
+                setTimeout(() => {
+                    if (win && win.closed) {
+                        showLaunchScreen();
+                    }
+                }, 1000);
+            }
+        }
+    };
+
+    const showLaunchScreen = () => {
+        const launchScreen = document.getElementById('launch-screen');
+        launchScreen.classList.remove('hidden');
+        document.getElementById('launch-button').addEventListener('click', () => {
+            launchScreen.classList.add('hidden');
+            // Load the app content
+            document.getElementById('main-frame').src = 'index2.html';
+        });
+    };
+
     // Key listener for panic (hiding)
     document.addEventListener('keydown', (e) => {
         if (!panicShortcut) return;
@@ -167,17 +370,15 @@
 
     // Initialize cloaking system
     const init = () => {
+        initFirstVisitCloak();
+        initStartupCloak();
         setupPanicKey();
 
         // Check for first visit cloak
         const fvKey = 'phantom_fv';
         if (window.SITE_CONFIG?.firstVisitCloak && !localStorage.getItem(fvKey)) {
-            return;
+            return; // Already handled
         }
-
-        // Always apply cloak regardless of mode (visuals vs behavior)
-        // const mode = window.Settings?.get('cloakMode') || 'none';
-        // if (mode === 'none') { restore(); return; }
 
         // Apply initial cloak
         const title = window.Settings?.get('tabTitle') || 'Google';

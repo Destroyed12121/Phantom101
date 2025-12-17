@@ -172,62 +172,9 @@
             text-overflow: ellipsis;
         }
 
-        /* Footer - Centered */
-        .site-footer {
-            padding: 20px 24px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
 
-        .footer-links {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
 
-        .footer-link {
-            font-size: 0.8125rem;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
 
-        .footer-link:hover {
-            color: var(--text);
-        }
-
-        .footer-version {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-        }
-
-        /* Offline Banner */
-        .offline-banner {
-            display: none;
-            position: fixed;
-            top: 12px;
-            right: 12px;
-            padding: 8px 14px;
-            background: var(--surface);
-            border: 1px solid var(--warning);
-            border-radius: 8px;
-            font-size: 0.8125rem;
-            color: var(--warning);
-            z-index: 9999;
-        }
-
-        .offline-banner.show {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
 
         @media (max-width: 640px) {
             .site-title {
@@ -246,6 +193,7 @@
     <script src="scripts/settings.js"></script>
     <script src="scripts/quotes.js"></script>
     <script src="scripts/notifications.js"></script>
+    <script src="scripts/featured.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
     <script type="module">
         import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
@@ -291,34 +239,25 @@
 
     <script>
         // Featured games
-        const featuredGames = [
-            { name: 'Fortnite', icon: 'fa-solid fa-crosshairs', url: 'staticsjv2/embed.html#https://nowgg.fun/' },
-            { name: 'Roblox', icon: 'fa-solid fa-cubes', url: 'staticsjv2/embed.html#https://nowgg.fun/' },
-            { name: '1v1.LOL', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/1v1-lol.png', url: 'pages/games.html?game=1v1lol' },
-            { name: 'Retro Bowl', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/retro-bowl.png', url: 'pages/games.html?game=retrobowl' },
-            { name: 'Slope', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/slope.png', url: 'pages/games.html?game=slope' },
-            { name: 'Subway Surfers', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/subway-surfers.png', url: 'pages/games.html?game=subwaysurfers' },
-            { name: 'Run 3', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/run-3.png', url: 'pages/games.html?game=run3' },
-            { name: 'Basket Random', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/basket-random.png', url: 'pages/games.html?game=basketrandom' },
-            { name: 'Drift Hunters', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/drift-hunters.png', url: 'pages/games.html?game=drifthunters' },
-            { name: 'Moto X3M', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/moto-x3m.png', url: 'pages/games.html?game=motox3m' },
-            { name: 'Code Runner', icon: 'fa-solid fa-code', url: 'pages/code.html' },
-            { name: 'All Games', icon: 'fa-solid fa-layer-group', url: 'pages/games.html' }
-        ];
+        (async () => {
+            // Load featured games
+            await window.FeaturedGames.load();
+            const featuredGames = window.FeaturedGames.games;
 
-        const grid = document.getElementById('featured-grid');
-        featuredGames.forEach(g => {
-            const card = document.createElement('a');
-            card.href = g.url;
-            card.className = 'featured-card';
-            card.innerHTML = `
-                <div class="featured-card-icon" style="background: ${g.img ? 'transparent' : 'var(--surface-hover)'}; color: var(--text-muted);">
-                    ${g.img ? `<img src="${g.img}" onerror="this.parentElement.style.background='var(--surface-hover)'; this.parentElement.innerHTML='<i class=\\'fa-solid fa-gamepad\\'></i>'">` : `<i class="${g.icon}"></i>`}
-                </div>
-                <div class="featured-card-title">${g.name}</div>
-            `;
-            grid.appendChild(card);
-        });
+            const grid = document.getElementById('featured-grid');
+            featuredGames.forEach(g => {
+                const card = document.createElement('a');
+                card.href = g.url;
+                card.className = 'featured-card';
+                card.innerHTML = `
+                    <div class="featured-card-icon" style="background: ${g.img ? 'transparent' : 'var(--surface-hover)'}; color: var(--text-muted);">
+                        ${g.img ? `<img src="${g.img}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-gamepad\\'></i>'">` : `<i class="${g.icon}"></i>`}
+                    </div>
+                    <div class="featured-card-title">${g.name}</div>
+                `;
+                grid.appendChild(card);
+            });
+        })();
 
         // Quote
         const subtitle = document.getElementById('subtitle');
@@ -346,23 +285,7 @@
         }
 
 
-        // Check setting
-        try {
-            const settings = JSON.parse(localStorage.getItem('void_settings') || '{}');
-            if (settings.discordWidget === false) {
-                document.getElementById('discord-widget').style.display = 'none';
-            }
-        } catch (e) { }
 
-
-        // Offline
-        const offlineBanner = document.getElementById('offline-banner');
-        function updateOffline() {
-            offlineBanner.classList.toggle('show', !navigator.onLine);
-        }
-        window.addEventListener('online', updateOffline);
-        window.addEventListener('offline', updateOffline);
-        updateOffline();
     </script>
     <script src="components/footer.js"></script>
 

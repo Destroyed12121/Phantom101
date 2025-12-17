@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -355,21 +355,21 @@
 
             try {
                 const settings = tryGetSettings();
-                let openMethod = 'about:blank';
-                if (settings.cloak === 'blob' || settings.openIn === 'blob') {
-                    openMethod = 'blob';
-                }
+                let openMethod = settings.openIn || 'about:blank';
 
                 let finalUrl = currentUrl;
 
-                if (type === 'game' || openMethod === 'blob') {
-                    const win = window.open('about:blank', '_blank');
-                    if (!win) throw new Error('Popup blocked');
+                const win = window.open('about:blank', '_blank');
+                if (!win) throw new Error('Popup blocked');
 
+                let htmlContent = '';
+                if (type === 'game') {
+                    const res = await fetch(finalUrl);
+                    if (!res.ok) throw new Error('Failed to fetch game');
+                    htmlContent = await res.text();
+                } else {
                     const iframeStyle = "position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;";
-
-                    // Safe HTML construction to avoid parser errors with template literals
-                    const htmlParts = [
+                    htmlContent = [
                         '<!DOCTYPE html>',
                         '<html>',
                         '<head><title>' + (title || 'Phantom') + '</title><style>body{margin:0;background:#000;}</style></head>',
@@ -377,21 +377,16 @@
                         '<iframe src="' + finalUrl + '" style="' + iframeStyle + '" allowfullscreen></iframe>',
                         '</body>',
                         '</html>'
-                    ];
-                    const htmlContent = htmlParts.join('\n');
-
-                    if (openMethod === 'blob') {
-                        const blob = new Blob([htmlContent], { type: 'text/html' });
-                        win.location.href = URL.createObjectURL(blob);
-                    } else {
-                        win.document.write(htmlContent);
-                        win.document.close();
-                    }
-
-                } else {
-                    window.open(finalUrl, '_blank');
+                    ].join('\n');
                 }
 
+                if (openMethod === 'blob') {
+                    const blob = new Blob([htmlContent], { type: 'text/html' });
+                    win.location.href = URL.createObjectURL(blob);
+                } else {
+                    win.document.write(htmlContent);
+                    win.document.close();
+                }
             } catch (e) {
                 console.error(e);
                 if (window.Notify) window.Notify.error('Error', 'Failed to open in new tab');
@@ -439,8 +434,11 @@
 
         function tryGetSettings() {
             try {
-                return JSON.parse(localStorage.getItem('void_settings')) || {};
-            } catch { return {}; }
+                return {
+                    cloak: window.Settings ? window.Settings.get('cloak') : 'default',
+                    openIn: window.Settings ? window.Settings.get('openIn') : 'about:blank'
+                };
+            } catch { return { cloak: 'default', openIn: 'about:blank' }; }
         }
 
         init();

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <script src="../config.js"></script>
-    <script src="../scripts/notifications.js"></script>
+    <script src="../Utils/notifications.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -942,9 +942,9 @@
         <main class="main">
             <!-- Source Tabs - Controls both SEARCH and PLAYBACK -->
             <div class="source-tabs">
-                <button class="source-tab" data-source="itunes">iTunes (Preview only)</button>
+                <button class="source-tab active" data-source="itunes">iTunes (Preview only)</button>
                 <button class="source-tab" data-source="soundcloud">SoundCloud</button>
-                <button class="source-tab active" data-source="youtube">YouTube</button>
+                <button class="source-tab" data-source="youtube">YouTube</button>
             </div>
 
             <div class="search-container">
@@ -1137,7 +1137,15 @@
                 let results = [];
                 // Independent search logic - Proxy Mode does NOT affect this
                 if (state.playbackSource === 'soundcloud') {
-                    results = await searchSoundCloud(query, searchController.signal);
+                    // Try SC, fallback to iTunes if fails/empty
+                    try {
+                        results = await searchSoundCloud(query, searchController.signal);
+                    } catch (e) {
+                        console.warn('SC failed, falling back to iTunes');
+                    }
+                    if (!results.length) {
+                        results = await searchiTunes(query, searchController.signal);
+                    }
                 } else if (state.playbackSource === 'youtube') {
                     results = await searchYouTube(query, searchController.signal);
                 } else {
