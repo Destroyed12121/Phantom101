@@ -241,6 +241,46 @@
                 startRotation();
             }
         });
+
+        // Theme Rotation Logic
+        const checkThemeRotation = () => {
+            if (!_settings.themeRotation) return;
+
+            const now = Date.now();
+            const lastRotation = _settings.lastThemeRotation || 0;
+            const TWO_DAYS = 172800000; // 2 * 24 * 60 * 60 * 1000
+
+            if (now - lastRotation >= TWO_DAYS) {
+                const presets = window.SITE_CONFIG?.themePresets || {};
+                const keys = Object.keys(presets);
+                if (keys.length > 1) {
+                    let randomKey;
+                    let attempts = 0;
+                    do {
+                        randomKey = keys[Math.floor(Math.random() * keys.length)];
+                        attempts++;
+                    } while (presets[randomKey].surface === _settings.surfaceColor && attempts < 5);
+
+                    const theme = presets[randomKey];
+                    Settings.update({
+                        background: theme.bg,
+                        surfaceColor: theme.surface,
+                        surfaceHoverColor: theme.surfaceHover,
+                        surfaceActiveColor: theme.surfaceActive,
+                        secondaryColor: theme.secondary,
+                        borderColor: theme.border,
+                        borderLightColor: theme.borderLight,
+                        textColor: theme.text,
+                        textSecondaryColor: theme.textSec,
+                        textDimColor: theme.textDim,
+                        accentColor: theme.accent,
+                        lastThemeRotation: now
+                    });
+                }
+            }
+        };
+        checkThemeRotation();
+
         // Leave Confirmation
         window.addEventListener('beforeunload', (e) => {
             if (_settings.leaveConfirmation) {

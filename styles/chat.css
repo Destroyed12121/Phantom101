@@ -29,10 +29,10 @@ body {
    ============================================ */
 .sidebar {
     width: var(--chat-sidebar-width);
-    background: rgba(15, 15, 15, 0.6);
+    background: var(--surface);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     transition: transform var(--transition-normal);
@@ -54,7 +54,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border);
 }
 
 .brand-section {
@@ -85,7 +85,7 @@ body {
     margin: var(--space-md);
     padding: var(--space-sm);
     background: var(--accent);
-    color: black;
+    color: var(--bg);
     border: none;
     border-radius: var(--radius-md);
     font-weight: 600;
@@ -128,7 +128,7 @@ body {
 }
 
 .conversation-item.active {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-active);
     color: var(--text);
     border-left: 2px solid var(--accent);
 }
@@ -159,7 +159,7 @@ body {
 
 .sidebar-footer {
     padding: var(--space-md);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border);
 }
 
 .settings-btn {
@@ -193,8 +193,11 @@ body {
     height: 100%;
     transition: margin-left var(--transition-normal);
     position: relative;
-    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.03), transparent 40%),
-        radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.02), transparent 40%);
+    background: var(--bg);
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
 .sidebar-collapsed .main-content {
@@ -208,8 +211,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    background: rgba(10, 10, 10, 0.7);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    opacity: 0.95;
     backdrop-filter: blur(10px);
     z-index: 10;
 }
@@ -297,7 +301,7 @@ body {
 
 .user-message .message-avatar {
     background: var(--accent);
-    color: black;
+    color: var(--bg);
 }
 
 .ai-message .message-avatar {
@@ -332,7 +336,7 @@ body {
 }
 
 .message-text code {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-active);
     padding: 0.2em 0.4em;
     border-radius: 4px;
     font-family: var(--font-mono);
@@ -340,7 +344,7 @@ body {
 }
 
 .message-text pre {
-    background: #111;
+    background: var(--surface-active);
     padding: 1em;
     border-radius: var(--radius-md);
     overflow-x: auto;
@@ -372,7 +376,7 @@ body {
 .input-container {
     max-width: 900px;
     margin: 0 auto;
-    background: rgba(20, 20, 20, 0.8);
+    background: var(--surface);
     backdrop-filter: blur(10px);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
@@ -429,7 +433,7 @@ body {
 
 .action-btn.active {
     color: var(--accent);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-active);
 }
 
 .send-btn {
@@ -543,7 +547,7 @@ body {
 
 /* Mode Pills */
 .mode-pill {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-active);
     border: 1px solid var(--border);
     color: var(--text-muted);
     padding: 6px 14px;
@@ -563,7 +567,7 @@ body {
 
 .mode-pill.active {
     background: var(--accent);
-    color: black;
+    color: var(--bg);
     border-color: var(--accent);
     font-weight: 500;
 }
@@ -596,7 +600,7 @@ body {
 }
 
 .msg-action-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-active);
     color: var(--text);
 }
 

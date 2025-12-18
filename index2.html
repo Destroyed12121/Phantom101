@@ -8,6 +8,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/search.css">
     <link rel="stylesheet" href="components/topbar.css">
     <style>
         html,
@@ -194,6 +195,7 @@
     <script src="scripts/quotes.js"></script>
     <script src="scripts/notifications.js"></script>
     <script src="scripts/featured.js"></script>
+    <script src="scripts/search.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
     <script type="module">
         import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
@@ -218,7 +220,7 @@
             <div class="search-container">
                 <form class="search-bar" onsubmit="handleSearch(event)">
                     <i class="fa-solid fa-search"></i>
-                    <input type="text" id="search-input" placeholder="Search the web..." autocomplete="off">
+                    <input type="text" id="search-input" placeholder="Search the web and games..." autocomplete="off">
                 </form>
             </div>
 
@@ -263,24 +265,40 @@
             subtitle.textContent = window.QUOTES[Math.floor(Math.random() * window.QUOTES.length)];
         }
 
-        // Search → staticsjv2/index.html
+
+        // Search → use autocomplete or fallback to web search
         function handleSearch(e) {
             e.preventDefault();
             const query = document.getElementById('search-input').value.trim();
             if (!query) return;
 
-            // Open staticsjv2 browser with search
-            let url;
-            if (query.includes('.') && !query.includes(' ')) {
-                url = query.startsWith('http') ? query : 'https://' + query;
-            } else {
-                url = 'https://search.brave.com/search?q=' + encodeURIComponent(query);
+            // If autocomplete has a selected item, it handles navigation
+            // Otherwise fallback to web search
+            if (window.PhantomSearch && window.PhantomSearch.isOpen && window.PhantomSearch.suggestions.length > 0) {
+                // Let the autocomplete handle it (Enter key is already handled)
+                return;
             }
 
-            // Navigate to staticsjv2/index.html
-            // The tab will open with the searched URL
-            window.location.href = 'staticsjv2/index.html#' + encodeURIComponent(url);
+            // Fallback: direct web search
+            window.PhantomSearch?.doWebSearch(query) || (() => {
+                let url;
+                if (query.includes('.') && !query.includes(' ')) {
+                    url = query.startsWith('http') ? query : 'https://' + query;
+                } else {
+                    url = 'https://search.brave.com/search?q=' + encodeURIComponent(query);
+                }
+                window.location.href = 'staticsjv2/index.html#' + encodeURIComponent(url);
+            })();
         }
+
+        // Theme notification
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.Notify) {
+                    window.Notify.info("Appearance", "Don't like your theme? Change it in settings!", 6000);
+                }
+            }, 1500);
+        });
 
 
 

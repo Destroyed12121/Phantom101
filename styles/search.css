@@ -1,0 +1,108 @@
+/**
+ * PhantomSearch - Autocomplete Dropdown Styles
+ * Uses existing CSS variables from main.css
+ */
+
+.search-autocomplete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.5));
+    overflow: hidden;
+    z-index: var(--z-dropdown, 100);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+
+.search-autocomplete.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.search-autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.search-autocomplete-item:hover,
+.search-autocomplete-item.selected {
+    background: var(--surface-hover);
+}
+
+.search-autocomplete-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.search-autocomplete-item.selected .search-autocomplete-icon,
+.search-autocomplete-item:hover .search-autocomplete-icon {
+    color: var(--accent, #fff);
+}
+
+.search-autocomplete-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-autocomplete-type {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    padding: 2px 6px;
+    background: var(--surface-active, rgba(255, 255, 255, 0.05));
+    border-radius: 4px;
+}
+
+/* Separator before web search */
+.search-autocomplete-item[data-index]:last-child {
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    padding-top: 12px;
+}
+
+/* Keyboard hint */
+.search-autocomplete::after {
+    content: '';
+    display: block;
+    height: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .search-autocomplete-item {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+    .search-autocomplete-text {
+        font-size: 13px;
+    }
+
+    .search-autocomplete-type {
+        font-size: 10px;
+    }
+}

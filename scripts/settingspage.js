@@ -136,6 +136,8 @@ else document.getElementById('miniplayer-toggle').classList.remove('active');
 if (settings.leaveConfirmation) document.getElementById('leave-confirm-toggle').classList.add('active');
 if (settings.showChangelogOnUpdate !== false) document.getElementById('changelog-toggle').classList.add('active');
 else document.getElementById('changelog-toggle').classList.remove('active');
+if (settings.themeRotation) document.getElementById('theme-rotation-toggle').classList.add('active');
+else document.getElementById('theme-rotation-toggle').classList.remove('active');
 
 // Rotating Cloaks
 if (settings.rotateCloaks) {
@@ -164,6 +166,7 @@ document.getElementById('discord-toggle').onclick = function () { this.classList
 document.getElementById('miniplayer-toggle').onclick = function () { this.classList.toggle('active'); settings.miniplayer = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('leave-confirm-toggle').onclick = function () { this.classList.toggle('active'); settings.leaveConfirmation = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('changelog-toggle').onclick = function () { this.classList.toggle('active'); settings.showChangelogOnUpdate = this.classList.contains('active'); saveSettings(settings); };
+document.getElementById('theme-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.themeRotation = this.classList.contains('active'); saveSettings(settings); };
 
 document.getElementById('rotate-toggle').onclick = function () {
     this.classList.toggle('active');

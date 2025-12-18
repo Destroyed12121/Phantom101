@@ -38,6 +38,8 @@ window.SITE_CONFIG = {
         miniplayer: true,
         leaveConfirmation: false,
         showChangelogOnUpdate: true,
+        themeRotation: true,
+        lastThemeRotation: 0,
     },
 
     // Theme Presets
