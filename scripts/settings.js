@@ -183,9 +183,7 @@
             if (!_settings.rotateCloaks) return;
 
             const cloaks = [...(window.SITE_CONFIG?.cloakPresets || []), ...(_settings.customCloaks || [])];
-            // Also include default presets if config is empty? 
-            // For now, assume config has presets or we rely on custom ones.
-            // If no cloaks, we can't rotate.
+
             if (!cloaks.length) return;
 
             let index = 0;

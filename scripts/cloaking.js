@@ -266,8 +266,10 @@
             };
             document.addEventListener('keydown', onKey);
         } else {
-            // No cloak needed, load immediately
-            iframe.src = 'index2.html';
+            // No cloak needed, load immediately if not already loaded
+            if (iframe && !iframe.src) {
+                iframe.src = 'index2.html';
+            }
         }
     };
 
@@ -368,10 +370,16 @@
         }
     });
 
+    let initialized = false;
+
     // Initialize cloaking system
     const init = () => {
-        initFirstVisitCloak();
-        initStartupCloak();
+        if (!initialized) {
+            initFirstVisitCloak();
+            initStartupCloak();
+            initialized = true;
+        }
+
         setupPanicKey();
 
         // Check for first visit cloak

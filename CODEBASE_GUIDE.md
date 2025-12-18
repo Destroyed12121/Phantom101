@@ -27,7 +27,7 @@
 | `games.js` | Loads game library, handles favorites, search | `window.Games` | ❌ Don't reload games manually |
 | `movies.js` | TMDB movie/TV API, search, genre filtering | Direct functions | ❌ Don't call TMDB separately |
 
-**Settings storage key:** `phantom_settings` (in localStorage)
+**Settings storage key:** `void_settings` (in localStorage)
 
 ---
 
@@ -114,13 +114,13 @@ Call `Settings.apply()` to load user's theme.
 
 ## Key Rules
 
-1. **Use `phantom_settings`** for localStorage - don't create new storage keys
+1. **Use `void_settings`** for localStorage - don't create new storage keys
 2. **Use CSS variables** (like `var(--surface)`) - don't hardcode colors
 3. **Include footer.js and topbar.js** - don't write nav/footer HTML
 4. **Use Notify for feedback** - don't create alert popups
 5. **Use config.js** - site info is already there
-
+6. **For styling put all styling in /styles** and remember to use main.css but do not put page specific styling in main.css, create more css files for that.
 ---
 
 *BUILD LIGHTWEIGHT AND MAINTAINABLE CODE.*
-*If a feature exists here, use it. Don't rebuild it.*
+*If a feature exists, use it. Don't rebuild it.*

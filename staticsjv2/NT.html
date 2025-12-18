@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <title>New Tab</title>
+  <link rel="stylesheet" href="../styles/main.css">
   <script src="../config.js"></script>
+  <script src="../scripts/settings.js"></script>
   <script src="../scripts/quotes.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -16,8 +18,8 @@
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg, #0a0a0a);
-      color: var(--text, #e4e4e7);
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -31,12 +33,12 @@
       font-weight: 600;
       letter-spacing: -2px;
       margin-bottom: 8px;
-      color: var(--accent, #fff);
+      color: var(--accent);
     }
 
     .date {
       font-size: 14px;
-      color: var(--text-muted, #71717a);
+      color: var(--text-muted);
       margin-bottom: 32px;
     }
 
@@ -44,8 +46,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: var(--surface, #0f0f0f);
-      border: 1px solid var(--border, #1f1f1f);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 12px 16px;
       width: 100%;
@@ -54,7 +56,7 @@
     }
 
     .search-box i {
-      color: var(--text-muted, #71717a);
+      color: var(--text-muted);
       font-size: 14px;
     }
 
@@ -63,20 +65,20 @@
       background: transparent;
       border: none;
       outline: none;
-      color: var(--text, #fff);
+      color: var(--text);
       font-size: 14px;
       font-family: inherit;
     }
 
     .search-box input::placeholder {
-      color: var(--text-dim, #52525b);
+      color: var(--text-dim);
     }
 
     .search-box select {
-      background: var(--surface-hover, #1a1a1a);
+      background: var(--surface-hover);
       border: none;
       border-radius: 6px;
-      color: var(--text-muted, #a1a1aa);
+      color: var(--text-muted);
       padding: 6px 10px;
       font-size: 12px;
       cursor: pointer;
@@ -103,8 +105,8 @@
     .shortcut-icon {
       width: 52px;
       height: 52px;
-      background: var(--surface, #0f0f0f);
-      border: 1px solid var(--border, #1f1f1f);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -113,7 +115,7 @@
     }
 
     .shortcut:hover .shortcut-icon {
-      background: var(--surface-hover, #1a1a1a);
+      background: var(--surface-hover);
       transform: translateY(-2px);
     }
 
@@ -125,12 +127,12 @@
 
     .shortcut-icon i {
       font-size: 20px;
-      color: var(--text-muted, #71717a);
+      color: var(--text-muted);
     }
 
     .shortcut-label {
       font-size: 11px;
-      color: var(--text-muted, #71717a);
+      color: var(--text-muted);
       text-align: center;
       max-width: 60px;
       overflow: hidden;
@@ -139,14 +141,14 @@
     }
 
     .shortcut:hover .shortcut-label {
-      color: var(--text, #a1a1aa);
+      color: var(--text);
     }
 
     .quote {
       position: fixed;
       bottom: 24px;
       font-size: 13px;
-      color: var(--text-dim, #3f3f46);
+      color: var(--text-dim);
       max-width: 400px;
       text-align: center;
     }
@@ -154,7 +156,7 @@
     .loader {
       position: fixed;
       inset: 0;
-      background: rgba(10, 10, 10, 0.9);
+      background: rgba(0, 0, 0, 0.9);
       display: none;
       align-items: center;
       justify-content: center;
@@ -168,8 +170,8 @@
     .spinner {
       width: 32px;
       height: 32px;
-      border: 2px solid var(--border, #1f1f1f);
-      border-top-color: var(--accent, #fff);
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }

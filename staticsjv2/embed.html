@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Embed</title>
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <link rel="stylesheet" href="../styles/main.css">
     <style>
         * {
             margin: 0;
@@ -16,7 +19,7 @@
         body {
             height: 100%;
             overflow: hidden;
-            background: #0a0a0a;
+            background: var(--bg);
             font-family: 'Inter', system-ui, sans-serif;
         }
 
@@ -43,7 +46,7 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: #e4e4e7;
+            color: var(--text);
             text-align: center;
             position: relative;
             z-index: 10;
@@ -57,19 +60,19 @@
         .message-content h1 {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #fff;
+            color: var(--text);
             margin-bottom: 8px;
         }
 
         .message-content p {
-            color: #71717a;
+            color: var(--text-muted);
             font-size: 13px;
             word-break: break-all;
         }
 
         .spinner {
-            border: 2px solid #1f1f1f;
-            border-top-color: #fff;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -87,8 +90,8 @@
             margin-top: 20px;
             padding: 8px 16px;
             background: transparent;
-            color: #71717a;
-            border: 1px solid #1f1f1f;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
@@ -97,8 +100,8 @@
         }
 
         #skip-btn:hover {
-            border-color: #333;
-            color: #fff;
+            border-color: var(--border-light);
+            color: var(--text);
         }
     </style>
     <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>

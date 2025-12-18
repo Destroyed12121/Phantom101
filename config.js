@@ -20,8 +20,8 @@ window.SITE_CONFIG = {
         widgetServer: "1447673724017971324",
         widgetChannel: "1447673726228496617",
     },
-    firstVisitCloak: true,
 
+    firstVisitCloak: true,
     // Default settings
     defaults: {
         cloakMode: "about:blank",
@@ -38,19 +38,20 @@ window.SITE_CONFIG = {
         miniplayer: true,
         leaveConfirmation: false,
         showChangelogOnUpdate: true,
+    },
 
-        // Theme colors
-        accentColor: "#ffffff",
-        surfaceColor: "#0f0f0f",
-        surfaceHoverColor: "#1a1a1a",
-        surfaceActiveColor: "#252525",
-        secondaryColor: "#2e2e33",
-        borderColor: "#1f1f1f",
-        borderLightColor: "#2a2a2a",
-        textColor: "#e4e4e7",
-        textSecondaryColor: "#71717a",
-        textDimColor: "#52525b",
-        background: { type: "color", value: "#0a0a0a" }
+    // Theme Presets
+    themePresets: {
+        dark: { name: 'Dark (Default)', bg: { type: 'color', value: '#0a0a0a' }, surface: '#0f0f0f', surfaceHover: '#1a1a1a', surfaceActive: '#252525', secondary: '#2e2e33', border: '#1f1f1f', borderLight: '#2a2a2a', text: '#e4e4e7', textSec: '#71717a', textDim: '#52525b', accent: '#ffffff' },
+        midnight: { name: 'Midnight', bg: { type: 'color', value: '#000000' }, surface: '#050505', surfaceHover: '#111111', surfaceActive: '#1a1a1a', secondary: '#111111', border: '#050505', borderLight: '#111111', text: '#ededed', textSec: '#a3a3a3', textDim: '#737373', accent: '#d4d4d4' },
+        abyss: { name: 'Abyss', bg: { type: 'color', value: '#020617' }, surface: '#0f172a', surfaceHover: '#1e293b', surfaceActive: '#334155', secondary: '#1e293b', border: '#0f172a', borderLight: '#1e293b', text: '#f1f5f9', textSec: '#94a3b8', textDim: '#64748b', accent: '#38bdf8' },
+        phantom: { name: 'Phantom', bg: { type: 'color', value: '#0f0a14' }, surface: '#1a0f24', surfaceHover: '#2e1a40', surfaceActive: '#4c2a5c', secondary: '#2e1a40', border: '#1a0f24', borderLight: '#2e1a40', text: '#f3e8ff', textSec: '#d8b4fe', textDim: '#c084fc', accent: '#c084fc' },
+        nord: { name: 'Nord', bg: { type: 'color', value: '#2e3440' }, surface: '#3b4252', surfaceHover: '#434c5e', surfaceActive: '#4c566a', secondary: '#434c5e', border: '#2e3440', borderLight: '#3b4252', text: '#eceff4', textSec: '#d8dee9', textDim: '#4c566a', accent: '#88c0d0' },
+        rosepine: { name: 'Rose Pine', bg: { type: 'color', value: '#191724' }, surface: '#1f1d2e', surfaceHover: '#26233a', surfaceActive: '#524f67', secondary: '#26233a', border: '#191724', borderLight: '#1f1d2e', text: '#e0def4', textSec: '#908caa', textDim: '#6e6a86', accent: '#ebbcba' },
+        ocean: { name: 'Oceanic', bg: { type: 'color', value: '#011627' }, surface: '#0b2942', surfaceHover: '#1d3b53', surfaceActive: '#2d4b63', secondary: '#0b2942', border: '#011627', borderLight: '#0b2942', text: '#d6deeb', textSec: '#5f7e97', textDim: '#011627', accent: '#7fdbca' },
+        forest: { name: 'Forest', bg: { type: 'color', value: '#0a1f12' }, surface: '#0d301b', surfaceHover: '#134728', surfaceActive: '#175932', secondary: '#0d301b', border: '#0a1f12', borderLight: '#0d301b', text: '#d1fae5', textSec: '#6ee7b7', textDim: '#065f46', accent: '#10b981' },
+        crimson: { name: 'Crimson', bg: { type: 'color', value: '#1a0505' }, surface: '#2d0a0a', surfaceHover: '#450a0a', surfaceActive: '#7f1d1d', secondary: '#2d0a0a', border: '#1a0505', borderLight: '#2d0a0a', text: '#fef2f2', textSec: '#fecaca', textDim: '#450a0a', accent: '#ef4444' },
+        amber: { name: 'Amber', bg: { type: 'color', value: '#1c1200' }, surface: '#451a03', surfaceHover: '#78350f', surfaceActive: '#92400e', secondary: '#451a03', border: '#1c1200', borderLight: '#451a03', text: '#fffbeb', textSec: '#fef3c7', textDim: '#451a03', accent: '#f59e0b' }
     },
 
     // Tab Cloaks
