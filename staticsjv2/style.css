@@ -232,6 +232,11 @@ input.bar::placeholder {
     display: none;
 }
 
+.iframe-container iframe.loading {
+    filter: blur(15px);
+    transition: filter 0.5s ease;
+}
+
 .iframe-loading {
     position: absolute;
     inset: 0;
@@ -253,7 +258,9 @@ input.bar::placeholder {
     position: absolute;
     top: 0;
     left: 0;
-    background: var(--bg);
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 10;
 }
 

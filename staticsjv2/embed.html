@@ -29,9 +29,13 @@
             position: absolute;
             top: 0;
             left: 0;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: filter 0.5s ease;
             z-index: 1;
+            filter: blur(15px);
+        }
+
+        #iframe-container.loaded {
+            filter: blur(0);
         }
 
         #embed-frame {
@@ -46,10 +50,17 @@
             align-items: center;
             justify-content: center;
             height: 100%;
+            width: 100%;
             color: var(--text);
             text-align: center;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
             z-index: 10;
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: opacity 0.3s ease, visibility 0.3s;
         }
 
         .message-content {
@@ -152,8 +163,9 @@
         function showContent() {
             if (loadingTimeout) clearTimeout(loadingTimeout);
             if (skipButtonTimeout) clearTimeout(skipButtonTimeout);
-            loadingContainer.style.display = 'none';
-            iframeContainer.style.opacity = '1';
+            loadingContainer.style.opacity = '0';
+            loadingContainer.style.visibility = 'hidden';
+            iframeContainer.classList.add('loaded');
         }
 
         async function init() {
@@ -192,7 +204,7 @@
 
             if (shouldSkip) {
                 loadingContainer.style.display = 'none';
-                iframeContainer.style.opacity = '1';
+                iframeContainer.classList.add('loaded');
             }
 
             try {
@@ -210,8 +222,23 @@
                 const wispUrl = localStorage.getItem('proxServer') || 'wss://dash.goip.de/wisp/';
 
                 await navigator.serviceWorker.ready;
+
+                // Force update to ensure we have the latest SW fixes (like the retry logic)
+                reg.update();
+
+                // Wait for controller to ensure fetches are intercepted
+                if (!navigator.serviceWorker.controller) {
+                    console.log("Embed: Waiting for SW controller...");
+                    await new Promise(resolve => {
+                        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
+                    });
+                }
+
                 const sw = reg.active || navigator.serviceWorker.controller;
-                if (sw) sw.postMessage({ type: 'config', wispurl: wispUrl });
+                if (sw) {
+                    console.log("Embed: Sending config to SW:", wispUrl);
+                    sw.postMessage({ type: 'config', wispurl: wispUrl });
+                }
                 if (navigator.serviceWorker.controller && navigator.serviceWorker.controller !== sw) {
                     navigator.serviceWorker.controller.postMessage({ type: 'config', wispurl: wispUrl });
                 }
@@ -228,7 +255,7 @@
                 frame.frame.id = 'embed-frame';
 
                 if (!shouldSkip) {
-                    skipButtonTimeout = setTimeout(() => { skipBtn.style.display = 'inline-block'; }, 5000);
+                    skipButtonTimeout = setTimeout(() => { skipBtn.style.display = 'inline-block'; }, 1000);
                     skipBtn.addEventListener('click', showContent);
 
                     const loadStartTime = Date.now();

@@ -25,11 +25,10 @@
         topbarContainer.id = 'topbar-container';
 
         // Logo - Lightning icon
-        const logoSection = document.createElement('div');
+        const logoSection = document.createElement('a');
         logoSection.className = 'logo-section';
+        logoSection.href = rootPrefix + 'index2.html';
         logoSection.innerHTML = '<div class="logo-placeholder"><i data-lucide="zap"></i></div>';
-        logoSection.style.cursor = 'pointer';
-        logoSection.onclick = () => window.location.href = rootPrefix + 'index.html';
         topbarContainer.appendChild(logoSection);
 
         // Navigation - Order: Music, Movies, Games, Search, AI Chat, Separator, Settings

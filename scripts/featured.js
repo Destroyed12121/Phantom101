@@ -2,8 +2,8 @@ const ZONES_URL = "https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json"
 const HTML_PREFIX = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
 
 let featuredGames = [
-    { name: 'Fortnite', icon: 'fa-solid fa-crosshairs', url: 'staticsjv2/embed.html#https://nowgg.fun/' },
-    { name: 'Roblox', icon: 'fa-solid fa-cubes', url: 'staticsjv2/embed.html#https://nowgg.fun/' },
+    { name: 'Fortnite', icon: 'fa-solid fa-crosshairs', url: 'pages/player.html?type=game&title=Fortnite&url=..%2Fstaticsjv2%2Fembed.html%23https%3A%2F%2Fnow.gg%2Fapps%2Fepic-games%2F5349%2Ffortnite.html' },
+    { name: 'Roblox', icon: 'fa-solid fa-cubes', url: 'pages/player.html?type=game&title=Roblox&url=..%2Fstaticsjv2%2Fembed.html%23https%3A%2F%2Fnow.gg%2Fapps%2Froblox-corporation%2F5349%2Froblox.html' },
     { name: '1v1.LOL', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/1v1-lol.png', gameName: '1v1.LOL' },
     { name: 'Retro Bowl', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/retro-bowl.png', gameName: 'Retro Bowl' },
     { name: 'Slope', img: 'https://cdn.jsdelivr.net/gh/gn-math/covers@main/slope.png', gameName: 'Slope' },

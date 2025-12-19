@@ -184,7 +184,7 @@ function createTab(makeActive = true) {
                 const skipBtn = document.getElementById('skip-btn');
                 if (skipBtn) skipBtn.style.display = 'inline-block';
             }
-        }, 5000); // 5 seconds before skip button appears
+        }, 1000); // 1 second before skip button appears
     });
 
     frame.frame.addEventListener('load', () => {
@@ -225,6 +225,10 @@ function showIframeLoading(show, url = '') {
 
     if (loader) {
         loader.style.display = show ? "flex" : "none";
+        const tab = getActiveTab();
+        if (tab) {
+            tab.frame.frame.classList.toggle('loading', show);
+        }
         if (show) {
             title.textContent = "Connecting";
             urlText.textContent = url || "Loading content...";
@@ -506,6 +510,10 @@ function setWisp(url) {
 function toggleDevTools() {
     const win = getActiveTab()?.frame.frame.contentWindow;
     if (!win) return;
+    if (win.eruda) {
+        win.eruda.show();
+        return;
+    }
     const script = win.document.createElement('script');
     script.src = "https://cdn.jsdelivr.net/npm/eruda";
     script.onload = () => { win.eruda.init(); win.eruda.show(); };

@@ -78,6 +78,20 @@
     `;
 
     document.body.appendChild(footer);
+    // ==========================================
+    // WAU TRACKER INJECTION
+    // ==========================================
+    if (!document.getElementById('_waur6x')) {
+        const wauInit = document.createElement('script');
+        wauInit.id = '_waur6x';
+        wauInit.text = 'var _wau = _wau || []; _wau.push(["small", "edqa7va9er", "r6x"]);';
+        document.body.appendChild(wauInit);
+
+        const wauSrc = document.createElement('script');
+        wauSrc.async = true;
+        wauSrc.src = '//waust.at/s.js';
+        document.body.appendChild(wauSrc);
+    }
 
     // ==========================================
     // GOOGLE TAG MANAGER INJECTION

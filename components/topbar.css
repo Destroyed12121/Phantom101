@@ -42,7 +42,9 @@ body {
     align-items: center;
     padding-right: 10px;
     border-right: 1px solid var(--border);
-    height: 24px;
+    height: 32px;
+    text-decoration: none;
+    color: inherit;
 }
 
 .logo-placeholder {

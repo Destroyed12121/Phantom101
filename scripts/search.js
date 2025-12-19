@@ -9,10 +9,13 @@ const PhantomSearch = {
     suggestions: [],
     selectedIndex: -1,
     isOpen: false,
-    allGames: [],
+    allGames: [
+        { name: 'Roblox', type: 'game', url: 'pages/player.html?type=game&title=Roblox&url=..%2Fstaticsjv2%2Fembed.html%23https%3A%2F%2Fnow.gg%2Fapps%2Froblox-corporation%2F5349%2Froblox.html' },
+        { name: 'Fortnite', type: 'game', url: 'pages/player.html?type=game&title=Fortnite&url=..%2Fstaticsjv2%2Fembed.html%23https%3A%2F%2Fnow.gg%2Fapps%2Fepic-games%2F5349%2Ffortnite.html' }
+    ],
     gamesLoaded: false,
 
-    // Static pages configuration
+    // Static  pages configuration
     pages: [
         { name: 'Games', url: 'pages/games.html', icon: 'fa-solid fa-gamepad', type: 'page' },
         { name: 'Movies & TV', url: 'pages/movies.html', icon: 'fa-solid fa-film', type: 'page' },

@@ -11,9 +11,9 @@
     <link rel="stylesheet" href="../components/topbar.css">
     <script src="../config.js"></script>
     <script src="../scripts/settings.js"></script>
-    <script src="../Utils/notifications.js"></script>
+    <script src="../scripts/notifications.js"></script>
     <link rel="stylesheet" href="../styles/music.css">
-    
+
 
 </head>
 
@@ -57,16 +57,15 @@
         <main class="main">
             <!-- Source Tabs - Controls both SEARCH and PLAYBACK -->
             <div class="source-tabs">
-                <button class="source-tab active" data-source="itunes">iTunes (Preview only)</button>
-                <button class="source-tab" data-source="soundcloud">SoundCloud</button>
-                <button class="source-tab" data-source="youtube">YouTube</button>
+                <button class="source-tab" data-source="itunes">iTunes (30s Preview)</button>
+                <button class="source-tab active" data-source="youtube">YouTube</button>
             </div>
 
             <div class="search-container">
                 <div class="search-wrapper">
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="searchInput" placeholder="Search songs...">
+                        <input type="text" id="searchInput" placeholder="Search or paste YouTube/SoundCloud URL...">
                     </div>
                     <div class="results" id="searchResults"></div>
                 </div>

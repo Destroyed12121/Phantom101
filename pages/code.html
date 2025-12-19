@@ -9,10 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
-
-    <!-- Load JSZip first (synchronous) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
     <link rel="stylesheet" href="../styles/code.css">
 </head>
 
@@ -23,41 +20,28 @@
     <script src="../components/topbar.js"></script>
 
     <div class="editor-page">
-        <!-- Main Container -->
         <div class="editor-container">
-            <!-- File Sidebar -->
+            <!-- Sidebar -->
             <div class="file-sidebar">
                 <div class="sidebar-header">
-                    <span class="sidebar-title">Explorer</span>
+                    <span class="sidebar-title">Files</span>
                     <div class="sidebar-actions">
                         <button class="sidebar-btn" id="new-file-btn" title="New File">
-                            <i class="fa-solid fa-file-circle-plus"></i>
-                        </button>
-                        <button class="sidebar-btn" id="new-folder-btn" title="New Folder">
-                            <i class="fa-solid fa-folder-plus"></i>
+                            <i class="fa-solid fa-plus"></i>
                         </button>
                     </div>
                 </div>
-                <div class="file-tree" id="file-tree">
-                    <div class="file-tree-empty">
-                        <i class="fa-solid fa-folder-open"></i>
-                        <span>Drag & drop files or folders here<br>or click + to create new</span>
-                    </div>
-                </div>
+                <div class="file-tree" id="file-tree"></div>
             </div>
 
-            <!-- Main Editor -->
+            <!-- Editor -->
             <div class="editor-main">
                 <!-- Toolbar -->
                 <div class="editor-toolbar">
                     <div class="toolbar-left">
-                        <button class="toolbar-btn success" id="fix-code-btn">
+                        <button class="toolbar-btn success" id="fix-code-btn" title="Auto-fix issues">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            Fix Code
-                        </button>
-                        <button class="toolbar-btn" id="lint-btn">
-                            <i class="fa-solid fa-bug"></i>
-                            Check Errors
+                            <span>Fix</span>
                         </button>
                         <select class="language-select" id="language-select">
                             <option value="javascript">JavaScript</option>
@@ -69,72 +53,54 @@
                             <option value="markdown">Markdown</option>
                             <option value="plaintext">Plain Text</option>
                         </select>
-                        <span class="error-badge" id="error-count" style="display:none">0 errors</span>
-                        <span class="warning-badge" id="warning-count" style="display:none">0 warnings</span>
+                        <span class="error-badge" id="error-count" style="display:none">0</span>
+                        <span class="warning-badge" id="warning-count" style="display:none">0</span>
                     </div>
                     <div class="toolbar-right">
-                        <button class="toolbar-btn" id="open-tab-btn" title="Open in New Tab">
+                        <button class="toolbar-btn" id="open-tab-btn" title="Open in cloaked tab">
                             <i class="fa-solid fa-up-right-from-square"></i>
-                            Open in Tab
+                            <span>Open</span>
                         </button>
-                        <button class="toolbar-btn" id="save-btn">
+                        <button class="toolbar-btn" id="save-btn" title="Download file">
                             <i class="fa-solid fa-download"></i>
-                            Save
+                            <span>Save</span>
                         </button>
-                        <button class="toolbar-btn primary" id="export-btn">
+                        <button class="toolbar-btn primary" id="export-btn" title="Export as ZIP">
                             <i class="fa-solid fa-file-zipper"></i>
-                            Export Project
+                            <span>Export</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Tabs -->
-                <div class="editor-tabs" id="editor-tabs">
-                    <button class="editor-tab active" data-file="untitled.js">
-                        <i class="fa-solid fa-file-code js-icon"></i>
-                        untitled.js
-                        <span class="close-tab"><i class="fa-solid fa-xmark"></i></span>
-                    </button>
-                </div>
+                <div class="editor-tabs" id="editor-tabs"></div>
 
-                <!-- Monaco Editor -->
+                <!-- Monaco -->
                 <div id="monaco-container"></div>
 
-                <!-- Terminal Panel -->
+                <!-- Terminal -->
                 <div class="terminal-panel" id="terminal-panel">
                     <div class="resize-handle" id="terminal-resize"></div>
                     <div class="terminal-header" id="terminal-header">
                         <div class="terminal-tabs">
-                            <span class="terminal-tab active" data-panel="terminal">
-                                <i class="fa-solid fa-terminal"></i> Terminal
-                            </span>
-                            <span class="terminal-tab" data-panel="problems">
-                                <i class="fa-solid fa-triangle-exclamation"></i> Problems
-                            </span>
+                            <span class="terminal-tab active" data-panel="terminal">Terminal</span>
+                            <span class="terminal-tab" data-panel="problems">Problems</span>
                         </div>
                         <button class="sidebar-btn" id="terminal-toggle">
                             <i class="fa-solid fa-chevron-down"></i>
                         </button>
                     </div>
                     <div class="terminal-content" id="terminal-content">
-                        <div class="terminal-line info">> Phantom Code Editor v1.0.0</div>
-                        <div class="terminal-line">> Ready to code. Drag files or start typing...</div>
+                        <div class="terminal-line info">> Phantom Code Editor</div>
                     </div>
-                    <div class="terminal-content problems-content" id="problems-content">
-                        <div style="color: var(--text-muted); text-align: center; padding: 20px;">
-                            No problems detected. Click "Check Errors" to lint your code.
-                        </div>
-                    </div>
+                    <div class="problems-content" id="problems-content"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Monaco Editor CDN -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-
     <script src="../scripts/code.js"></script>
-
     <script src="../components/footer.js"></script>
 </body>
 
