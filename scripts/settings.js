@@ -25,7 +25,7 @@
 
             maxMovieRating: 'R',
             offlineGames: [],
-            gameLibrary: 'lib1',
+            gameLibrary: 'multi',
             leaveConfirmation: false
         };
     };
@@ -176,46 +176,10 @@
             }
         });
 
-        // Rotating Cloaks Handler
-        let rotationInterval;
-        const startRotation = () => {
-            if (rotationInterval) clearInterval(rotationInterval);
-            if (!_settings.rotateCloaks) return;
-
-            const cloaks = [...(window.SITE_CONFIG?.cloakPresets || []), ...(_settings.customCloaks || [])];
-
-            if (!cloaks.length) return;
-
-            let index = 0;
-            const rotate = () => {
-                const c = cloaks[index];
-                document.title = c.title || c.name;
-
-                // Update favicon
-                let link = document.querySelector("link[rel*='icon']");
-                if (!link) {
-                    link = document.createElement('link');
-                    link.type = 'image/x-icon';
-                    link.rel = 'shortcut icon';
-                    document.head.appendChild(link);
-                }
-                link.href = c.icon || '';
-
-                index = (index + 1) % cloaks.length;
-            };
-
-            const interval = (_settings.rotateInterval || 5) * 1000;
-            rotate(); // Initial
-            rotationInterval = setInterval(rotate, interval);
-        };
-
-        if (_settings.rotateCloaks) startRotation();
-
         window.addEventListener('settings-changed', (e) => {
             if (e.detail.rotateCloaks !== undefined || e.detail.rotateInterval !== undefined) {
                 // Update local ref
                 _settings = e.detail;
-                startRotation();
             }
         });
 
@@ -226,7 +190,6 @@
                 // Update internal state
                 _settings = newSettings;
                 Settings.apply();
-                startRotation();
                 // Re-dispatch for local listeners
                 window.dispatchEvent(new CustomEvent('settings-changed', { detail: newSettings }));
             }
@@ -238,7 +201,6 @@
                 const newSettings = load();
                 _settings = newSettings;
                 Settings.apply();
-                startRotation();
             }
         });
 
@@ -253,29 +215,44 @@
             if (now - lastRotation >= TWO_DAYS) {
                 const presets = window.SITE_CONFIG?.themePresets || {};
                 const keys = Object.keys(presets);
-                if (keys.length > 1) {
-                    let randomKey;
-                    let attempts = 0;
-                    do {
-                        randomKey = keys[Math.floor(Math.random() * keys.length)];
-                        attempts++;
-                    } while (presets[randomKey].surface === _settings.surfaceColor && attempts < 5);
 
-                    const theme = presets[randomKey];
-                    Settings.update({
-                        background: theme.bg,
-                        surfaceColor: theme.surface,
-                        surfaceHoverColor: theme.surfaceHover,
-                        surfaceActiveColor: theme.surfaceActive,
-                        secondaryColor: theme.secondary,
-                        borderColor: theme.border,
-                        borderLightColor: theme.borderLight,
-                        textColor: theme.text,
-                        textSecondaryColor: theme.textSec,
-                        textDimColor: theme.textDim,
-                        accentColor: theme.accent,
-                        lastThemeRotation: now
-                    });
+                if (keys.length > 0) {
+                    let randomKey;
+
+                    // First rotation: limit to default dark, midnight, or flame
+                    if (lastRotation === 0) {
+                        const allowed = ['dark', 'midnight'].filter(k => keys.includes(k));
+                        if (allowed.length > 0) {
+                            randomKey = allowed[Math.floor(Math.random() * allowed.length)];
+                        }
+                    } else if (keys.length > 1) {
+                        // Subsequent rotations: avoid repeating current theme
+                        let attempts = 0;
+                        do {
+                            randomKey = keys[Math.floor(Math.random() * keys.length)];
+                            attempts++;
+                        } while (presets[randomKey].surface === _settings.surfaceColor && attempts < 5);
+                    } else {
+                        randomKey = keys[0];
+                    }
+
+                    if (randomKey) {
+                        const theme = presets[randomKey];
+                        Settings.update({
+                            background: theme.bg,
+                            surfaceColor: theme.surface,
+                            surfaceHoverColor: theme.surfaceHover,
+                            surfaceActiveColor: theme.surfaceActive,
+                            secondaryColor: theme.secondary,
+                            borderColor: theme.border,
+                            borderLightColor: theme.borderLight,
+                            textColor: theme.text,
+                            textSecondaryColor: theme.textSec,
+                            textDimColor: theme.textDim,
+                            accentColor: theme.accent,
+                            lastThemeRotation: now
+                        });
+                    }
                 }
             }
         };

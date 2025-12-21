@@ -75,7 +75,7 @@ document.getElementById('border-color').value = settings.borderColor || '#1f1f1f
 document.getElementById('border-light-color').value = settings.borderLightColor || '#2a2a2a';
 
 document.getElementById('max-rating').value = settings.maxMovieRating || 'R';
-document.getElementById('game-library').value = settings.gameLibrary || 'lib1';
+document.getElementById('game-library').value = settings.gameLibrary || 'multi';
 
 // Theme Presets - use from config.js
 const presets = window.SITE_CONFIG?.themePresets || {};

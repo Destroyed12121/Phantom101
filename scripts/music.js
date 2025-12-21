@@ -1058,7 +1058,7 @@ updateRadioBadge();
 // Show welcome tip
 setTimeout(() => {
     if (!state.recent.length) {
-        notify('info', 'Tip', 'Search for music or enable Radio mode for auto-play!');
+        notify('info', 'Radio', 'Search for music or enable Radio mode for auto-play!');
     }
 }, 1000);
 

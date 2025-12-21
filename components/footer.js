@@ -78,20 +78,8 @@
     `;
 
     document.body.appendChild(footer);
-    // ==========================================
-    // WAU TRACKER INJECTION
-    // ==========================================
-    if (!document.getElementById('_waur6x')) {
-        const wauInit = document.createElement('script');
-        wauInit.id = '_waur6x';
-        wauInit.text = 'var _wau = _wau || []; _wau.push(["small", "edqa7va9er", "r6x"]);';
-        document.body.appendChild(wauInit);
 
-        const wauSrc = document.createElement('script');
-        wauSrc.async = true;
-        wauSrc.src = '//waust.at/s.js';
-        document.body.appendChild(wauSrc);
-    }
+
 
     // ==========================================
     // GOOGLE TAG MANAGER INJECTION
@@ -328,4 +316,39 @@
         settings = e.detail;
         initDiscord();
     });
+
+    // ==========================================
+    // 6. SUPERCOUNTERS WIDGET
+    // ==========================================
+    // Only show on home page (index2.html) checking if main-content exists
+    const mainContent = document.querySelector('.main-content');
+    // Ensure we are on the home page view (search bar checks etc) or just check existence
+    if (mainContent && document.querySelector('.featured-section')) {
+        const counterContainer = document.createElement('div');
+        counterContainer.id = 'supercounters-wrapper';
+        counterContainer.style.marginTop = '24px';
+        counterContainer.style.textAlign = 'center';
+        counterContainer.style.opacity = '0.8';
+
+        // Use iframe to isolate document.write from the widget
+        const iframe = document.createElement('iframe');
+        iframe.style.border = 'none';
+        iframe.style.width = '150px';
+        iframe.style.height = '40px';
+        iframe.style.overflow = 'hidden';
+
+        // Widget code
+        const widgetCode = `
+            <html>
+            <body style="margin:0;display:flex;justify-content:center;align-items:center;background:transparent;">
+                <script type="text/javascript" src="//widget.supercounters.com/ssl/online_i.js"></script>
+                <script type="text/javascript">sc_online_i(1726449,"ffffff","000000");</script>
+            </body>
+            </html>
+        `;
+
+        iframe.srcdoc = widgetCode;
+        counterContainer.appendChild(iframe);
+        mainContent.appendChild(counterContainer);
+    }
 })();

@@ -126,7 +126,7 @@ const PhantomSearch = {
 
             // Load UGS files if available
             if (window.UGS_FILES) {
-                const UGS_PREFIX = "../components/UGSfiles.js";
+                const UGS_PREFIX = "https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/";
                 window.UGS_FILES.forEach(file => {
                     let name = file;
                     if (name.toLowerCase().startsWith('cl')) {
@@ -264,7 +264,13 @@ const PhantomSearch = {
         const pageMatches = this.pages
             .filter(p => p.name.toLowerCase().includes(q))
             .slice(0, 2);
-        results.push(...pageMatches);
+
+        // Add pages if not already present (deduplication)
+        pageMatches.forEach(p => {
+            if (!results.some(r => r.name === p.name)) {
+                results.push(p);
+            }
+        });
 
         // Search popular movies
         const movieMatches = this.popularMovies

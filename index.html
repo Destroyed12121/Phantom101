@@ -33,15 +33,6 @@
             font-family: 'Inter', -apple-system, sans-serif;
         }
 
-        /* First Visit Cloak Overlay */
-        #fv-cloak {
-            position: fixed;
-            inset: 0;
-            background: #fff;
-            z-index: 10000;
-            display: none;
-            /* Hidden by default, shown via script if needed */
-        }
 
         .loading-screen {
             position: fixed;
@@ -150,6 +141,7 @@
     <script src="config.js"></script>
     <script src="scripts/settings.js"></script>
     <script src="scripts/cloaking.js"></script>
+    <link rel="stylesheet" href="styles/error.css">
 </head>
 
 <body>
@@ -159,7 +151,54 @@
     <!-- End Google Tag Manager (noscript) -->
 
     <!-- First Visit Cloak Layer -->
-    <div id="fv-cloak"></div>
+    <div id="fv-cloak" class="neterror">
+        <div id="main-frame-error" class="interstitial-wrapper">
+            <div id="main-content">
+                <div class="icon icon-generic"></div>
+                <div id="main-message">
+                    <h1>
+                        <span>This site can’t be reached</span>
+                    </h1>
+                    <p>
+                        <strong id="origin-text"></strong>’s <abbr id="dnsDefinition">DNS address</abbr> could not be
+                        found.
+                        Diagnosing the problem.
+                    </p>
+                    <div class="error-code">DNS_PROBE_POSSIBLE</div>
+                </div>
+            </div>
+            <div id="buttons" class="nav-wrapper suggested-left">
+                <div id="control-buttons">
+                    <button id="reload-button" class="text-button" onclick="location.reload()">Reload</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            {
+                const origin = window.location.hostname || "This site";
+                document.getElementById("origin-text").textContent = origin;
+
+                // Immediate cloak check to prevent flash
+                try {
+                    const STORAGE_KEY = 'phantom_fv';
+                    const hasBypassed = localStorage.getItem(STORAGE_KEY);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const isFakeMode = urlParams.has('fake');
+
+                    if (!hasBypassed && !isFakeMode) {
+                        const overlay = document.getElementById('fv-cloak');
+                        if (overlay) overlay.style.display = 'block';
+                        document.title = origin;
+
+                        // Hide loading screen immediately if possible
+                        const style = document.createElement('style');
+                        style.innerHTML = '#loading-screen { display: none !important; }';
+                        document.head.appendChild(style);
+                    }
+                } catch (e) { }
+            }
+        </script>
+    </div>
 
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">

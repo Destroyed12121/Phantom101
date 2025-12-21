@@ -13,9 +13,9 @@
 
     // Get cloak presets from config
     const getPresets = () => {
-        return window.SITE_CONFIG?.cloakPresets || [
-            { name: 'Google', title: 'Google', favicon: 'https://www.google.com/favicon.ico' }
-        ];
+        const presets = [...(window.SITE_CONFIG?.cloakPresets || [])];
+        const custom = window.Settings?.get('customCloaks') || [];
+        return [...presets, ...custom];
     };
 
     // Original page state (to restore if needed)
@@ -37,13 +37,16 @@
     // Set favicon
     const setFavicon = (url) => {
         const updateLink = (doc, href) => {
-            let link = doc.querySelector('link[rel="icon"]');
-            if (!link) {
-                link = doc.createElement('link');
-                link.rel = 'icon';
-                doc.head.appendChild(link);
-            }
+            // Remove existing icon links
+            const links = doc.querySelectorAll('link[rel*="icon"]');
+            links.forEach(l => l.parentNode.removeChild(l));
+
+            // Create new icon link to force refresh
+            const link = doc.createElement('link');
+            link.rel = 'icon';
             link.href = href;
+            doc.head.appendChild(link);
+
             link.onerror = () => {
                 if (href.includes('favicon.svg')) {
                     link.href = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjUgMTMuNUMyMi41IDE4LjQ3NCAxOC40NzQgMjIuNSAxMy41IDIyLjVDOC41MjYgMjIuNS40NSAxOC40NzQuNDUgMTMuNUMuNDUgOC41MjYgOC41MjYuNDUgMTMuNS40NUMxOC40NzQuNDUgMjIuNS44NTI2IDIyLjUgMTMuNVoiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTEzLjUgMTYuNUMxNS4xMDQgMTYuNSAxNi41IDE1LjEwNCAxNi41IDEzLjVDMTYuNSAxMS44OTYgMTUuMTA0IDEwLjUgMTMuNSAxMC41QzExLjg5NiAxMC41IDEwLjUgMTEuODk2IDEwLjUgMTMuNUMxMC41IDE1LjEwNCAxMS44OTYgMTYuNSAxMy41IDE2LjVaIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=';
@@ -74,7 +77,7 @@
         rotationInterval = setInterval(() => {
             currentPresetIndex = (currentPresetIndex + 1) % presets.length;
             const preset = presets[currentPresetIndex];
-            applyCloak(preset.title, preset.favicon);
+            applyCloak(preset.title, preset.icon || preset.favicon);
         }, interval);
     };
 
@@ -151,7 +154,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isFakeMode = urlParams.has('fake');
         const cloakEnabled = window.SITE_CONFIG?.firstVisitCloak !== false;
-        const isCloaked = cloakEnabled && !localStorage.getItem(STORAGE_KEY) && !isFakeMode;
+        const hasBypassed = localStorage.getItem(STORAGE_KEY);
+        const isCloaked = cloakEnabled && !hasBypassed && !isFakeMode;
 
         if (isFakeMode) {
             // Show launch screen
@@ -170,13 +174,11 @@
                     const randomTarget = targets[Math.floor(Math.random() * targets.length)];
                     window.location.replace(randomTarget);
                 };
-                let popupOpened = false;
                 if (cloakMode === 'blob') {
                     fetch(realUrl).then(r => r.text()).then(html => {
                         const blob = new Blob([html], { type: 'text/html' });
                         const win = window.open(URL.createObjectURL(blob), '_blank');
                         if (win) {
-                            popupOpened = true;
                             doRedirect();
                         } else {
                             iframe.src = 'index2.html';
@@ -187,11 +189,9 @@
                 } else if (cloakMode === 'about:blank') {
                     const win = window.open('about:blank', '_blank');
                     if (win) {
-                        popupOpened = true;
                         win.document.open();
                         win.document.write('<iframe src="' + realUrl + '" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>');
                         win.document.close();
-                        // Copy disguised title/icon to new window
                         if (settings.tabTitle) win.document.title = settings.tabTitle;
                         if (settings.tabFavicon) {
                             const link = win.document.createElement('link');
@@ -204,69 +204,66 @@
                         iframe.src = 'index2.html';
                     }
                 } else {
-                    // No cloak, open directly
                     const win = window.open(realUrl, '_blank');
                     if (win) {
-                        popupOpened = true;
                         doRedirect();
                     } else {
                         iframe.src = 'index2.html';
                     }
                 }
-                // If popup was opened, check if it closed
-                if (popupOpened) {
-                    setTimeout(() => {
-                        if (win && win.closed) {
-                            // Show launch screen again or something
-                        }
-                    }, 1000);
-                }
             });
         } else if (isCloaked) {
-            // Show white screen
+            // Show cloak immediately
             overlay.style.display = 'block';
-            // Remove title tag to show URL/filename
-            var titleTag = document.querySelector('title');
-            if (titleTag) titleTag.remove();
-            // Remove favicon tags to show default icon
-            var iconLinks = document.querySelectorAll("link[rel*='icon']");
+
+            // Hide loading screen
+            const ls = document.getElementById('loading-screen');
+            if (ls) ls.style.display = 'none';
+
+            // Set title to hostname to mimic URL
+            const originalTitle = document.title;
+            document.title = window.location.hostname;
+
+            // Remove favicon
+            const iconLinks = document.querySelectorAll("link[rel*='icon']");
             iconLinks.forEach(l => l.remove());
-            var link = document.createElement('link');
-            link.rel = 'icon';
-            link.href = 'data:image/x-icon;base64,'; // Empty
-            document.getElementsByTagName('head')[0].appendChild(link);
-            var onKey = function (e) {
-                if (e.key.toLowerCase() === 'c') {
-                    // Uncloak
-                    overlay.style.display = 'none';
+
+            const onKey = function (e) {
+                if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    e.preventDefault();
+
+                    // Uncloak persistently
                     localStorage.setItem(STORAGE_KEY, '1');
                     document.removeEventListener('keydown', onKey);
-                    // Restore title
-                    var newTitle = document.createElement('title');
-                    newTitle.innerText = 'Phantom Unblocked';
-                    document.head.appendChild(newTitle);
-                    // Restore favicon
-                    var newLink = document.createElement('link');
-                    newLink.rel = 'icon';
-                    newLink.href = 'favicon.svg';
-                    newLink.type = 'image/svg+xml';
-                    document.head.appendChild(newLink);
-                    // Load the app content NOW
-                    iframe.src = 'index2.html';
-                    // Analytics
-                    window.dataLayer = window.dataLayer || [];
-                    window.dataLayer.push({ event: 'cloak_bypass_pressed' });
-                    if (typeof gtag === 'function') {
-                        gtag('event', 'cloak_bypass', {
-                            'event_category': 'engagement',
-                            'event_label': 'first_visit_cloak'
-                        });
+
+                    // Reveal logic
+                    let settings = {};
+                    try { settings = JSON.parse(localStorage.getItem('void_settings') || '{}'); } catch { }
+                    const cloakMode = settings.cloakMode || 'none';
+
+                    if (cloakMode === 'about:blank' || cloakMode === 'blob') {
+                        // Use the built-in cloaking API to open in a new tab and redirect this one
+                        if (cloakMode === 'about:blank') window.Cloaking.openInBlank(window.location.href.split('?')[0]);
+                        else window.Cloaking.openInBlob(window.location.href.split('?')[0]);
+                    } else {
+                        // Just reveal on current tab
+                        overlay.style.display = 'none';
+                        document.title = originalTitle;
+
+                        // Restore favicon
+                        const newLink = document.createElement('link');
+                        newLink.rel = 'icon';
+                        newLink.href = 'favicon.svg';
+                        document.head.appendChild(newLink);
+
+                        // Load app
+                        iframe.src = 'index2.html';
                     }
                 }
             };
             document.addEventListener('keydown', onKey);
         } else {
-            // No cloak needed, load immediately if not already loaded
+            // No cloak needed, load immediately
             if (iframe && !iframe.src) {
                 iframe.src = 'index2.html';
             }
@@ -275,6 +272,9 @@
 
     // Startup cloak mode
     const initStartupCloak = () => {
+        const STORAGE_KEY = 'phantom_fv';
+        if (window.SITE_CONFIG?.firstVisitCloak !== false && !localStorage.getItem(STORAGE_KEY)) return;
+
         let settings = {};
         try { settings = JSON.parse(localStorage.getItem('void_settings') || '{}'); } catch { }
         const cloakMode = settings.cloakMode || 'none';
@@ -338,9 +338,16 @@
         launchScreen.classList.remove('hidden');
         document.getElementById('launch-button').addEventListener('click', () => {
             launchScreen.classList.add('hidden');
-            // Load the app content
-            document.getElementById('main-frame').src = 'index2.html';
-        });
+
+            // Try to open cloaked instance
+            // The click event should bypass popup blockers
+            const win = window.Cloaking.openCloaked(window.location.href);
+
+            // Only fallback to current tab if popup totally failed (rare on click)
+            if (!win) {
+                document.getElementById('main-frame').src = 'index2.html';
+            }
+        }, { once: true });
     };
 
     // Key listener for panic (hiding)
@@ -357,6 +364,10 @@
     document.addEventListener('keydown', (e) => {
         // Ignore if user is typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+        // Ignore if first visit cloak is active
+        const STORAGE_KEY = 'phantom_fv';
+        if (window.SITE_CONFIG?.firstVisitCloak !== false && !localStorage.getItem(STORAGE_KEY)) return;
 
         if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey && !e.metaKey) {
             const mode = window.Settings?.get('cloakMode');
@@ -479,7 +490,7 @@
             `;
             const blob = new Blob([html], { type: 'text/html' });
             const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, '_blank');
+            const win = window.open(blobUrl, '_blank');
 
             // Handle redirect of original tab
             const redirect = window.Settings?.get('redirectTarget');
@@ -490,6 +501,8 @@
                 const randomTarget = targets[Math.floor(Math.random() * targets.length)];
                 window.location.replace(randomTarget);
             }
+
+            return win;
         },
 
         // Smart open - uses current cloak mode setting
@@ -497,11 +510,11 @@
             const mode = window.Settings?.get('cloakMode') || 'none';
 
             if (mode === 'about:blank') {
-                this.openInBlank(url);
+                return this.openInBlank(url);
             } else if (mode === 'blob') {
-                this.openInBlob(url);
+                return this.openInBlob(url);
             } else {
-                window.open(url, '_blank');
+                return window.open(url, '_blank');
             }
         }
     };

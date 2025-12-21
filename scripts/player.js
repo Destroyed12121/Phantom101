@@ -16,6 +16,7 @@ const proxyToggle = document.getElementById('proxy-toggle');
 
 // Providers
 const PROVIDERS = [
+    { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}', tv: 'https://player.vidify.top/embed/tv/{id}&s={season}&e={episode}' }, isActive: true },
     { id: 'vidfast', name: 'Vidfast', urls: { movie: 'https://vidfast.to/embed/movie/{id}', tv: 'https://vidfast.to/embed/tv/{id}&s={season}&e={episode}' }, isActive: true },
     { id: 'vidsrc', name: 'VidSrc', urls: { movie: 'https://vidsrc-embed.su/embed/movie?tmdb={id}', tv: 'https://vidsrc-embed.su/embed/tv?tmdb={id}&s={season}&e={episode}' }, isActive: true },
     { id: '2embed', name: '2Embed', urls: { movie: 'https://www.2embed.cc/embed/{tmdb_id}', tv: 'https://www.2embed.cc/embedtv/{tmdb_id}&s={season}&e={episode}' }, isActive: true },

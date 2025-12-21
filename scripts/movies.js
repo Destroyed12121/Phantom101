@@ -1,10 +1,8 @@
 const API_KEY = '2713804610e1e236b1cf44bfac3a7776';
 const IMG_BASE = 'https://image.tmdb.org/t/p/w300';
 
-// Restore Static Featured List (Fallback for broken API)
 const FEATURED = [
     { id: 950779, title: "Five Nights at Freddy's", poster_path: "/A4j8S6moJS2zNtRR8oWF08gRnL5.jpg", release_date: "2023-10-25", vote_average: 7.6, media_type: "movie", overview: "Recently fired and desperate for work, a troubled young man named Mike agrees to take a position as a night security guard at an abandoned theme restaurant: Freddy Fazbear's Pizzeria. But he soon discovers that nothing at Freddy's is what it seems." },
-    // Using FNAF 1 metadata as placeholder for 2 since it's not out/available on TMDB fully yet or just to satisfy user request for "1 and 2"
     { id: 1047585, title: "Five Nights at Freddy's 2", poster_path: "/x0f24255a019409893902996.jpg", release_date: "2025-12-05", vote_average: 0, media_type: "movie", overview: "The sequel to the 2023 film Five Nights at Freddy's. (Coming Soon)" },
     { id: 76600, title: "Avatar: The Way of Water", poster_path: "/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg", release_date: "2022-12-14", vote_average: 7.7, media_type: "movie", overview: "Set more than a decade after the events of the first film, learn the story of the Sully family (Jake, Neytiri, and their kids), the trouble that follows them, the lengths they go to keep each other safe, the battles they fight to stay alive, and the tragedies they endure." },
     { id: 677179, title: "Creed III", poster_path: "/cvsXj3I9Q2iyyIo95AecSd1tad7.jpg", release_date: "2023-03-01", vote_average: 7.2, media_type: "movie", overview: "After dominating the boxing world, Adonis Creed has been thriving in both his career and family life. When a childhood friend and former boxing prodigy, Damian Anderson, resurfaces after serving a long sentence in prison, he is eager to prove that he deserves his shot in the ring." },
@@ -268,7 +266,17 @@ async function loadMedia(page = 1, append = false) {
             return;
         }
         if (!append) {
-            mediaGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><p>Failed to load content.</p><p style="font-size:0.8rem;margin-top:8px;">Please check your connection or try again later.</p></div>';
+            mediaGrid.innerHTML = `
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
+                    <p>Failed to load content from TMDB.</p>
+                    <p style="font-size:0.8rem;margin-top:8px;margin-bottom:20px;">Please check your connection or try again later.</p>
+                    <a href="player.html?type=game&title=Movies&url=..%2Fstaticsjv2%2Fembed.html%23https%3A%2F%2Fprimeshows.live" 
+                       class="btn" 
+                       style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding: 10px 20px; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
+                        <i class="fa-solid fa-film"></i> Use PrimeShows instead
+                    </a>
+                </div>
+            `;
         }
         if (window.Notify) window.Notify.error("Error", "Failed to load movies from TMDB");
     } finally {

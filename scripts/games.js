@@ -15,8 +15,11 @@ const Games = {
     async init() {
         // Load settings preference
         const settings = JSON.parse(localStorage.getItem('void_settings') || '{}');
-        if (settings.gameLibrary === 'lib2') this.lib = 'ugs';
-        else if (settings.gameLibrary === 'lib1') this.lib = 'gnmath';
+        this.lib = settings.gameLibrary || 'multi';
+
+        // Normalize legacy values
+        if (this.lib === 'lib1') this.lib = 'gnmath';
+        if (this.lib === 'lib2') this.lib = 'ugs';
 
         // Setup scroll listener for lazy loading
         window.addEventListener('scroll', () => {
@@ -35,10 +38,14 @@ const Games = {
 
         this.allGames = [];
         try {
-            if (this.lib === 'gnmath') {
-                await this.loadGnmath();
-            } else {
-                await this.loadUGS();
+            if (this.lib === 'multi') {
+                const gnmath = await this.loadGnmath();
+                const ugs = await this.loadUGS();
+                this.allGames = [...gnmath, ...ugs];
+            } else if (this.lib === 'gnmath') {
+                this.allGames = await this.loadGnmath();
+            } else if (this.lib === 'ugs') {
+                this.allGames = await this.loadUGS();
             }
         } catch (e) {
             console.error(e);
@@ -58,7 +65,7 @@ const Games = {
             const res = await fetch(ZONES_1_URL);
             const data = await res.json();
 
-            this.allGames = data.map(g => {
+            return data.map(g => {
                 let name = g.name || g.title;
                 if (name.endsWith('-a.html')) name = name.replace('-a.html', '');
 
@@ -93,7 +100,7 @@ const Games = {
         // Use the global window.UGS_FILES array from components/UGSfiles.js
         const files = window.UGS_FILES || [];
 
-        this.allGames = files.map(file => {
+        return files.map(file => {
             // Remove 'cl' prefix if present
             let name = file;
             if (name.toLowerCase().startsWith('cl')) {
@@ -101,7 +108,6 @@ const Games = {
             }
 
             // Format URL
-            // Logic from example: if it contains '.', leave it, else add .html
             let fileName = file;
             if (!fileName.includes('.')) fileName += '.html';
             const url = `${UGS_PREFIX}${encodeURIComponent(fileName)}`;
@@ -300,13 +306,20 @@ const Games = {
         // Library Select
         const libSelect = document.getElementById('lib-select');
         if (libSelect) {
-            libSelect.value = this.lib;
+            // Re-populate options to include Multi
+            libSelect.innerHTML = `
+                <option value="multi">Multi (Default)</option>
+                <option value="gnmath">Gnmath</option>
+                <option value="ugs">UGS</option>
+            `;
+            libSelect.value = this.lib; // Set current selection
+
             libSelect.onchange = (e) => {
                 this.lib = e.target.value;
                 this.loadGames();
                 // Update settings
                 const s = JSON.parse(localStorage.getItem('void_settings') || '{}');
-                s.gameLibrary = this.lib === 'gnmath' ? 'lib2' : 'lib1';
+                s.gameLibrary = this.lib;
                 localStorage.setItem('void_settings', JSON.stringify(s));
             };
         }
