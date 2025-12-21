@@ -12,6 +12,7 @@ window.SITE_CONFIG = {
         "fixxes to search suggestion",
         "multi library using both libraries",
         "ambience glow and more fixxed",
+        "OPEN SOURCE RELEASE https://github.com/Destroyed12121/Phantom101",
         "JOIN THE DISCORD"
     ],
 
@@ -22,7 +23,7 @@ window.SITE_CONFIG = {
         widgetChannel: "1447673726228496617",
     },
 
-    firstVisitCloak: true, // this controls the fake error page
+    firstVisitCloak: false, // this controls the fake error page
     // Default settings
     defaults: {
         cloakMode: "about:blank",

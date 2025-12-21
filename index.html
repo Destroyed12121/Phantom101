@@ -185,7 +185,7 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const isFakeMode = urlParams.has('fake');
 
-                    if (!hasBypassed && !isFakeMode) {
+                    if (window.SITE_CONFIG.firstVisitCloak && !hasBypassed && !isFakeMode) {
                         const overlay = document.getElementById('fv-cloak');
                         if (overlay) overlay.style.display = 'block';
                         document.title = origin;
@@ -194,6 +194,17 @@
                         const style = document.createElement('style');
                         style.innerHTML = '#loading-screen { display: none !important; }';
                         document.head.appendChild(style);
+
+                        // Set up bypass on reload button
+                        document.getElementById('reload-button').onclick = function () {
+                            localStorage.setItem(STORAGE_KEY, 'true');
+                            overlay.style.display = 'none';
+                            document.getElementById('main-frame').src = 'index2.html';
+                            document.title = 'Phantom Unblocked'; // Reset title
+                        };
+                    } else {
+                        // If no cloak, load main content immediately
+                        document.getElementById('main-frame').src = 'index2.html';
                     }
                 } catch (e) { }
             }
@@ -264,6 +275,8 @@
         // Expose to children if needed
         window.showLoading = showLoading;
         window.hideLoading = hideLoading;
+
+        console.log('press c to enter');
     </script>
 </body>
 
