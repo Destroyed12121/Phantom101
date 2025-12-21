@@ -1,5 +1,5 @@
 # Phantom Unblocked
-press c to enter
+
 👻 **Phantom** - Your ultimate unblocked entertainment platform 👻
 
 ## What We Offer
