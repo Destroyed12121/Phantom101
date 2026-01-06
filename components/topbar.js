@@ -40,7 +40,7 @@
             { name: 'Movies', icon: 'film', link: 'pages/movies.html' },
             { name: 'Games', icon: 'gamepad-2', link: 'pages/games.html' },
             { name: 'Search', icon: 'search', link: 'staticsjv2/index.html' },
-            { name: 'AI Chat', icon: 'bot', link: 'pages/chatbot.html' },
+            { name: 'PhantomAI', icon: 'bot', link: 'pages/chatbot.html' },
             { separator: true },
             { name: 'Settings', icon: 'settings', link: 'pages/settings.html' }
         ];

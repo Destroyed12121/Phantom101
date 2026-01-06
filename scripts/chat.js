@@ -1,6 +1,6 @@
 /**
  * PHANTOM AI - Core Logic
- * Handles local chat state, Pollinations.ai integration, and UI updates.
+ * Fully integrated with Phantom Design System (main.css)
  */
 
 class PhantomChat {
@@ -17,6 +17,16 @@ class PhantomChat {
             }
         };
 
+        // UI: Auto-typing placeholders
+        this.placeholders = [
+            "Explain point slope form",
+            "Generate a cinematic phantom concept art...",
+            "Explain quantum physics in simple terms...",
+            "Write a dark atmospheric poem...",
+            "How do I center a div using CSS?",
+            "Design a futuristic UI layout..."
+        ];
+
         this.dom = {};
         this.abortController = null;
         this.storageKey = 'phantom_ai_data';
@@ -24,6 +34,7 @@ class PhantomChat {
         this.cacheDOM();
         this.loadState();
         this.init();
+        this.initPlaceholderAnimation();
     }
 
     init() {
@@ -36,7 +47,9 @@ class PhantomChat {
         if (!window.hljs) console.warn('Highlight.js not loaded');
 
         // System ready notification
-        Notify.success('System Ready', 'Phantom AI initialized successfully');
+        if (window.Notify) {
+            Notify.success('System Ready', 'Phantom AI initialized successfully');
+        }
     }
 
     cacheDOM() {
@@ -55,16 +68,13 @@ class PhantomChat {
     }
 
     bindEvents() {
-        // Global events
+        // Global Delegation
         document.addEventListener('click', (e) => {
             if (e.target.closest('#sidebarToggle') || e.target.closest('#menuToggle')) {
                 this.toggleSidebar();
             }
             if (e.target.closest('#newChatBtn')) {
                 this.createConversation();
-            }
-            if (e.target.closest('.delete-btn')) {
-                // Handled in render loop or delegation
             }
             if (e.target.closest('.mode-btn')) {
                 const btn = e.target.closest('.mode-btn');
@@ -75,36 +85,62 @@ class PhantomChat {
             }
         });
 
-        // Input events
-        document.addEventListener('keydown', (e) => {
-            if (e.target.id === 'chatInput' && e.key === 'Enter' && !e.shiftKey) {
+        // Input Handling
+        this.dom.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 this.sendMessage();
             }
         });
 
-        document.addEventListener('input', (e) => {
-            if (e.target.id === 'chatInput') {
-                this.updateInputHeight(e.target);
-                this.dom.sendBtn.disabled = !e.target.value.trim();
-            }
+        this.dom.input.addEventListener('input', (e) => {
+            this.updateInputHeight(e.target);
+            this.dom.sendBtn.disabled = !e.target.value.trim();
         });
 
-        // Model change
-        document.addEventListener('change', (e) => {
-            if (e.target.id === 'modelSelector') {
-                this.state.config.model = e.target.value;
-                this.saveState();
-                Notify.success('AI Model Updated', `Switched to ${this.state.config.model}`);
-            }
+        // Model Change
+        this.dom.modelSelect.addEventListener('change', (e) => {
+            this.state.config.model = e.target.value;
+            this.saveState();
+            if (window.Notify) Notify.success('Model Updated', `Switched to ${this.state.config.model}`);
         });
 
-        // Send Button
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#sendBtn')) {
-                this.sendMessage();
+        // Send Click
+        this.dom.sendBtn.addEventListener('click', () => this.sendMessage());
+    }
+
+    // ============================================
+    // UI ANIMATIONS & UTILS
+    // ============================================
+
+    initPlaceholderAnimation() {
+        let pIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+
+        const type = () => {
+            const current = this.placeholders[pIndex];
+            const input = this.dom.input;
+            if (!input) return;
+
+            if (isDeleting) {
+                input.placeholder = current.substring(0, charIndex--);
+            } else {
+                input.placeholder = current.substring(0, charIndex++);
             }
-        });
+
+            if (!isDeleting && charIndex > current.length) {
+                isDeleting = true;
+                setTimeout(type, 2000); // Pause at end
+            } else if (isDeleting && charIndex < 0) {
+                isDeleting = false;
+                pIndex = (pIndex + 1) % this.placeholders.length;
+                setTimeout(type, 500); // Pause before next word
+            } else {
+                setTimeout(type, isDeleting ? 40 : 80);
+            }
+        };
+        type();
     }
 
     updateInputHeight(el) {
@@ -117,7 +153,6 @@ class PhantomChat {
         const isActive = isDesktop ? !this.dom.sidebar.classList.contains('collapsed') : this.dom.sidebar.classList.contains('active');
         const newState = forceState !== undefined ? forceState : !isActive;
 
-        // Desktop uses 'collapsed' class logic, Mobile uses 'active' class logic
         if (isDesktop) {
             this.dom.sidebar.classList.toggle('collapsed', !newState);
             this.dom.app.classList.toggle('sidebar-collapsed', !newState);
@@ -127,23 +162,24 @@ class PhantomChat {
         }
     }
 
+    // ============================================
+    // AI & DATA LOGIC
+    // ============================================
+
     async fetchModels() {
         try {
-            // Fetch Text Models
-            const textRes = await fetch('https://text.pollinations.ai/models');
-            const textData = await textRes.json();
-            this.state.models.text = textData.map(m => typeof m === 'object' ? m.name : m);
+            const headers = { 'Authorization': 'Bearer sk_j66iDfX2lPbTZ2Otb9MI7xje7kRZQUyE' };
+            const [textRes, imgRes] = await Promise.all([
+                fetch('https://text.pollinations.ai/models', { headers }),
+                fetch('https://image.pollinations.ai/models', { headers })
+            ]);
 
-            // Fetch Image Models
-            const imgRes = await fetch('https://image.pollinations.ai/models');
-            const imgData = await imgRes.json();
-            this.state.models.image = imgData.map(m => typeof m === 'object' ? m.name : m);
-
+            this.state.models.text = await textRes.json();
+            this.state.models.image = await imgRes.json();
             this.populateModelSelect();
         } catch (e) {
             console.error('Failed to fetch models', e);
-            // Fallbacks
-            this.state.models.text = ['openai', 'mistral', 'llama', 'searchgpt'];
+            this.state.models.text = ['openai', 'mistral', 'llama'];
             this.state.models.image = ['flux', 'turbo'];
             this.populateModelSelect();
         }
@@ -151,46 +187,34 @@ class PhantomChat {
 
     populateModelSelect() {
         if (!this.dom.modelSelect) return;
-
         const mode = this.state.config.mode;
         const models = this.state.models[mode] || [];
 
-        // Priority sorting
-        const priority = ['openai', 'gpt4', 'p1', 'flux'];
-        models.sort((a, b) => {
-            const pA = priority.indexOf(a);
-            const pB = priority.indexOf(b);
-            if (pA !== -1 && pB !== -1) return pA - pB;
-            if (pA !== -1) return -1;
-            if (pB !== -1) return 1;
-            return a.localeCompare(b);
-        });
-
-        this.dom.modelSelect.innerHTML = models.map(m =>
-            `<option value="${m}" ${m === this.state.config.model ? 'selected' : ''}>
-                ${m.charAt(0).toUpperCase() + m.slice(1).replace('gpt', 'GPT')}
-            </option>`
-        ).join('');
+        this.dom.modelSelect.innerHTML = models.map(m => {
+            const name = typeof m === 'object' ? m.name : m;
+            return `<option value="${name}" ${name === this.state.config.model ? 'selected' : ''}>
+                ${name.charAt(0).toUpperCase() + name.slice(1)}
+            </option>`;
+        }).join('');
     }
 
     setMode(mode) {
         if (mode !== 'text' && mode !== 'image') return;
         this.state.config.mode = mode;
 
-        // Update UI
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
 
-        // Reset model to default for that mode
         this.state.config.model = mode === 'text' ? 'openai' : 'flux';
         this.populateModelSelect();
         this.saveState();
     }
 
     // ============================================
-    // CONVERSATIONS
+    // CONVERSATION MANAGEMENT
     // ============================================
+
     loadState() {
         const raw = localStorage.getItem(this.storageKey);
         if (raw) {
@@ -199,9 +223,7 @@ class PhantomChat {
                 this.state.conversations = data.conversations || [];
                 this.state.currentId = data.currentId;
                 this.state.config = { ...this.state.config, ...data.config };
-            } catch (e) {
-                console.error('State load error', e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         if (this.state.conversations.length === 0) {
@@ -235,8 +257,6 @@ class PhantomChat {
     }
 
     deleteConversation(id) {
-        if (!confirm('Are you sure you want to delete this chat?')) return;
-
         this.state.conversations = this.state.conversations.filter(c => c.id !== id);
         if (this.state.currentId === id) {
             this.state.currentId = this.state.conversations[0]?.id || null;
@@ -250,14 +270,20 @@ class PhantomChat {
         return this.state.conversations.find(c => c.id === this.state.currentId);
     }
 
+    loadConversation(id) {
+        this.state.currentId = id;
+        this.render();
+        if (window.innerWidth <= 768) this.toggleSidebar(false);
+    }
+
     // ============================================
-    // MESSAGING
+    // MESSAGING ENGINE
     // ============================================
+
     async sendMessage() {
         const text = this.dom.input.value.trim();
         if (!text) return;
 
-        // Reset Input
         this.dom.input.value = '';
         this.updateInputHeight(this.dom.input);
         this.dom.sendBtn.disabled = true;
@@ -265,15 +291,11 @@ class PhantomChat {
         const conv = this.getCurrentConversation();
         if (!conv) return;
 
-        // Add User Message
+        // User Message
         conv.messages.push({ role: 'user', content: text, type: 'text' });
         this.appendMessage({ role: 'user', content: text });
-        this.scrollToBottom();
 
-        // Title Generation (First Msg)
-        if (conv.messages.length === 1) {
-            this.generateTitle(text);
-        }
+        if (conv.messages.length === 1) this.generateTitle(text);
 
         // Logic based on mode
         if (this.state.config.mode === 'image') {
@@ -286,79 +308,87 @@ class PhantomChat {
     }
 
     async generateText(input, conv) {
-        // Create Placeholder
         const placeholderId = 'thinking-' + Date.now();
-        this.appendMessage({ role: 'ai', content: 'Thinking...', id: placeholderId, isThinking: true });
-        this.scrollToBottom();
+        this.appendMessage({ role: 'ai', content: 'Processing...', id: placeholderId, isThinking: true });
 
         try {
-            const systemPrompt = "You are Phantom AI. Use Markdown. For Math, use $...$ for inline and $$...$$ for block. Respond concisely and with a simple tone";
-            const history = conv.messages.filter(m => m.type !== 'image').map(m => `${m.role}: ${m.content}`).join('\n');
-            const fullPrompt = `System: ${systemPrompt}\n\n${history}`;
+            const system = "You are Phantom AI. Use Markdown. Concise, sleek tone.";
+            const history = conv.messages.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
+            const prompt = `System: ${system}\n${history}`;
 
-            const url = `https://text.pollinations.ai/${encodeURIComponent(fullPrompt)}?model=${this.state.config.model}`;
-
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('API Error');
+            const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=${this.state.config.model}`;
+            const res = await fetch(url, {
+                headers: { 'Authorization': 'Bearer sk_j66iDfX2lPbTZ2Otb9MI7xje7kRZQUyE' }
+            });
             const data = await res.text();
 
-            // Replace placeholder
-            const thinkingEl = document.getElementById(placeholderId);
-            if (thinkingEl) thinkingEl.remove();
+            document.getElementById(placeholderId)?.remove();
 
             conv.messages.push({ role: 'ai', content: data, type: 'text' });
             this.appendMessage({ role: 'ai', content: data });
 
         } catch (e) {
             console.error(e);
-            Notify.error('AI Error', 'Failed to generate response');
-            const thinkingEl = document.getElementById(placeholderId);
-            if (thinkingEl) thinkingEl.innerHTML = '<span style="color:var(--error)">Error generating response.</span>';
+            const el = document.getElementById(placeholderId);
+            if (el) el.innerHTML = `<span class="text-error">Communication failed. Retry?</span>`;
         }
     }
 
     async generateImage(input, conv) {
         const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(input)}?model=${this.state.config.model}&nologo=true`;
-
         conv.messages.push({ role: 'ai', content: url, prompt: input, type: 'image' });
         this.appendMessage({ role: 'ai', content: url, type: 'image', prompt: input });
     }
 
-    async generateTitle(firstMsg) {
+    async generateTitle(text) {
         try {
-            const prompt = `Generate a 3-word title for: "${firstMsg}"`;
-            const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai`);
+            const res = await fetch(`https://text.pollinations.ai/Generate a 3 word title for: ${encodeURIComponent(text)}?model=openai-fast`);
             const title = await res.text();
-
             const conv = this.getCurrentConversation();
             if (conv && title) {
                 conv.title = title.replace(/"/g, '').trim();
-                this.renderConversationList();
                 this.dom.title.textContent = conv.title;
+                this.renderConversationList();
             }
         } catch (e) { }
     }
 
+    retryLast() {
+        const conv = this.getCurrentConversation();
+        if (!conv || conv.messages.length < 2) return;
+
+        // Find last user message
+        const lastUserMsgIndex = [...conv.messages].reverse().findIndex(m => m.role === 'user');
+        if (lastUserMsgIndex === -1) return;
+
+        // Remove everything after that user message
+        const actualIndex = conv.messages.length - 1 - lastUserMsgIndex;
+        const lastInput = conv.messages[actualIndex].content;
+
+        conv.messages = conv.messages.slice(0, actualIndex + 1);
+
+        // Re-render and trigger send
+        this.render();
+        this.dom.input.value = lastInput;
+        this.sendMessage();
+    }
+
     // ============================================
-    // RENDERING
+    // RENDERING ENGINE
     // ============================================
+
     render() {
         const conv = this.getCurrentConversation();
-
-        // Render List
         this.renderConversationList();
-
-        // Render Chat Body
-        this.dom.chatBody.innerHTML = ''; // efficient enough for now
+        this.dom.chatBody.innerHTML = '';
 
         if (!conv || conv.messages.length === 0) {
             this.dom.hero.style.display = 'block';
+            this.dom.title.textContent = 'Phantom AI';
         } else {
             this.dom.hero.style.display = 'none';
             this.dom.title.textContent = conv.title;
-
             conv.messages.forEach(msg => this.appendMessage(msg));
-            this.scrollToBottom();
         }
     }
 
@@ -373,72 +403,85 @@ class PhantomChat {
         `).join('');
     }
 
-    loadConversation(id) {
-        this.state.currentId = id;
-        this.render();
-    }
-
     appendMessage({ role, content, type = 'text', prompt, id, isThinking }) {
         this.dom.hero.style.display = 'none';
 
         const div = document.createElement('div');
-        div.className = `message ${role}-message`;
+        div.className = `message ${role}-message animate-fadeIn`;
         if (id) div.id = id;
 
-        let innerHTML = '';
-
-        // Avatar
-        innerHTML += `
+        let innerHTML = `
             <div class="message-avatar">
-                <i class="fas ${role === 'ai' ? 'fa-robot' : 'fa-user'}"></i>
+                <i data-lucide="${role === 'ai' ? 'ghost' : 'user'}"></i>
             </div>
+            <div class="message-content">
+                <div class="message-text">
         `;
-
-        // Content
-        innerHTML += `<div class="message-content"><div class="message-text">`;
 
         if (isThinking) {
             innerHTML += `<span class="thinking-dots">Thinking...</span>`;
         } else if (type === 'image') {
             innerHTML += `
-                <p>Generating: <em>${prompt}</em></p>
+                <p class="text-xs text-dim mb-sm">Generated: ${prompt}</p>
                 <img src="${content}" class="generated-image" loading="lazy" alt="${prompt}">
             `;
         } else {
-            // Markdown Parse
             const parsed = window.marked ? marked.parse(content) : content;
             innerHTML += parsed;
         }
 
-        innerHTML += `</div></div>`;
+        innerHTML += `</div>`; // Close message-text
+
+        // Actions for AI
+        if (role === 'ai' && !isThinking) {
+            innerHTML += `
+                <div class="message-actions">
+                    <button class="btn btn-sm" title="Copy" onclick="navigator.clipboard.writeText(\`${content.replace(/`/g, '\\`')}\`); if(window.Notify) Notify.success('Copied','Message saved to clipboard')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button class="btn btn-sm" title="Retry" onclick="window.phantomChat.retryLast()">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        innerHTML += `</div>`; // Close message-content
         div.innerHTML = innerHTML;
 
         this.dom.chatBody.appendChild(div);
 
-        // Hydrate Math / Syntax
-        if (!isThinking && type === 'text') {
-            if (window.renderMathInElement) {
-                renderMathInElement(div, {
-                    delimiters: [
-                        { left: '$$', right: '$$', display: true },
-                        { left: '$', right: '$', display: false }
-                    ]
-                });
-            }
-            div.querySelectorAll('pre code').forEach(block => {
-                if (window.hljs) hljs.highlightElement(block);
+        // Create Lucide icons
+        if (window.lucide) {
+            lucide.createIcons(div);
+        }
+
+        // Highlight Code
+        if (!isThinking && type === 'text' && window.hljs) {
+            div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+        }
+
+        // Render Math
+        if (!isThinking && type === 'text' && window.renderMathInElement) {
+            renderMathInElement(div, {
+                delimiters: [
+                    { left: '$', right: '$', display: false },
+                    { left: '$$', right: '$$', display: true }
+                ]
             });
         }
+
+        this.scrollToBottom();
     }
 
     scrollToBottom() {
         setTimeout(() => {
             this.dom.chatBody.scrollTop = this.dom.chatBody.scrollHeight;
-        }, 50);
+        }, 100);
     }
 }
 
-// Init on Load
+// Initialize
 window.addEventListener('DOMContentLoaded', () => {
     window.phantomChat = new PhantomChat();
 });

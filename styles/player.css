@@ -1,233 +1,273 @@
-        .player-page {
-            min-height: 100vh;
-            padding: 70px 20px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
+/* ============================================
+   PLAYER PAGE STYLES
+   ============================================ */
 
-            overflow-x: hidden;
-        }
+.player-page {
+    min-height: 100vh;
+    padding: 80px 20px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    background: var(--bg);
+}
 
-        .player-container {
-            width: 100%;
-            max-width: 1200px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            z-index: 10;
-        }
+.player-container {
+    width: 100%;
+    max-width: 1200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+    /* Clean "start of chat" look - Standard Card */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
 
-        .player-frame-wrapper {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%;
-            background: #000;
-            z-index: 2;
-            overflow: visible;
-        }
+.player-frame-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    /* 16:9 Aspect Ratio */
+    background: #000;
+    z-index: 5;
+    overflow: hidden;
+}
 
+/* ============================================
+   THEATER MODE
+   ============================================ */
+body.theater-active {
+    background: #000 !important;
+    overflow: hidden;
+    /* Prevent scrolling */
+}
 
+body.theater-active .topbar {
+    transform: translateY(-100%);
+    /* Hide topbar */
+    transition: transform 0.3s ease;
+}
 
-        /* Theater Mode */
-        body.theater-active {
-            background: #000 !important;
-        }
+body.theater-active .player-page {
+    padding: 0;
+    justify-content: center;
+    height: 100vh;
+}
 
-        body.theater-active .topbar {
-            opacity: 0;
-            pointer-events: none;
-        }
+body.theater-active .player-container {
+    max-width: 100vw;
+    height: 100vh;
+    border: none;
+    border-radius: 0;
+    background: #000;
+    box-shadow: none;
+}
 
-        body.theater-active .player-page {
-            padding-top: 20px;
-            z-index: 910;
+body.theater-active .player-frame-wrapper {
+    padding-top: 0;
+    height: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        }
+/* Theater Mode Overlays - Bottom Aligned */
+body.theater-active .player-controls,
+body.theater-active .player-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    border: none;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    /* Let clicks pass through empty space */
+}
 
-        body.theater-active .player-container {
-            max-width: 98%;
-            background: #000;
-            border-color: #111;
-            z-index: 950 !important;
+/* Stack styling */
+body.theater-active .player-controls {
+    bottom: 0;
+    padding-bottom: 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
+}
 
-        }
+body.theater-active .player-info {
+    bottom: auto;
+    /* Reset bottom */
+    top: 0;
+    /* Move to top to avoid clipping controls */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+    /* Top gradient */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
 
-        body.theater-active .player-info {
-            background: transparent;
-        }
+/* Move Title/Desc container to top left in Theater Mode */
+body.theater-active .player-info {
+    justify-content: flex-start;
+    padding-top: 20px;
+}
 
+/* Show on Hover */
+body.theater-active .player-container:hover .player-controls,
+body.theater-active .player-container:hover .player-info {
+    opacity: 1;
+}
 
+/* Re-enable clicks on the actual interactive elements */
+body.theater-active .player-controls>*,
+body.theater-active .player-info>* {
+    pointer-events: auto;
+}
 
-        .player-frame {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-            z-index: 3;
-            background: transparent;
-        }
+/* ============================================
+   FRAME & AMBIENCE
+   ============================================ */
+.player-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    z-index: 6;
+    /* Video above background */
+    background: transparent;
+}
 
-        .player-controls {
-            padding: 16px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            justify-content: flex-end;
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            flex-wrap: wrap;
-        }
+/* Ambilight - Hidden by default */
+.player-frame-bg {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.1);
+    width: 100%;
+    height: 100%;
+    border: none;
+    z-index: 1;
+    /* Below video */
+    filter: blur(80px) saturate(1.5) brightness(0.8);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+}
 
-        .player-info {
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            background: var(--bg);
-        }
+body.theater-active .player-frame-bg {
+    display: block;
+    opacity: 0.6;
+}
 
-        .player-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
+/* ============================================
+   UI COMPONENTS
+   ============================================ */
+.player-controls {
+    padding: 16px 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    transition: background 0.2s, opacity 0.2s;
+}
 
-        .player-desc {
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
+.player-info {
+    padding: 24px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    /* Visually separate if needed */
+    transition: background 0.2s, opacity 0.2s;
+}
 
-        .control-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 0.875rem;
-            outline: none;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
+.player-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+}
 
-        .control-btn:hover,
-        .control-btn.active {
-            background: var(--border);
-            color: #fff;
-        }
+.player-desc {
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-size: 0.875rem;
+}
 
-        .provider-select {
-            padding: 8px 12px;
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 0.875rem;
-            outline: none;
-            cursor: pointer;
-        }
+/* Dropdown */
+.provider-select {
+    padding: 8px 12px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.875rem;
+    outline: none;
+    cursor: pointer;
+}
 
-        /* Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 22px;
-            margin-right: 8px;
-        }
+/* Switch Toggle */
+.switch {
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    position: relative;
+    margin-right: 8px;
+}
 
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--surface-hover);
-            border: 1px solid var(--border);
-            transition: .4s;
-            border-radius: 22px;
-        }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border);
+    transition: .3s;
+    border-radius: 22px;
+}
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 2px;
-            bottom: 2px;
-            background-color: var(--text-muted);
-            transition: .4s;
-            border-radius: 50%;
-        }
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-dim);
+    transition: .3s;
+    border-radius: 50%;
+}
 
-        input:checked+.slider {
-            background-color: var(--primary);
-            border-color: var(--primary);
-        }
+input:checked+.slider {
+    background-color: var(--accent);
+}
 
-        input:checked+.slider:before {
-            transform: translateX(18px);
-            background-color: #fff;
-        }
+input:checked+.slider:before {
+    transform: translateX(18px);
+    background-color: var(--bg);
+}
 
-        /* Theater Glow Ambience */
-        .theater-glow {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, var(--primary), #9333ea, #2563eb, var(--primary));
-            background-size: 300% 300%;
-            z-index: 1;
-            filter: blur(20px);
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            border-radius: 12px;
-            pointer-events: none;
-            transform: scale(1);
-        }
+/* Ensure buttons are clickable */
+.btn {
+    position: relative;
+    z-index: 101;
+}
 
-        body.theater-active .theater-glow {
-            opacity: 0.8;
-            animation: animateGlow 10s ease infinite, pulseGlow 4s ease-in-out infinite alternate;
-        }
-
-        @keyframes animateGlow {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        @keyframes pulseGlow {
-            0% {
-                transform: scale(1.01);
-                filter: blur(20px);
-            }
-
-            100% {
-                transform: scale(1.05);
-                filter: blur(35px);
-            }
-        }
+/* Legacy fallback */
+.theater-glow {
+    display: none;
+}

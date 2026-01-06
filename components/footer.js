@@ -153,6 +153,80 @@
     if (versionBtn) versionBtn.onclick = openChangelog;
 
     // ==========================================
+    // EXTERNAL MESSAGE (ONE-TIME)
+    // ==========================================
+    async function showExternalMessage() {
+        const MESSAGE_SHOWN_KEY = 'phantom_ext_msg_shown';
+        if (localStorage.getItem(MESSAGE_SHOWN_KEY)) return;
+
+        try {
+            const response = await fetch('https://cdn.jsdelivr.net/gh/Destroyed12121/Phantom101/message.js');
+            if (!response.ok) return;
+            const content = await response.text();
+
+            // Flexible parsing
+            let messages = [];
+            try {
+                // If it's a JSON array
+                messages = JSON.parse(content);
+            } catch (e) {
+                // If it's JS: window.MSG = ["line1", "line2"]
+                const arrayMatch = content.match(/\[.*\]/s);
+                if (arrayMatch) {
+                    try {
+                        messages = JSON.parse(arrayMatch[0].replace(/'/g, '"').replace(/,\s*\]/g, ']'));
+                    } catch (e2) {
+                        messages = content.split('\n').filter(l => l.trim().length > 2);
+                    }
+                } else {
+                    messages = content.split('\n').filter(l => l.trim().length > 2);
+                }
+            }
+
+            if (!messages || messages.length === 0) return;
+
+            // Show global modal (identical to changelog)
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.innerHTML = `
+                <div class="modal" style="width: 400px; max-width: 90vw;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Announcement</h3>
+                        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul style="margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+                            ${messages.map(m => '<li>' + m + '</li>').join('')}
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-sm btn-primary modal-close-btn" style="width: 100%">Got it</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Trigger animation
+            requestAnimationFrame(() => overlay.classList.add('show'));
+
+            const close = () => {
+                overlay.classList.remove('show');
+                setTimeout(() => overlay.remove(), 200);
+                localStorage.setItem(MESSAGE_SHOWN_KEY, 'true');
+            };
+
+            overlay.querySelector('.modal-close').onclick = close;
+            overlay.querySelector('.modal-close-btn').onclick = close;
+            overlay.onclick = (e) => { if (e.target === overlay) close(); };
+        } catch (err) {
+            console.warn("Could not load external message:", err);
+        }
+    }
+
+    // Call it after a delay
+    setTimeout(showExternalMessage, 3000);
+
+    // ==========================================
     // AUTO SHOW CHANGELOG ON UPDATE
     // ==========================================
     const currentVersion = config.version;

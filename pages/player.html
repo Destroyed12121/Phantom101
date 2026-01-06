@@ -21,6 +21,7 @@
         <div class="player-container">
             <div class="player-frame-wrapper" id="frame-wrapper">
                 <div class="theater-glow"></div>
+                <iframe class="player-frame-bg" id="game-frame-bg" tabindex="-1"></iframe>
                 <iframe class="player-frame" id="game-frame" allowfullscreen></iframe>
             </div>
 
@@ -41,20 +42,20 @@
                     </label>
                 </div>
 
-                <button class="control-btn" id="btn-download" style="display:none;">
+                <button class="btn btn-secondary" id="btn-download" style="display:none;">
                     <i class="fa-solid fa-download"></i> Download
                 </button>
 
-                <button class="control-btn" id="btn-reload">
+                <button class="btn btn-secondary" id="btn-reload">
                     <i class="fa-solid fa-rotate-right"></i> Reload
                 </button>
-                <button class="control-btn" id="btn-newtab">
+                <button class="btn btn-secondary" id="btn-newtab">
                     <i class="fa-solid fa-up-right-from-square"></i> Open in New Tab
                 </button>
-                <button class="control-btn" id="btn-theater">
+                <button class="btn btn-secondary" id="btn-theater">
                     <i class="fa-solid fa-masks-theater"></i> Theater Mode
                 </button>
-                <button class="control-btn" id="btn-fullscreen">
+                <button class="btn btn-secondary" id="btn-fullscreen">
                     <i class="fa-solid fa-expand"></i> Fullscreen
                 </button>
             </div>

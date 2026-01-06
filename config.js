@@ -5,12 +5,13 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.5",
+    version: "1.0.6",
 
     // Changelog
     changelog: [
-        "fixxes to search suggestion",
-        "multi library using both libraries",
+        "UI Changes and latex fixxes for PhantomAI",
+        "more fixxes to search suggestion",
+        "multi library using both game libraries",
         "ambience glow and more fixxed",
         "OPEN SOURCE RELEASE https://github.com/Destroyed12121/Phantom101",
         "JOIN THE DISCORD"

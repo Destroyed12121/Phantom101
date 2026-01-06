@@ -335,19 +335,29 @@
 
     const showLaunchScreen = () => {
         const launchScreen = document.getElementById('launch-screen');
+        if (!launchScreen) return;
+
         launchScreen.classList.remove('hidden');
-        document.getElementById('launch-button').addEventListener('click', () => {
+        document.getElementById('launch-button').onclick = () => {
             launchScreen.classList.add('hidden');
 
             // Try to open cloaked instance
-            // The click event should bypass popup blockers
             const win = window.Cloaking.openCloaked(window.location.href);
 
-            // Only fallback to current tab if popup totally failed (rare on click)
+            // If popup failed, stay on current tab and load content
             if (!win) {
-                document.getElementById('main-frame').src = 'index2.html';
+                console.warn("Popup blocked, falling back to current tab");
+                const frame = document.getElementById('main-frame');
+                if (frame) frame.src = 'index2.html';
+
+                // Reset title and icon just in case they were partially changed
+                document.title = 'Phantom Unblocked';
+                const link = document.createElement('link');
+                link.rel = 'icon';
+                link.href = 'favicon.svg';
+                document.head.appendChild(link);
             }
-        }, { once: true });
+        };
     };
 
     // Key listener for panic (hiding)
@@ -428,7 +438,7 @@
         // Open page in about:blank (for cloak mode)
         openInBlank(url) {
             const win = window.open('about:blank', '_blank');
-            if (win) {
+            if (win && !win.closed) {
                 // Determine title/icon to use for the new window
                 const title = window.Settings?.get('tabTitle') || 'Google';
                 const icon = window.Settings?.get('tabFavicon') || 'https://www.google.com/favicon.ico';
@@ -451,16 +461,16 @@
                     </html>
                 `);
                 win.document.close();
-            }
 
-            // Handle redirect of original tab
-            const redirect = window.Settings?.get('redirectTarget');
-            if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
-            else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
-            else {
-                const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-                window.location.replace(randomTarget);
+                // Handle redirect of original tab ONLY if win was successful
+                const redirect = window.Settings?.get('redirectTarget');
+                if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
+                else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
+                else {
+                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
+                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                    window.location.replace(randomTarget);
+                }
             }
 
             return win;
@@ -492,14 +502,16 @@
             const blobUrl = URL.createObjectURL(blob);
             const win = window.open(blobUrl, '_blank');
 
-            // Handle redirect of original tab
-            const redirect = window.Settings?.get('redirectTarget');
-            if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
-            else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
-            else {
-                const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-                window.location.replace(randomTarget);
+            if (win && !win.closed) {
+                // Handle redirect of original tab ONLY if win was successful
+                const redirect = window.Settings?.get('redirectTarget');
+                if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
+                else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
+                else {
+                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
+                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                    window.location.replace(randomTarget);
+                }
             }
 
             return win;

@@ -268,30 +268,6 @@
         }
 
 
-        // Search → use autocomplete or fallback to web search
-        function handleSearch(e) {
-            e.preventDefault();
-            const query = document.getElementById('search-input').value.trim();
-            if (!query) return;
-
-            // If autocomplete has a selected item, it handles navigation
-            // Otherwise fallback to web search
-            if (window.PhantomSearch && window.PhantomSearch.isOpen && window.PhantomSearch.suggestions.length > 0) {
-                // Let the autocomplete handle it (Enter key is already handled)
-                return;
-            }
-
-            // Fallback: direct web search
-            window.PhantomSearch?.doWebSearch(query) || (() => {
-                let url;
-                if (query.includes('.') && !query.includes(' ')) {
-                    url = query.startsWith('http') ? query : 'https://' + query;
-                } else {
-                    url = 'https://search.brave.com/search?q=' + encodeURIComponent(query);
-                }
-                window.location.href = 'staticsjv2/index.html#' + encodeURIComponent(url);
-            })();
-        }
 
         // Theme notification
         window.addEventListener('load', () => {
@@ -369,15 +345,36 @@
                     }
 
                     const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
+
+                    // Reliable initialization check
+                    const configReady = new Promise(resolve => {
+                        const timeout = setTimeout(() => {
+                            navigator.serviceWorker.removeEventListener('message', handler);
+                            resolve(false);
+                        }, 5000);
+
+                        const handler = (e) => {
+                            if (e.data.type === 'config_ready') {
+                                clearTimeout(timeout);
+                                navigator.serviceWorker.removeEventListener('message', handler);
+                                resolve(true);
+                            }
+                        };
+                        navigator.serviceWorker.addEventListener('message', handler);
+                    });
+
                     reg.active.postMessage({ type: "config", wispurl: wispUrl });
+                    const isReady = await configReady;
 
                     const connection = new BareMux.BareMuxConnection(bareWorkerPath);
                     await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: wispUrl }]);
 
                     if (window.Notify) {
-                        setTimeout(() => {
+                        if (isReady) {
                             window.Notify.success("Ready", "Proxy service initialized");
-                        }, 1000);
+                        } else {
+                            window.Notify.warning("Partial Ready", "Proxy initialized with possible connection delay");
+                        }
                     }
                 } else {
                     throw new Error("Service Worker not supported");

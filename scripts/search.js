@@ -9,31 +9,53 @@ const PhantomSearch = {
     suggestions: [],
     selectedIndex: -1,
     isOpen: false,
-    allGames: [
-        { name: 'Roblox', type: 'game', url: 'pages/player.html?type=game&title=Roblox&url=..%2Fstaticsjv2%2Fembed.html%23https%3A%2F%2Fnow.gg%2Fapps%2Froblox-corporation%2F5349%2Froblox.html' },
-        { name: 'Fortnite', type: 'game', url: 'pages/player.html?type=game&title=Fortnite&url=..%2Fstaticsjv2%2Fembed.html%23https%3A%2F%2Fnow.gg%2Fapps%2Fepic-games%2F5349%2Ffortnite.html' }
-    ],
+    allGames: [],
     gamesLoaded: false,
+    domainsLoaded: false,
 
-    // Static  pages configuration
+    // Static configuration
     pages: [
-        { name: 'Games', url: 'pages/games.html', icon: 'fa-solid fa-gamepad', type: 'page' },
-        { name: 'Movies & TV', url: 'pages/movies.html', icon: 'fa-solid fa-film', type: 'page' },
-        { name: 'AI Chatbot', url: 'pages/chatbot.html', icon: 'fa-solid fa-robot', type: 'page' },
-        { name: 'Code Editor', url: 'pages/code.html', icon: 'fa-solid fa-code', type: 'page' },
-        { name: 'Music', url: 'pages/music.html', icon: 'fa-solid fa-music', type: 'page' },
-        { name: 'Settings', url: 'pages/settings.html', icon: 'fa-solid fa-gear', type: 'page' }
+        { name: 'Games', url: 'pages/games.html', icon: 'fa-gamepad', type: 'page' },
+        { name: 'Movies & TV', url: 'pages/movies.html', icon: 'fa-film', type: 'page' },
+        { name: 'AI Chatbot', url: 'pages/chatbot.html', icon: 'fa-robot', type: 'page' },
+        { name: 'Code Editor', url: 'pages/code.html', icon: 'fa-code', type: 'page' },
+        { name: 'Music', url: 'pages/music.html', icon: 'fa-music', type: 'page' },
+        { name: 'Settings', url: 'pages/settings.html', icon: 'fa-gear', type: 'page' }
     ],
 
-    // Popular movies (hardcoded for quick suggestions)
     popularMovies: [
-        { name: 'Avengers: Endgame', type: 'movie' },
-        { name: 'Spider-Man: No Way Home', type: 'movie' },
-        { name: 'The Dark Knight', type: 'movie' },
-        { name: 'Fnaf', type: 'movie' },
-        { name: 'Interstellar', type: 'movie' },
-        { name: 'Breaking Bad', type: 'movie' },
-        { name: 'Stranger Things', type: 'movie' }
+        { name: 'Avengers: Endgame', id: 299534 },
+        { name: 'Spider-Man: No Way Home', id: 634649 },
+        { name: 'The Dark Knight', id: 155 },
+        { name: 'Fnaf', id: 950779 },
+        { name: 'Interstellar', id: 157336 },
+        { name: 'Breaking Bad', id: 1396 },
+        { name: 'Stranger Things', id: 66732 }
+    ],
+
+    popularDomains: [
+        { domain: 'google.com', name: 'Google' },
+        { domain: 'youtube.com', name: 'YouTube' },
+        { domain: 'tiktok.com', name: 'TikTok' },
+        { domain: 'imdb.com', name: 'IMDB' },
+        { domain: 'x.com', name: 'X' },
+        { domain: 'fandom.com', name: 'Fandom' },
+        { domain: 'instagram.com', name: 'Instagram' },
+        { domain: 'discord.com', name: 'Discord' },
+        { domain: 'spotify.com', name: 'Spotify' },
+        { domain: 'twitch.tv', name: 'Twitch' },
+        { domain: 'netflix.com', name: 'Netflix' },
+        { domain: 'facebook.com', name: 'Facebook' },
+        { domain: 'reddit.com', name: 'Reddit' },
+        { domain: 'wikipedia.org', name: 'Wikipedia' },
+        { domain: 'amazon.com', name: 'Amazon' },
+        { domain: 'github.com', name: 'GitHub' },
+        { domain: 'stackoverflow.com', name: 'Stack Overflow' },
+        { domain: 'linkedin.com', name: 'LinkedIn' },
+        { domain: 'pinterest.com', name: 'Pinterest' },
+        { domain: 'steampowered.com', name: 'Steam' },
+        { domain: 'zoom.us', name: 'Zoom' },
+        { domain: 'paypal.com', name: 'PayPal' }
     ],
 
     /**
@@ -53,8 +75,9 @@ const PhantomSearch = {
         this.inputEl.addEventListener('focus', () => this.onFocus());
         document.addEventListener('click', (e) => this.onClickOutside(e));
 
-        // Load games in background
+        // Load games and domains in background
         this.loadGames();
+        this.loadDomains();
     },
 
     /**
@@ -73,80 +96,38 @@ const PhantomSearch = {
     },
 
     /**
-     * Load all games from sources
+     * Load games from sources
      */
     async loadGames() {
         if (this.gamesLoaded) return;
 
         try {
-            // Load from FeaturedGames if available
+            // Load from FeaturedGames
             if (window.FeaturedGames?.games) {
                 window.FeaturedGames.games.forEach(g => {
                     if (g.name && g.url) {
-                        this.allGames.push({
-                            name: g.name,
-                            url: g.url,
-                            img: g.img,
-                            type: 'game'
-                        });
+                        this.addGame(g.name, g.url, g.img);
                     }
                 });
             }
 
             // Load from zones.json CDN
-            const ZONES_URL = "https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json";
-            const HTML_PREFIX = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
-
-            const res = await fetch(ZONES_URL);
+            const res = await fetch("https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json");
             const data = await res.json();
 
             data.forEach(g => {
-                let name = g.name || g.title;
-                if (name?.endsWith('-a.html')) name = name.replace('-a.html', '');
-
-                let url = g.url || g.file;
-                if (url) {
-                    url = url.replace('{HTML_URL}', HTML_PREFIX);
-                    if (url.endsWith('-a.html')) {
-                        url = url.replace('-a.html', '.html');
-                    }
-                }
-
-                const formattedName = this.formatName(name);
-
-                // Avoid duplicates
-                if (!this.allGames.some(x => x.name.toLowerCase() === formattedName.toLowerCase())) {
-                    this.allGames.push({
-                        name: formattedName,
-                        url: `pages/player.html?type=game&title=${encodeURIComponent(formattedName)}&url=${encodeURIComponent(url)}`,
-                        type: 'game'
-                    });
-                }
+                const name = (g.name || g.title).replace('-a.html', '');
+                const url = (g.url || g.file)?.replace('{HTML_URL}', "https://cdn.jsdelivr.net/gh/gn-math/html@main");
+                if (name && url) this.addGame(name, url);
             });
 
-            // Load UGS files if available
+            // Load UGS files
             if (window.UGS_FILES) {
-                const UGS_PREFIX = "https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/";
+                const prefix = "https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/";
                 window.UGS_FILES.forEach(file => {
-                    let name = file;
-                    if (name.toLowerCase().startsWith('cl')) {
-                        name = name.substring(2);
-                    }
-
-                    let fileName = file;
-                    if (!fileName.includes('.')) fileName += '.html';
-                    const url = `${UGS_PREFIX}${encodeURIComponent(fileName)}`;
-
-                    const formattedName = this.formatName(name);
-
-                    // Avoid duplicates
-                    if (!this.allGames.some(x => x.name.toLowerCase() === formattedName.toLowerCase())) {
-                        this.allGames.push({
-                            name: formattedName,
-                            url: `pages/player.html?type=game&title=${encodeURIComponent(formattedName)}&url=${encodeURIComponent(url)}`,
-                            type: 'game'
-                        });
-                    }
+                    const name = file.replace(/^cl/i, '');
+                    const url = `${prefix}${encodeURIComponent(file.includes('.') ? file : file + '.html')}`;
+                    this.addGame(name, url);
                 });
             }
 
@@ -156,18 +137,36 @@ const PhantomSearch = {
         }
     },
 
+    addGame(name, url, img) {
+        const formattedName = this.formatName(name);
+        const exists = this.allGames.some(g => g.name.toLowerCase() === formattedName.toLowerCase());
+        
+        if (!exists) {
+            this.allGames.push({
+                name: formattedName,
+                url: `pages/player.html?type=game&title=${encodeURIComponent(formattedName)}&url=${encodeURIComponent(url)}`,
+                img: img,
+                type: 'game'
+            });
+        }
+    },
+
     /**
-     * Format game name to be human readable
+     * Load domains
      */
+    async loadDomains() {
+        if (this.domainsLoaded) return;
+        this.domainsLoaded = true;
+    },
+
     formatName(name) {
-        if (!name) return '';
-        return name
+        return name ? name
             .replace(/\.html$/i, '')
             .replace(/[-_]/g, ' ')
             .replace(/([a-z])([A-Z])/g, '$1 $2')
             .replace(/\(\d+\)$/, '')
             .replace(/\b\w/g, l => l.toUpperCase())
-            .trim();
+            .trim() : '';
     },
 
     /**
@@ -242,49 +241,52 @@ const PhantomSearch = {
         }
     },
 
-    /**
-     * Search and generate suggestions
-     */
     search(query) {
         const q = query.toLowerCase();
-        const results = [];
         const MAX_RESULTS = 7;
+        const results = [];
 
-        // Search games (priority)
-        const gameMatches = this.allGames
+        // Add matching games (max 4)
+        this.allGames
             .filter(g => g.name.toLowerCase().includes(q))
             .slice(0, 4)
-            .map(g => ({ ...g, matchScore: g.name.toLowerCase().startsWith(q) ? 2 : 1 }));
+            .forEach(g => results.push(g));
 
-        // Sort by match score (prefix matches first)
-        gameMatches.sort((a, b) => b.matchScore - a.matchScore);
-        results.push(...gameMatches);
-
-        // Search pages
-        const pageMatches = this.pages
+        // Add matching pages (max 2)
+        this.pages
             .filter(p => p.name.toLowerCase().includes(q))
-            .slice(0, 2);
-
-        // Add pages if not already present (deduplication)
-        pageMatches.forEach(p => {
-            if (!results.some(r => r.name === p.name)) {
-                results.push(p);
-            }
-        });
-
-        // Search popular movies
-        const movieMatches = this.popularMovies
-            .filter(m => m.name.toLowerCase().includes(q))
             .slice(0, 2)
-            .map(m => ({ ...m, url: `pages/movies.html?search=${encodeURIComponent(m.name)}` }));
-        results.push(...movieMatches);
+            .forEach(p => results.push(p));
 
-        // Always add web search as last option
+        // Add matching movies (max 2)
+        this.popularMovies
+            .filter(movie => movie.name.toLowerCase().includes(q))
+            .slice(0, 2)
+            .forEach(movie => results.push({
+                name: movie.name,
+                url: `pages/player.html?type=movie&id=${movie.id}&title=${encodeURIComponent(movie.name)}`,
+                type: 'movie'
+            }));
+
+        // Add matching domains (max 3)
+        this.popularDomains
+            .filter(d => d.domain.includes(q) || d.name.toLowerCase().includes(q))
+            .slice(0, 3)
+            .forEach(d => results.push({
+                name: d.name,
+                domain: d.domain,
+                type: 'domain',
+                icon: 'fa-globe',
+                url: `staticsjv2/index.html#https://${d.domain}`,
+                displayName: d.name
+            }));
+
+        // Add web search option
         results.push({
             name: `Search web for "${query}"`,
             query: query,
             type: 'web',
-            icon: 'fa-solid fa-globe'
+            icon: 'fa-globe'
         });
 
         this.suggestions = results.slice(0, MAX_RESULTS);
@@ -303,36 +305,28 @@ const PhantomSearch = {
         }
 
         this.dropdownEl.innerHTML = this.suggestions.map((item, index) => {
-            let icon = '';
-            let typeLabel = '';
-
-            switch (item.type) {
-                case 'game':
-                    icon = '<i class="fa-solid fa-gamepad"></i>';
-                    typeLabel = 'Game';
-                    break;
-                case 'page':
-                    icon = `<i class="${item.icon}"></i>`;
-                    typeLabel = 'Page';
-                    break;
-                case 'movie':
-                    icon = '<i class="fa-solid fa-film"></i>';
-                    typeLabel = 'Movie';
-                    break;
-                case 'web':
-                    icon = '<i class="fa-solid fa-globe"></i>';
-                    typeLabel = 'Web';
-                    break;
-            }
+            const icons = {
+                game: 'fa-gamepad',
+                page: item.icon,
+                movie: 'fa-film',
+                domain: 'fa-globe',
+                web: 'fa-globe'
+            };
+            
+            const labels = {
+                game: 'Game',
+                page: 'Page',
+                movie: 'Movie',
+                domain: 'Website',
+                web: 'Web'
+            };
 
             return `
-                <div class="search-autocomplete-item${index === this.selectedIndex ? ' selected' : ''}" 
-                     data-index="${index}"
-                     role="option"
-                     aria-selected="${index === this.selectedIndex}">
-                    <span class="search-autocomplete-icon">${icon}</span>
-                    <span class="search-autocomplete-text">${this.escapeHtml(item.name)}</span>
-                    <span class="search-autocomplete-type">${typeLabel}</span>
+                <div class="search-autocomplete-item${index === this.selectedIndex ? ' selected' : ''}"
+                     data-index="${index}" role="option" aria-selected="${index === this.selectedIndex}">
+                    <span class="search-autocomplete-icon"><i class="fa-solid ${icons[item.type]}"></i></span>
+                    <span class="search-autocomplete-text">${this.escapeHtml(item.displayName || item.name)}</span>
+                    <span class="search-autocomplete-type">${labels[item.type]}</span>
                 </div>
             `;
         }).join('');
@@ -377,12 +371,11 @@ const PhantomSearch = {
      * Perform web search
      */
     doWebSearch(query) {
-        let url;
-        if (query.includes('.') && !query.includes(' ')) {
-            url = query.startsWith('http') ? query : 'https://' + query;
-        } else {
-            url = 'https://search.brave.com/search?q=' + encodeURIComponent(query);
-        }
+        const isDomain = query.includes('.') && !query.includes(' ');
+        const url = isDomain ?
+            (query.startsWith('http') ? query : 'https://' + query) :
+            'https://search.brave.com/search?q=' + encodeURIComponent(query);
+            
         window.location.href = 'staticsjv2/index.html#' + encodeURIComponent(url);
     },
 
