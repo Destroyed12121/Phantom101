@@ -11,7 +11,7 @@
 - **Unblocked Browser**: Integrated Scramjet browser for unrestricted browsing.
 - **Panic Key**: Quick escape feature to avoid detection.
 - **Code Editor**: Full web-based code editor and runner.
-- **Music**: Not really unblocked, sometimes it works.
+- **Music**: Usually works player is a little broken but its usable.
 
 ## Try It Now
 
