@@ -73,6 +73,7 @@
             <a href="${config.discord?.inviteUrl || '#'}" target="_blank" class="footer-link"><i class="fa-brands fa-discord"></i> Discord</a>
             <a href="${rootPrefix}pages/terms.html" class="footer-link">Terms</a>
             <a href="${rootPrefix}pages/disclaimer.html" class="footer-link">Disclaimer</a>
+            <a href="${rootPrefix}pages/extra.html" class="footer-link">Extra</a>
         </div>
         <span class="footer-version" id="footer-version">${config.name || 'Phantom'} v${config.version || '1.0.0'}</span>
     `;
@@ -102,9 +103,9 @@
     }
 
     // Changelog Popup Logic
-    const openChangelog = (e) => {
-        if (e) e.preventDefault();
-        const changes = config.changelog || ['No changes listed'];
+    const openChangelog = (e, customTitle, customContent) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const changes = customContent || config.changelog || ['No changes listed'];
 
         // Use standard modal structure from main.css
         const overlay = document.createElement('div');
@@ -113,7 +114,7 @@
         overlay.innerHTML = `
             <div class="modal" style="width: 400px; max-width: 90vw;">
                 <div class="modal-header">
-                    <h3 class="modal-title">What's New in v${config.version}</h3>
+                    <h3 class="modal-title">${customTitle || 'What\'s New in v' + config.version}</h3>
                     <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
@@ -153,95 +154,67 @@
     if (versionBtn) versionBtn.onclick = openChangelog;
 
     // ==========================================
-    // EXTERNAL MESSAGE (ONE-TIME)
+    // REMOTE CHANGELOG FETCHING
     // ==========================================
-    async function showExternalMessage() {
-        const MESSAGE_SHOWN_KEY = 'phantom_ext_msg_shown';
-        if (localStorage.getItem(MESSAGE_SHOWN_KEY)) return;
+    async function syncRemoteChangelog() {
+        const LAST_MSG_HASH = 'phantom_changelog_hash';
 
         try {
-            const response = await fetch('https://cdn.jsdelivr.net/gh/Destroyed12121/Phantom101/message.js');
+            // Using a timeout for reliability
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch('https://cdn.jsdelivr.net/gh/Destroyed12121/Phantom101/message.js', { signal: controller.signal });
+            clearTimeout(timeoutId);
+
             if (!response.ok) return;
             const content = await response.text();
+            if (!content || content.trim().length === 0) return;
 
-            // Flexible parsing
-            let messages = [];
-            try {
-                // If it's a JSON array
-                messages = JSON.parse(content);
-            } catch (e) {
-                // If it's JS: window.MSG = ["line1", "line2"]
-                const arrayMatch = content.match(/\[.*\]/s);
-                if (arrayMatch) {
-                    try {
-                        messages = JSON.parse(arrayMatch[0].replace(/'/g, '"').replace(/,\s*\]/g, ']'));
-                    } catch (e2) {
-                        messages = content.split('\n').filter(l => l.trim().length > 2);
-                    }
-                } else {
-                    messages = content.split('\n').filter(l => l.trim().length > 2);
-                }
+            // Parsing (Plaintext or Array)
+            let newChangelog = [];
+            const trimmed = content.trim();
+            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                try { newChangelog = JSON.parse(trimmed.replace(/'/g, '"')); } catch { }
+            }
+            if (!newChangelog.length) {
+                newChangelog = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             }
 
-            if (!messages || messages.length === 0) return;
+            if (newChangelog.length === 0) return;
 
-            // Show global modal (identical to changelog)
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay';
-            overlay.innerHTML = `
-                <div class="modal" style="width: 400px; max-width: 90vw;">
-                    <div class="modal-header">
-                        <h3 class="modal-title">Announcement</h3>
-                        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                    <div class="modal-body">
-                        <ul style="margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
-                            ${messages.map(m => '<li>' + m + '</li>').join('')}
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-sm btn-primary modal-close-btn" style="width: 100%">Got it</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
+            // Create a simple hash/identifier for the content
+            const contentId = btoa(unescape(encodeURIComponent(newChangelog.join('|')))).substring(0, 32);
+            const previousId = localStorage.getItem(LAST_MSG_HASH);
 
-            // Trigger animation
-            requestAnimationFrame(() => overlay.classList.add('show'));
-
-            const close = () => {
-                overlay.classList.remove('show');
-                setTimeout(() => overlay.remove(), 200);
-                localStorage.setItem(MESSAGE_SHOWN_KEY, 'true');
-            };
-
-            overlay.querySelector('.modal-close').onclick = close;
-            overlay.querySelector('.modal-close-btn').onclick = close;
-            overlay.onclick = (e) => { if (e.target === overlay) close(); };
+            // If it's the first time seeing this specific remote message, show it
+            if (previousId !== contentId) {
+                setTimeout(() => {
+                    openChangelog(null, "Announcement", newChangelog);
+                    localStorage.setItem(LAST_MSG_HASH, contentId);
+                }, 2000);
+            }
         } catch (err) {
-            console.warn("Could not load external message:", err);
+            console.warn("Changelog sync failed:", err);
         }
     }
 
-    // Call it after a delay
-    setTimeout(showExternalMessage, 3000);
+    // Initialize Sync
+    syncRemoteChangelog();
 
     // ==========================================
-    // AUTO SHOW CHANGELOG ON UPDATE
+    // AUTO SHOW CHANGELOG ON VERSION UPDATE
     // ==========================================
     const currentVersion = config.version;
     const lastVersion = settings.lastVersion;
 
     if (settings.showChangelogOnUpdate && lastVersion && lastVersion !== currentVersion) {
-        // Show changelog on update
         setTimeout(() => {
             openChangelog();
-            // Update last version ONLY after showing
             settings.lastVersion = currentVersion;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
         }, 1000);
     } else if (!lastVersion) {
-        // First run, just set version
         settings.lastVersion = currentVersion;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     }

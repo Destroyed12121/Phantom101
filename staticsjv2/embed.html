@@ -117,7 +117,7 @@
     </style>
     <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
     <script type="module">
-        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux@2.1.2/dist/index.mjs";
         window.BareMux = BareMux;
     </script>
 </head>
@@ -207,83 +207,143 @@
                 iframeContainer.classList.add('loaded');
             }
 
-            try {
-                const { ScramjetController } = $scramjetLoadController();
-                const scramjet = new ScramjetController({
-                    prefix: basePath + "scramjet/",
-                    files: {
-                        wasm: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm',
-                        all: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js',
-                        sync: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js'
-                    }
-                });
-                await scramjet.init();
-                const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
-                const wispUrl = localStorage.getItem('proxServer') || 'wss://dash.goip.de/wisp/';
+            // Retry logic for initialization
+            const maxInitRetries = 3;
+            let initAttempt = 0;
 
-                await navigator.serviceWorker.ready;
+            async function attemptInit() {
+                initAttempt++;
+                console.log(`Embed: Init attempt ${initAttempt}/${maxInitRetries}`);
 
-                // Force update to ensure we have the latest SW fixes (like the retry logic)
-                reg.update();
-
-                // Wait for controller to ensure fetches are intercepted
-                if (!navigator.serviceWorker.controller) {
-                    console.log("Embed: Waiting for SW controller...");
-                    await new Promise(resolve => {
-                        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
-                    });
-                }
-
-                const sw = reg.active || navigator.serviceWorker.controller;
-                if (sw) {
-                    console.log("Embed: Sending config to SW:", wispUrl);
-                    sw.postMessage({ type: 'config', wispurl: wispUrl });
-                }
-                if (navigator.serviceWorker.controller && navigator.serviceWorker.controller !== sw) {
-                    navigator.serviceWorker.controller.postMessage({ type: 'config', wispurl: wispUrl });
-                }
-
-                const connection = new BareMux.BareMuxConnection(basePath + 'bareworker.js');
-                await connection.setTransport('https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs', [{ wisp: wispUrl }]);
-
-                if (!shouldSkip) {
-                    loadingTitle.textContent = 'Loading';
-                    loadingUrl.textContent = validatedUrl;
-                }
-
-                const frame = scramjet.createFrame();
-                frame.frame.id = 'embed-frame';
-
-                if (!shouldSkip) {
-                    skipButtonTimeout = setTimeout(() => { skipBtn.style.display = 'inline-block'; }, 1000);
-                    skipBtn.addEventListener('click', showContent);
-
-                    const loadStartTime = Date.now();
-                    const MIN_LOADING_TIME = 1500;
-
-                    frame.frame.addEventListener('load', () => {
-                        const elapsed = Date.now() - loadStartTime;
-                        const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
-                        setTimeout(showContent, remaining);
-                    });
-
-                    frame.frame.addEventListener('error', () => {
-                        showError(`Failed to load: ${validatedUrl}`);
-                    });
-
-                    loadingTimeout = setTimeout(() => {
-                        if (!frame.frame.contentWindow || frame.frame.contentWindow.location.href === 'about:blank') {
-                            showError(`Timeout: Content took too long to load.`);
+                try {
+                    const { ScramjetController } = $scramjetLoadController();
+                    const scramjet = new ScramjetController({
+                        prefix: basePath + "scramjet/",
+                        files: {
+                            wasm: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm',
+                            all: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js',
+                            sync: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js'
                         }
-                    }, 60000);
+                    });
+                    await scramjet.init();
+
+                    // Register service worker with error handling
+                    let reg;
+                    try {
+                        reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
+                    } catch (swErr) {
+                        console.error("Embed: SW registration failed:", swErr);
+                        throw new Error("Service Worker registration failed");
+                    }
+
+                    const wispUrl = localStorage.getItem('proxServer') || 'wss://dash.goip.de/wisp/';
+
+                    // Wait for SW ready with timeout
+                    const swReadyPromise = navigator.serviceWorker.ready;
+                    const swReadyTimeout = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error("SW ready timeout")), 10000)
+                    );
+
+                    await Promise.race([swReadyPromise, swReadyTimeout]);
+
+                    // Force update to get latest SW
+                    reg.update().catch(e => console.warn("SW update check failed:", e));
+
+                    // Wait for controller with timeout
+                    if (!navigator.serviceWorker.controller) {
+                        console.log("Embed: Waiting for SW controller...");
+                        const controllerPromise = new Promise(resolve => {
+                            const onControllerChange = () => {
+                                navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+                                resolve();
+                            };
+                            navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+                        });
+                        const controllerTimeout = new Promise(resolve => setTimeout(resolve, 5000));
+                        await Promise.race([controllerPromise, controllerTimeout]);
+                    }
+
+                    // Send config to SW
+                    const sw = reg.active || navigator.serviceWorker.controller;
+                    if (sw) {
+                        console.log("Embed: Sending config to SW:", wispUrl);
+                        sw.postMessage({ type: 'config', wispurl: wispUrl });
+                    }
+                    if (navigator.serviceWorker.controller && navigator.serviceWorker.controller !== sw) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'config', wispurl: wispUrl });
+                    }
+
+                    // Setup BareMux connection with retry
+                    let connection;
+                    for (let connAttempt = 0; connAttempt < 3; connAttempt++) {
+                        try {
+                            connection = new BareMux.BareMuxConnection(basePath + 'bareworker.js');
+                            await Promise.race([
+                                connection.setTransport('https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs', [{ wisp: wispUrl }]),
+                                new Promise((_, reject) => setTimeout(() => reject(new Error("Transport setup timeout")), 10000))
+                            ]);
+                            break;
+                        } catch (connErr) {
+                            console.warn(`Embed: Connection attempt ${connAttempt + 1} failed:`, connErr);
+                            if (connAttempt === 2) throw connErr;
+                            await new Promise(r => setTimeout(r, 1000 * (connAttempt + 1)));
+                        }
+                    }
+
+                    if (!shouldSkip) {
+                        loadingTitle.textContent = 'Loading';
+                        loadingUrl.textContent = validatedUrl;
+                    }
+
+                    const frame = scramjet.createFrame();
+                    frame.frame.id = 'embed-frame';
+
+                    if (!shouldSkip) {
+                        skipButtonTimeout = setTimeout(() => { skipBtn.style.display = 'inline-block'; }, 1500);
+                        skipBtn.addEventListener('click', showContent);
+
+                        const loadStartTime = Date.now();
+                        const MIN_LOADING_TIME = 1500;
+
+                        frame.frame.addEventListener('load', () => {
+                            const elapsed = Date.now() - loadStartTime;
+                            const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
+                            setTimeout(showContent, remaining);
+                        });
+
+                        frame.frame.addEventListener('error', (err) => {
+                            console.error("Embed: Frame error:", err);
+                            // Don't immediately show error - SW may retry
+                            loadingTitle.textContent = 'Retrying...';
+                        });
+
+                        loadingTimeout = setTimeout(() => {
+                            if (!frame.frame.contentWindow || frame.frame.contentWindow.location.href === 'about:blank') {
+                                showError(`Timeout: Content took too long to load. Try refreshing or switch proxy servers.`);
+                            }
+                        }, 60000);
+                    }
+
+                    iframeContainer.appendChild(frame.frame);
+                    frame.go(validatedUrl);
+
+                } catch (err) {
+                    console.error(`Embed: Init attempt ${initAttempt} failed:`, err);
+
+                    if (initAttempt < maxInitRetries) {
+                        if (!shouldSkip) {
+                            loadingTitle.textContent = 'Retrying...';
+                            loadingUrl.textContent = `Attempt ${initAttempt + 1} of ${maxInitRetries}`;
+                        }
+                        await new Promise(r => setTimeout(r, 1500 * initAttempt));
+                        return attemptInit();
+                    }
+
+                    showError(`Connection failed after ${maxInitRetries} attempts: ${err.message}`);
                 }
-
-                iframeContainer.appendChild(frame.frame);
-                frame.go(validatedUrl);
-
-            } catch (err) {
-                showError(`Initialization error: ${err.message}`);
             }
+
+            await attemptInit();
         }
 
         window.addEventListener('load', init);

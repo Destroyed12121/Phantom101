@@ -1,1 +1,1 @@
-search is broken
+search and ai are broken

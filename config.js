@@ -5,16 +5,16 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.6",
+    version: "1.0.7",
 
     // Changelog
     changelog: [
-        "UI Changes and latex fixxes for PhantomAI",
-        "more fixxes to search suggestion",
-        "multi library using both game libraries",
-        "ambience glow and more fixxed",
-        "OPEN SOURCE RELEASE https://github.com/Destroyed12121/Phantom101",
-        "JOIN THE DISCORD"
+    "added announcements",
+    "fixxed theater mode and made player look better",
+   "tried to fix search not sure yet + fixxed parts of it",
+   "added auto switching servers for movies",
+   "fixxed popups i think",
+    "JOIN THE DISCORD"
     ],
 
     // Discord
@@ -33,7 +33,7 @@ window.SITE_CONFIG = {
         cloakRotation: false,
         cloakInterval: 5000,
         panicKey: "Escape",
-        panicModifiers: ["ctrl", "shift"],
+        panicModifiers: ["ctrl", "alt"],
         panicUrl: "https://classroom.google.com",
         maxMovieRating: "R",
         gameLibrary: "lib1",
@@ -77,10 +77,11 @@ window.SITE_CONFIG = {
     ],
 
     // Wisp servers
-    wispServers: [
-        { name: "Primary", url: "wss://dash.goip.de/wisp/" },
-        { name: "Backup 1", url: "wss://register.goip.it/wisp/" },
-        { name: "Backup 2", url: "wss://wisp.rhw.one/wisp/" }
-    ]
+   // wispServers: [
+     //   { name: "Primary", url: "wss://dash.goip.de/wisp/" },
+      //  { name: "Backup 1", url: "wss://register.goip.it/wisp/" },
+     //   { name: "Backup 2", url: "wss://wisp.rhw.one/wisp/" }
+    // commeteted because they arent supposed to be here
+    //]
 };
 
