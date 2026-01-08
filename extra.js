@@ -16,5 +16,5 @@ TODO
                                                             - shorten some page's code
                                                                 - 1.0.8! Release - Finalizing all features and fixes for the upcoming rollout
 
-latest version 1.0.8 dev
+latest version 1.0.8 de
 1 / 8 / 2026
