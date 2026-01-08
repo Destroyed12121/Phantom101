@@ -5,15 +5,15 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.7",
+    version: "1.0.7 xtra",
 
     // Changelog
     changelog: [
     "added announcements",
     "fixxed theater mode and made player look better",
-   "tried to fix search not sure yet + fixxed parts of it",
-   "added auto switching servers for movies",
-   "fixxed popups i think",
+    "fixxed parts of search",
+    "added auto switching servers for movies",
+    "added extra tab with a live todo list",
     "JOIN THE DISCORD"
     ],
 

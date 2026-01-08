@@ -1,1 +1,1 @@
-aaa
+proxy and ai are broken, im hoping for both to be fixxed by monday
