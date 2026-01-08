@@ -207,7 +207,7 @@
         return toast;
     }
 
-    // Public API
+
     window.Notify = {
         success: (title, message, duration) => createNotification('success', title, message, duration),
         error: (title, message, duration) => createNotification('error', title, message, duration),

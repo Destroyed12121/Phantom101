@@ -164,7 +164,8 @@
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-            const response = await fetch('https://cdn.jsdelivr.net/gh/Destroyed12121/Phantom101/message.js', { signal: controller.signal });
+            const timestamp = new Date().getTime();
+            const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/main/message.js?t=${timestamp}`, { signal: controller.signal });
             clearTimeout(timeoutId);
 
             if (!response.ok) return;

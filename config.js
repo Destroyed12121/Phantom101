@@ -38,7 +38,7 @@ window.SITE_CONFIG = {
         maxMovieRating: "R",
         gameLibrary: "lib1",
         discordWidget: true,
-        miniplayer: true,
+        miniplayer: true, //not here yet
         leaveConfirmation: false,
         showChangelogOnUpdate: true,
         themeRotation: true,
