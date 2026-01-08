@@ -1,6 +1,6 @@
 ** TODO **
 
-*** fix the proxy  SOON! ***
+*** fix the proxy  SOON! *** done
 fix panic panickey, add quote talking about it ** SOON! **
 fix theatermode, make it hide buttons after a few seconds and ensure all content is being displayed and move the description to the bottom ** SOON! **
 change back player to use old styling, change the surface to use background colors for the bottom part where description is shown, looking just like the background ** SOON! **
@@ -16,6 +16,7 @@ add singlefile using cdns for each page so it autoupdates and is easy enough to 
 prolly should advertise phantom
 revamp movies page to 'watch'(lowk copy vapor v4) and add youtube and twitch
 shorten some page's code
-
-Latest version ** 1.0.8 dev **
+make announcements show even on first visit unlike changelog and allow disabling it via settings
+fix index.html in index.html bug to ensure its not iframing itself and remove topbar from indivdiual pages so its just in index.html??
+Latest version ** 1.0.7 xtra++ **
 ** 1 / 8 / 2026 **
