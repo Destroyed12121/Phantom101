@@ -34,18 +34,19 @@
     <script>
         function formatText(text) {
             // Escape HTML
-            const escaped = text
+            let formatted = text
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
 
-            // Bold: ***text***, **text**, or __text__
-            // Strikethrough: ~~text~~
-            return escaped
-                .replace(/(\*\*\*|\*\*|__)(.*?)\1/g, '<b>$2</b>')
-                .replace(/~~(.*?)~~/g, '<s>$1</s>');
+            // Strikethrough: ~~text~~ or ***text***
+            // Note: Processed before bold to appropriately handle ***
+            formatted = formatted.replace(/(\~\~|\*\*\*)(.*?)\1/g, '<s>$2</s>');
+
+            // Bold: **text** or __text__
+            return formatted.replace(/(\*\*|__)(.*?)\1/g, '<b>$2</b>');
         }
 
         async function loadExtraContent() {

@@ -1,15 +1,15 @@
 ** TODO **
 
-***fix the proxy   SOON!***
-fix panic panickey, add quote talking about it **SOON!**
-fix theatermode, make it hide buttons after a few seconds and ensure all content is being displayed and move the description to the bottom **SOON!**
-change back player to use old styling, change the surface to use background colors for the bottom part where description is shown, looking just like the background **SOON!**
-add image and  video support for backgrounds **SOON!**
-fix aichat, make the title use the same ai request as the users question unless its in image mode where it will use text mode and fix ai chat to remember modes better **SOON!**
-add cloaking to quotes **SOON!**
+*** fix the proxy  SOON! ***
+fix panic panickey, add quote talking about it ** SOON! **
+fix theatermode, make it hide buttons after a few seconds and ensure all content is being displayed and move the description to the bottom ** SOON! **
+change back player to use old styling, change the surface to use background colors for the bottom part where description is shown, looking just like the background ** SOON! **
+add image and  video support for backgrounds ** SOON! **
+fix aichat, make the title use the same ai request as the users question unless its in image mode where it will use text mode and fix ai chat to remember modes better ** SOON! **
+add cloaking to quotes ** SOON! **
 add a default cloak and fix it so icons work in aboutblank for whatever reason they only work when you go to settings in aboutblank where it correctly applies
-for search suggestions add highlighting for whatever will happen when you click enter, in search suggestions fix all games not sending you to the games page **SOON!**
-fix games to make multi library the default, put it in config.js **SOON!**
+for search suggestions add highlighting for whatever will happen when you click enter, in search suggestions fix all games not sending you to the games page ** SOON! **
+fix games to make multi library the default, put it in config.js ** SOON! **
 fix music page to hide youtube player unless toggled via 3 dot small button, and always shown on proxy mode, fix all the controls for video time, volume,
 rename movies shortcut in index2.html to primeshows, add shortcuts to main pages in the topbar and change the current shortcuts to more popular games
 add singlefile using cdns for each page so it autoupdates and is easy enough to make
@@ -17,5 +17,5 @@ prolly should advertise phantom
 revamp movies page to 'watch'(lowk copy vapor v4) and add youtube and twitch
 shorten some page's code
 
-Latest version** 1.0.8 dev **
+Latest version ** 1.0.8 dev **
 ** 1 / 8 / 2026 **
