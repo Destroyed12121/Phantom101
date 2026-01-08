@@ -18,7 +18,8 @@
     <script src="../components/topbar.js"></script>
 
     <div style="max-width: 700px; margin: 0 auto; padding: 120px 24px 40px;">
-        <div id="extra-content" style="color: var(--text-muted); line-height: 1.8; font-size: 0.9375rem; opacity: 0.7;">
+        <div id="extra-content"
+            style="color: var(--text-muted); line-height: 1.8; font-size: 0.9375rem; opacity: 0.8; white-space: pre-wrap;">
             Loading content...
         </div>
 
@@ -37,37 +38,7 @@
                 const response = await fetch('https://cdn.jsdelivr.net/gh/Destroyed12121/Phantom101/extra.js');
                 if (response.ok) {
                     const text = await response.text();
-                    const lines = text.split('\n').filter(l => l.trim().length > 0);
-
-                    if (lines.some(l => l.trim().startsWith('-'))) {
-                        const ul = document.createElement('ul');
-                        ul.style.listStyleType = 'none';
-                        ul.style.padding = '0';
-                        lines.forEach(line => {
-                            const li = document.createElement('li');
-                            li.style.marginBottom = '8px';
-                            li.style.display = 'flex';
-                            li.style.alignItems = 'flex-start';
-                            li.style.gap = '12px';
-
-                            const checkbox = document.createElement('i');
-                            checkbox.className = 'fa-regular fa-square';
-                            checkbox.style.marginTop = '4px';
-                            checkbox.style.color = 'var(--text-dim)';
-
-                            const content = document.createElement('span');
-                            content.textContent = line.trim().replace(/^- /, '');
-
-                            li.appendChild(checkbox);
-                            li.appendChild(content);
-                            ul.appendChild(li);
-                        });
-                        container.innerHTML = '';
-                        container.appendChild(ul);
-                    } else {
-                        container.textContent = text;
-                        container.style.whiteSpace = 'pre-wrap';
-                    }
+                    container.textContent = text;
                 } else {
                     container.textContent = 'Failed to load content.';
                     if (window.Notify) Notify.error('Error', 'Failed to load extra content.');
@@ -78,9 +49,7 @@
             }
         }
 
-        // Settings are auto-applied by settings.js, but we can ensure it here if needed
         if (window.Settings) Settings.apply();
-
         loadExtraContent();
     </script>
 </body>
