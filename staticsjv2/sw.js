@@ -63,18 +63,40 @@ scramjet.addEventListener("request", async (e) => {
             if (!wispConfig.wispurl) return new Response("WISP URL missing", { status: 500 });
 
             const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-            await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: wispConfig.wispurl }]);
+            await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispConfig.wispurl }]);
             scramjet.client = connection;
         }
-        return await scramjet.client.fetch(e.url, {
-            method: e.method,
-            body: e.body,
-            headers: e.requestHeaders,
-            credentials: "omit",
-            mode: e.mode === "cors" ? e.mode : "same-origin",
-            cache: e.cache,
-            redirect: "manual",
-            duplex: "half",
-        });
+        const MAX_RETRIES = 2;
+        let lastErr;
+
+        for (let i = 0; i <= MAX_RETRIES; i++) {
+            try {
+                return await scramjet.client.fetch(e.url, {
+                    method: e.method,
+                    body: e.body,
+                    headers: e.requestHeaders,
+                    credentials: "include",
+                    mode: e.mode === "cors" ? e.mode : "same-origin",
+                    cache: e.cache,
+                    redirect: "manual",
+                    duplex: "half",
+                });
+            } catch (err) {
+                lastErr = err;
+                const errMsg = err.message.toLowerCase();
+                const isRetryable = errMsg.includes("connect") ||
+                    errMsg.includes("eof") ||
+                    errMsg.includes("handshake") ||
+                    errMsg.includes("reset");
+
+                if (!isRetryable || i === MAX_RETRIES || e.method !== 'GET') break;
+
+                console.warn(`Scramjet retry ${i + 1}/${MAX_RETRIES} for ${e.url} due to: ${err.message}`);
+                await new Promise(r => setTimeout(r, 500 * (i + 1)));
+            }
+        }
+
+        console.error("Scramjet Final Fetch Error:", lastErr);
+        return new Response("Scramjet Fetch Error: " + lastErr.message, { status: 502 });
     })();
 });

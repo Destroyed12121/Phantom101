@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         reg.update();
 
         const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-        await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: wispUrl }]);
+        await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
     }
 
     await initializeBrowser();

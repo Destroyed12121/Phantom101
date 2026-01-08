@@ -41,8 +41,11 @@
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
 
-            // Bold: **text** or __text__
-            return escaped.replace(/(\*\*|__)(.*?)\1/g, '<b>$2</b>');
+            // Bold: ***text***, **text**, or __text__
+            // Strikethrough: ~~text~~
+            return escaped
+                .replace(/(\*\*\*|\*\*|__)(.*?)\1/g, '<b>$2</b>')
+                .replace(/~~(.*?)~~/g, '<s>$1</s>');
         }
 
         async function loadExtraContent() {
