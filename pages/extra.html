@@ -49,7 +49,7 @@
             const container = document.getElementById('extra-content');
             try {
                 const timestamp = new Date().getTime();
-                const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/master/extra.js?t=${timestamp}`);
+                const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/refs/heads/master/extra.js?t=${timestamp}`);
                 if (response.ok) {
                     const text = await response.text();
                     container.innerHTML = formatText(text);
