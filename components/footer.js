@@ -165,7 +165,7 @@
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
             const timestamp = new Date().getTime();
-            const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/master/message.js?t=${timestamp}`, { signal: controller.signal });
+            const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/refs/heads/master/message.js?t=${timestamp}`, { signal: controller.signal });
             clearTimeout(timeoutId);
 
             if (!response.ok) return;
