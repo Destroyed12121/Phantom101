@@ -11,11 +11,11 @@
 - **Unblocked Browser**: Integrated Scramjet browser for unrestricted browsing.
 - **Panic Key**: Quick escape feature to avoid detection.
 - **Code Editor**: Full web-based code editor and runner.
-- **Music**: Usually works player is a little broken but its usable.
+- **Music**: Usually works player currently broken but its usable.
 
 ## Try It Now
 
-Visit [Phantom Unblocked](https://phantom103.surge.sh/) 
+Visit [Phantom Unblocked](https://phantom101.surge.sh/) 
 
 
 ## Recent Updates
@@ -31,6 +31,8 @@ Join our [Discord](https://discord.com/invite/tHWx9NXp5p) for support, updates, 
 ## Coming Soon
 
 - Single-file lite version for downloading
+
+- full list in the extra page found in the footer
 
 ## License
 
