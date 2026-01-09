@@ -5,7 +5,7 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.7 xtra",
+    version: "1.0.7 xtra++",
 
     // Changelog
     changelog: [
@@ -14,6 +14,7 @@ window.SITE_CONFIG = {
     "fixxed parts of search",
     "added auto switching servers for movies",
     "added extra tab with a live todo list",
+    "fixxed proxy"
     "JOIN THE DISCORD"
     ],
 
