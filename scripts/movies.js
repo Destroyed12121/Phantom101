@@ -74,8 +74,13 @@ const suggestions = document.getElementById('suggestions');
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
-    loadGenres();
-    loadMedia();
+    if (!document.getElementById('media-grid') && !document.getElementById('search-input')) return;
+
+    // Check if we are on the movies page specifically by checking for unique elements
+    if (document.getElementById('media-grid')) {
+        loadGenres();
+        loadMedia();
+    }
 
     document.getElementById('movies-tab').onclick = () => switchTab('movies');
     document.getElementById('tv-tab').onclick = () => switchTab('tv');

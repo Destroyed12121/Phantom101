@@ -13,24 +13,6 @@
 - **Code Editor**: Full web-based code editor and runner.
 - **Music**: Usually works player is a little broken but its usable.
 
-## Try It Now
-
-Visit [Phantom Unblocked](https://phantom103.surge.sh/) 
-
-
-## Recent Updates
-
-- Fixed search suggestion issues
-- New combined library for games
-- Added ambience glow and various fixes
-
-## Join the Community
-
-Join our [Discord](https://discord.com/invite/tHWx9NXp5p) for support, updates, and community discussions.
-
-## Coming Soon
-
-- Single-file lite version for downloading
 
 ## License
 

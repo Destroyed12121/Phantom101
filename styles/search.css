@@ -30,12 +30,32 @@
     gap: 12px;
     padding: 12px 16px;
     cursor: pointer;
-    transition: background 0.1s ease;
+    transition: background 0.1s ease, box-shadow 0.1s ease;
+    position: relative;
 }
 
-.search-autocomplete-item:hover,
+.search-autocomplete-item:hover {
+    background: var(--surface-hover);
+}
+
+/* Selected item with soft accent glow */
 .search-autocomplete-item.selected {
     background: var(--surface-hover);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+}
+
+/* Small enter icon on the right for the selected item */
+.search-autocomplete-item.selected::after {
+    content: '↵';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.7;
+    pointer-events: none;
 }
 
 .search-autocomplete-icon {
@@ -47,11 +67,21 @@
     color: var(--text-muted);
     font-size: 14px;
     flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 4px;
 }
 
 .search-autocomplete-item.selected .search-autocomplete-icon,
 .search-autocomplete-item:hover .search-autocomplete-icon {
     color: var(--accent, #fff);
+}
+
+/* Thumbnail/poster support */
+.search-autocomplete-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .search-autocomplete-text {
@@ -61,6 +91,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding-right: 20px;
 }
 
 .search-autocomplete-type {
@@ -72,20 +103,14 @@
     padding: 2px 6px;
     background: var(--surface-active, rgba(255, 255, 255, 0.05));
     border-radius: 4px;
+    margin-right: 16px;
 }
 
-/* Separator before web search */
+/* Separator before web search (last item) */
 .search-autocomplete-item[data-index]:last-child {
     border-top: 1px solid var(--border);
     margin-top: 4px;
     padding-top: 12px;
-}
-
-/* Keyboard hint */
-.search-autocomplete::after {
-    content: '';
-    display: block;
-    height: 0;
 }
 
 /* Responsive */
@@ -97,9 +122,15 @@
 
     .search-autocomplete-text {
         font-size: 13px;
+        padding-right: 0;
     }
 
     .search-autocomplete-type {
         font-size: 10px;
+        margin-right: 0;
+    }
+
+    .search-autocomplete-item.selected::after {
+        display: none;
     }
 }

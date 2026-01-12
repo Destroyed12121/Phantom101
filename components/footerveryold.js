@@ -73,7 +73,6 @@
             <a href="${config.discord?.inviteUrl || '#'}" target="_blank" class="footer-link"><i class="fa-brands fa-discord"></i> Discord</a>
             <a href="${rootPrefix}pages/terms.html" class="footer-link">Terms</a>
             <a href="${rootPrefix}pages/disclaimer.html" class="footer-link">Disclaimer</a>
-            <a href="${rootPrefix}pages/extra.html" class="footer-link">Extra</a>
         </div>
         <span class="footer-version" id="footer-version">${config.name || 'Phantom'} v${config.version || '1.0.0'}</span>
     `;
@@ -103,9 +102,9 @@
     }
 
     // Changelog Popup Logic
-    const openChangelog = (e, customTitle, customContent) => {
-        if (e && e.preventDefault) e.preventDefault();
-        const changes = customContent || config.changelog || ['No changes listed'];
+    const openChangelog = (e) => {
+        if (e) e.preventDefault();
+        const changes = config.changelog || ['No changes listed'];
 
         // Use standard modal structure from main.css
         const overlay = document.createElement('div');
@@ -114,7 +113,7 @@
         overlay.innerHTML = `
             <div class="modal" style="width: 400px; max-width: 90vw;">
                 <div class="modal-header">
-                    <h3 class="modal-title">${customTitle || 'What\'s New in v' + config.version}</h3>
+                    <h3 class="modal-title">What's New in v${config.version}</h3>
                     <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
@@ -123,7 +122,7 @@
                     </ul>
                 </div>
                 <div class="modal-footer">
-                    <a href="${config.discord?.inviteUrl || '#'}" target="_blank" style="color: #5865F2; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                    <a href="${config.discord?.inviteUrl || '#'}" target="_blank" class="btn btn-sm btn-ghost" style="color: #5865F2;">
                         <i class="fa-brands fa-discord"></i> Join Discord
                     </a>
                 </div>
@@ -154,74 +153,27 @@
     if (versionBtn) versionBtn.onclick = openChangelog;
 
     // ==========================================
-    // REMOTE CHANGELOG FETCHING
-    // ==========================================
-    async function syncRemoteChangelog() {
-        const LAST_MSG_HASH = 'phantom_changelog_hash';
-
-        try {
-            // Using a timeout for reliability
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-            const timestamp = new Date().getTime();
-            const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/refs/heads/master/message.js?t=${timestamp}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-
-            if (!response.ok) return;
-            const content = await response.text();
-            if (!content || content.trim().length === 0) return;
-
-            // Parsing (Plaintext or Array)
-            let newChangelog = [];
-            const trimmed = content.trim();
-            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-                try { newChangelog = JSON.parse(trimmed.replace(/'/g, '"')); } catch { }
-            }
-            if (!newChangelog.length) {
-                newChangelog = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            }
-
-            if (newChangelog.length === 0) return;
-
-            // Create a simple hash/identifier for the content
-            const contentId = btoa(unescape(encodeURIComponent(newChangelog.join('|')))).substring(0, 32);
-            const previousId = localStorage.getItem(LAST_MSG_HASH);
-
-            // If it's the first time seeing this specific remote message, show it
-            if (previousId !== contentId) {
-                setTimeout(() => {
-                    openChangelog(null, "Announcement", newChangelog);
-                    localStorage.setItem(LAST_MSG_HASH, contentId);
-                }, 2000);
-            }
-        } catch (err) {
-            console.warn("Changelog sync failed:", err);
-        }
-    }
-
-    // Initialize Sync
-    syncRemoteChangelog();
-
-    // ==========================================
-    // AUTO SHOW CHANGELOG ON VERSION UPDATE
+    // AUTO SHOW CHANGELOG ON UPDATE
     // ==========================================
     const currentVersion = config.version;
     const lastVersion = settings.lastVersion;
 
     if (settings.showChangelogOnUpdate && lastVersion && lastVersion !== currentVersion) {
+        // Show changelog on update
         setTimeout(() => {
             openChangelog();
+            // Update last version ONLY after showing
             settings.lastVersion = currentVersion;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
         }, 1000);
     } else if (!lastVersion) {
+        // First run, just set version
         settings.lastVersion = currentVersion;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     }
 
     // ==========================================
-    // 2. GLOBAL PANIC KEY - Fast white screen redirect
+    // 2. GLOBAL PANIC KEY
     // ==========================================
     if (settings.panicKey) {
         document.addEventListener('keydown', (e) => {
@@ -236,32 +188,71 @@
 
             if (ctrlMatch && shiftMatch && altMatch && pressedKey === triggerKey) {
                 e.preventDefault();
-
-                // Show white screen instantly (if panic-overlay exists in parent)
-                const parentOverlay = window.parent?.document?.getElementById('panic-overlay');
-                if (parentOverlay) {
-                    parentOverlay.style.display = 'block';
-                } else {
-                    // Create overlay if it doesn't exist
-                    const overlay = document.createElement('div');
-                    overlay.id = 'panic-overlay';
-                    overlay.style.cssText = 'position:fixed;inset:0;background:white;z-index:99999;';
-                    document.body.appendChild(overlay);
-                }
-
-                // Redirect immediately
                 const url = settings.panicUrl || 'https://classroom.google.com';
                 try { window.top.location.href = url; } catch { window.location.href = url; }
             }
-        }, true); // Use capture phase for faster response
+        });
     }
 
     // ==========================================
-    // 3. CLOAKING (DELEGATED TO CLOAKING.JS)
+    // 3. CLOAKING (STATIC & ROTATING)
     // ==========================================
-    // Cloaking logic has been moved to scripts/cloaking.js for better synchronization.
-    // If you need cloaking on a specific page, include that script.
+    function applyCloak() {
+        // Reload settings
+        try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
 
+        const presets = config.cloakPresets || [];
+        const customs = settings.customCloaks || [];
+        const allCloaks = [...presets, ...customs];
+
+        if (!settings.rotateCloaks) {
+            if (settings.tabTitle) document.title = settings.tabTitle;
+            if (settings.tabFavicon) {
+                let link = document.querySelector("link[rel~='icon']");
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    document.head.appendChild(link);
+                }
+                link.href = settings.tabFavicon;
+            }
+        }
+
+        return allCloaks;
+    }
+
+    // Apply immediately and get cloaks
+    let allCloaks = applyCloak();
+
+    // Listen for changes
+    window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) allCloaks = applyCloak();
+    });
+
+    // Expose for current tab settings page to call
+    window.updateCloakInstant = () => { allCloaks = applyCloak(); };
+
+    // Rotation Logic
+    let rotationIndex = 0;
+    setInterval(() => {
+        // Check setting live from local var (updated by storage listener)
+        if (settings.rotateCloaks && allCloaks.length > 0) {
+            const cloak = allCloaks[rotationIndex];
+            document.title = cloak.title || cloak.name;
+
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = cloak.icon || '';
+
+            try { window.top.document.title = document.title; } catch { }
+
+            rotationIndex = (rotationIndex + 1) % allCloaks.length;
+        }
+    }, (settings.rotateInterval || 5) * 1000);
 
     // ==========================================
     // 4. LEAVE CONFIRMATION
@@ -270,7 +261,7 @@
         // Reload settings to get latest value
         try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
 
-        if (window.top === window.self && settings.leaveConfirmation) {
+        if (settings.leaveConfirmation) {
             e.preventDefault();
             e.returnValue = '';
             return '';

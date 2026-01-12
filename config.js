@@ -5,17 +5,22 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.7 xtra++",
+    version: "1.0.8 Super",
 
     // Changelog
     changelog: [
-    "added announcements",
-    "fixxed theater mode and made player look better",
-    "fixxed parts of search",
-    "added auto switching servers for movies",
-    "added extra tab with a live todo list",
-    "fixxed proxy"
-    "JOIN THE DISCORD"
+        "ADDED BACKGROUNDS",
+        "enhanced theater mode for hopefully the last time",
+        "added movies to search in the home page",
+        "enhanced search in home page",
+        "changed shortcuts in home page",
+        "fixed panickey + added white screen when pressed",
+        "didnt feel like fixxing ai",
+        "tried to fix music",
+        "minor things u can find in the extra page",
+        "fixed panickey",
+        "made cloaks instantly update",
+        "JOIN THE DISCORD"
     ],
 
     // Discord
@@ -29,21 +34,28 @@ window.SITE_CONFIG = {
     // Default settings
     defaults: {
         cloakMode: "about:blank",
-        tabTitle: "Phantom Unblocked",
-        tabFavicon: "favicon.svg",
+        tabTitle: "You've already responded",
+        tabFavicon: "https://ssl.gstatic.com/docs/spreadsheets/forms/forms_icon_2023q4.ico",
         cloakRotation: false,
         cloakInterval: 5000,
-        panicKey: "Escape",
-        panicModifiers: ["ctrl", "alt"],
+        panicKey: "x",
+        panicModifiers: ["ctrl", "shift"],
         panicUrl: "https://classroom.google.com",
         maxMovieRating: "R",
-        gameLibrary: "lib1",
+        gameLibrary: "multi",
         discordWidget: true,
         miniplayer: true, //not here yet
         leaveConfirmation: false,
         showChangelogOnUpdate: true,
         themeRotation: true,
         lastThemeRotation: 0,
+        backgroundRotation: true,
+        lastBackgroundRotation: 0,
+        background: { type: 'color', value: '#0a0a0a' },
+        accentColor: '#ffffff',
+        surfaceColor: '#0f0f0f',
+        secondaryColor: '#2e2e33',
+        textColor: '#e4e4e7',
     },
 
     // Theme Presets
@@ -59,9 +71,50 @@ window.SITE_CONFIG = {
         flame: { name: 'Flame', bg: { type: 'color', value: '#0c0202' }, surface: '#1c0a0a', surfaceHover: '#451a03', surfaceActive: '#9a3412', secondary: '#1c0a0a', border: '#451a03', borderLight: '#9a3412', text: '#fff7ed', textSec: '#fdba74', textDim: '#ea580c', accent: '#f59e0b' }
     },
 
+    // Background Presets
+    backgroundPresets: [
+        { id: 'none', name: 'None (Theme Default)', type: 'none' },
+        {
+            id: 'scenic-mountains',
+            name: 'Mountain Peak',
+            type: 'image',
+            url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920&auto=format&fit=crop',
+            overlay: 0.25
+        },
+        {
+            id: 'winter-mountains',
+            name: 'Winter mountains',
+            type: 'image',
+            url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg',
+            overlay: 0.3
+        },
+        {
+            id: 'f1 car',
+            name: 'F1 Car',
+            type: 'image',
+            url: 'https://images.pexels.com/photos/14401632/pexels-photo-14401632.jpeg',
+            overlay: 0.3
+        },
+        {
+            id: 'moon-landing',
+            name: 'Moon Landing',
+            type: 'image',
+            url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg',
+            overlay: 0.3,
+            objectPosition: 'top center'
+        },
+        {
+            id: 'desert-stars',
+            name: 'Midnight Stars',
+            type: 'image',
+            url: 'https://images.pexels.com/photos/2312040/pexels-photo-2312040.jpeg',
+            overlay: 0.3
+        }
+    ],
+
     // Tab Cloaks
     cloakPresets: [
-        { name: "nothing", icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", title: "\u200B" },
+        { name: "Phantom", icon: "/favicon.svg", title: "Phantom Unblocked" },
         { name: "Edpuzzle", icon: "https://edpuzzle.imgix.net/favicons/favicon-32.png", title: "Edpuzzle" },
         { name: "Google Docs", icon: "https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico", title: "Untitled document - Google Docs" },
         { name: "Canvas", icon: "https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico", title: "Dashboard" },
@@ -74,14 +127,15 @@ window.SITE_CONFIG = {
         { name: "Blooket", icon: "https://play.blooket.com/favicon.ico", title: "Play Blooket | Blooket" },
         { name: "Gmail", icon: "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico", title: "Gmail" },
         { name: "YouTube", icon: "https://www.youtube.com/favicon.ico", title: "YouTube" },
-        { name: "Powerschool", icon: "https://waverlyk12.powerschool.com/favicon.ico", title: "Grades and Attendance" }
+        { name: "Powerschool", icon: "https://waverlyk12.powerschool.com/favicon.ico", title: "Grades and Attendance" },
+        { name: "nothing", icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", title: "\u200B" },
     ],
 
     // Wisp servers
-   // wispServers: [
-     //   { name: "Primary", url: "wss://dash.goip.de/wisp/" },
-      //  { name: "Backup 1", url: "wss://register.goip.it/wisp/" },
-     //   { name: "Backup 2", url: "wss://wisp.rhw.one/wisp/" }
+    // wispServers: [
+    //   { name: "Primary", url: "wss://dash.goip.de/wisp/" },
+    //  { name: "Backup 1", url: "wss://register.goip.it/wisp/" },
+    //   { name: "Backup 2", url: "wss://wisp.rhw.one/wisp/" }
     // commeteted because they arent supposed to be here
     //]
 };

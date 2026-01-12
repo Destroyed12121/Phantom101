@@ -1,1 +1,0 @@
-proxy is fixxed now, releasing a bigger update tuesday.
