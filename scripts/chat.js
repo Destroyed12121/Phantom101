@@ -10,7 +10,8 @@ class PhantomChat {
             currentId: null,
             models: { text: [], image: [] },
             config: {
-                model: 'openai',
+                textModel: 'openai',
+                imageModel: 'flux',
                 mode: 'text', // 'text' | 'image'
                 temperature: 0.7,
                 autoSave: true
@@ -19,17 +20,21 @@ class PhantomChat {
 
         // UI: Auto-typing placeholders
         this.placeholders = [
-            "Explain point slope form",
-            "Generate a cinematic phantom concept art...",
-            "Explain quantum physics in simple terms...",
+            "Explain physics in simple terms...",
+            "Generate a cinematic concept art...",
             "Write a dark atmospheric poem...",
-            "How do I center a div using CSS?",
-            "Design a futuristic UI layout..."
+            "What is the best way to center a div?",
+            "Design a futuristic cyberpunk city...",
+            "Explain how quantum computers work...",
+            "how to cheat in math class 101"
         ];
 
         this.dom = {};
         this.abortController = null;
         this.storageKey = 'phantom_ai_data';
+        this.apiKey = 'sk_j66iDfX2lPbTZ2Otb9MI7xje7kRZQUyE';
+        this.baseTextUrl = 'https://gen.pollinations.ai/v1/chat/completions';
+        this.baseImageUrl = 'https://gen.pollinations.ai/prompt/';
 
         this.cacheDOM();
         this.loadState();
@@ -100,9 +105,14 @@ class PhantomChat {
 
         // Model Change
         this.dom.modelSelect.addEventListener('change', (e) => {
-            this.state.config.model = e.target.value;
+            const mode = this.state.config.mode;
+            if (mode === 'text') {
+                this.state.config.textModel = e.target.value;
+            } else {
+                this.state.config.imageModel = e.target.value;
+            }
             this.saveState();
-            if (window.Notify) Notify.success('Model Updated', `Switched to ${this.state.config.model}`);
+            if (window.Notify) Notify.success('Model Updated', `Switched to ${e.target.value}`);
         });
 
         // Send Click
@@ -168,14 +178,24 @@ class PhantomChat {
 
     async fetchModels() {
         try {
-            const headers = { 'Authorization': 'Bearer sk_j66iDfX2lPbTZ2Otb9MI7xje7kRZQUyE' };
-            const [textRes, imgRes] = await Promise.all([
-                fetch('https://text.pollinations.ai/models', { headers }),
-                fetch('https://image.pollinations.ai/models', { headers })
-            ]);
+            const headers = { 'Authorization': `Bearer ${this.apiKey}` };
+            const res = await fetch('https://gen.pollinations.ai/models', { headers });
+            const data = await res.json();
 
-            this.state.models.text = await textRes.json();
-            this.state.models.image = await imgRes.json();
+            // Filter models if data is an array of objects
+            if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+                this.state.models.text = data.filter(m => m.type === 'text' || (m.output_modalities && m.output_modalities.includes('text'))).map(m => m.name);
+                this.state.models.image = data.filter(m => m.type === 'image' || (m.output_modalities && m.output_modalities.includes('image'))).map(m => m.name);
+            } else {
+                // Fallback for simple string array or unexpected format
+                this.state.models.text = data || ['openai', 'mistral', 'llama'];
+                this.state.models.image = ['flux', 'turbo'];
+            }
+
+            // Final fallback if empty
+            if (this.state.models.text.length === 0) this.state.models.text = ['openai', 'mistral', 'llama'];
+            if (this.state.models.image.length === 0) this.state.models.image = ['flux', 'turbo'];
+
             this.populateModelSelect();
         } catch (e) {
             console.error('Failed to fetch models', e);
@@ -189,10 +209,11 @@ class PhantomChat {
         if (!this.dom.modelSelect) return;
         const mode = this.state.config.mode;
         const models = this.state.models[mode] || [];
+        const currentModel = mode === 'text' ? this.state.config.textModel : this.state.config.imageModel;
 
         this.dom.modelSelect.innerHTML = models.map(m => {
             const name = typeof m === 'object' ? m.name : m;
-            return `<option value="${name}" ${name === this.state.config.model ? 'selected' : ''}>
+            return `<option value="${name}" ${name === currentModel ? 'selected' : ''}>
                 ${name.charAt(0).toUpperCase() + name.slice(1)}
             </option>`;
         }).join('');
@@ -206,7 +227,6 @@ class PhantomChat {
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
 
-        this.state.config.model = mode === 'text' ? 'openai' : 'flux';
         this.populateModelSelect();
         this.saveState();
     }
@@ -251,6 +271,10 @@ class PhantomChat {
         };
         this.state.conversations.unshift(newConv);
         this.state.currentId = newConv.id;
+
+        // Default to text mode on new chat as requested
+        this.setMode('text');
+
         this.render();
         this.dom.input.focus();
         this.saveState();
@@ -295,7 +319,19 @@ class PhantomChat {
         conv.messages.push({ role: 'user', content: text, type: 'text' });
         this.appendMessage({ role: 'user', content: text });
 
-        if (conv.messages.length === 1) this.generateTitle(text);
+        // Update Title logic:
+        // Text mode: use the request as the title
+        // Image mode: use AI summarize (text mode) for the title
+        if (conv.messages.length <= 2) {
+            if (this.state.config.mode === 'text') {
+                const truncatedTitle = text.length > 30 ? text.substring(0, 30) + '...' : text;
+                conv.title = truncatedTitle;
+                this.dom.title.textContent = conv.title;
+                this.renderConversationList();
+            } else {
+                this.generateTitle(text);
+            }
+        }
 
         // Logic based on mode
         if (this.state.config.mode === 'image') {
@@ -313,14 +349,31 @@ class PhantomChat {
 
         try {
             const system = "You are Phantom AI. Use Markdown. Concise, sleek tone.";
-            const history = conv.messages.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
-            const prompt = `System: ${system}\n${history}`;
+            const messages = [
+                { role: 'system', content: system },
+                ...conv.messages.slice(-8).map(m => ({
+                    role: m.role === 'ai' ? 'assistant' : m.role,
+                    content: m.content
+                }))
+            ];
 
-            const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=${this.state.config.model}`;
-            const res = await fetch(url, {
-                headers: { 'Authorization': 'Bearer sk_j66iDfX2lPbTZ2Otb9MI7xje7kRZQUyE' }
+            const response = await fetch(this.baseTextUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    messages: messages,
+                    model: this.state.config.textModel,
+                    seed: Math.floor(Math.random() * 1000000)
+                })
             });
-            const data = await res.text();
+
+            if (!response.ok) throw new Error('API request failed');
+
+            const result = await response.json();
+            const data = result.choices[0].message.content;
 
             document.getElementById(placeholderId)?.remove();
 
@@ -330,27 +383,47 @@ class PhantomChat {
         } catch (e) {
             console.error(e);
             const el = document.getElementById(placeholderId);
-            if (el) el.innerHTML = `<span class="text-error">Communication failed. Retry?</span>`;
+            if (el) el.innerHTML = `<span class="text-error">Communication failed. ${e.message}</span>`;
         }
     }
 
     async generateImage(input, conv) {
-        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(input)}?model=${this.state.config.model}&nologo=true`;
+        const model = this.state.config.imageModel;
+        const url = `${this.baseImageUrl}${encodeURIComponent(input)}?model=${model}&nologo=true&seed=${Math.floor(Math.random() * 1000000)}&key=${this.apiKey}`;
         conv.messages.push({ role: 'ai', content: url, prompt: input, type: 'image' });
         this.appendMessage({ role: 'ai', content: url, type: 'image', prompt: input });
     }
 
     async generateTitle(text) {
         try {
-            const res = await fetch(`https://text.pollinations.ai/Generate a 3 word title for: ${encodeURIComponent(text)}?model=openai-fast`);
-            const title = await res.text();
+            const res = await fetch(this.baseTextUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    messages: [
+                        { role: 'system', content: 'You are a title generator. Create a short 3-5 word title for the following prompt. Return ONLY the title.' },
+                        { role: 'user', content: text }
+                    ],
+                    model: 'openai-fast'
+                })
+            });
+            const result = await res.json();
+            const title = result.choices[0].message.content;
             const conv = this.getCurrentConversation();
             if (conv && title) {
                 conv.title = title.replace(/"/g, '').trim();
-                this.dom.title.textContent = conv.title;
+                if (this.state.currentId === conv.id) {
+                    this.dom.title.textContent = conv.title;
+                }
                 this.renderConversationList();
+                this.saveState();
             }
-        } catch (e) { }
+        } catch (e) {
+            console.error('Title generation failed', e);
+        }
     }
 
     retryLast() {

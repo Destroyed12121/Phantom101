@@ -6,6 +6,8 @@ window.QUOTES = [
     "FULL BOX",
     "FULL PIECE",
     "200!",
-    "press ctrl+shift+q+q for hacks",
+    "press esc + refresh + power button for hacks",
+    "press ctrl+x to hide your screen",
+    "change the tab title and favicon in settings",
     "TEACHERR!"
 ];

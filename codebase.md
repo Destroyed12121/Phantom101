@@ -97,6 +97,7 @@ Include these scripts in order:
 <script src="../config.js"></script>
 <script src="../scripts/settings.js"></script>
 <script src="../scripts/notifications.js"></script>
+<script src="../scripts/cloaking.js"></script>
 <script src="../components/topbar.js"></script>
 <!-- your page content -->
 <script src="../components/footer.js"></script>

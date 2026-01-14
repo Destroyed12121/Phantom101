@@ -123,7 +123,7 @@
                     </ul>
                 </div>
                 <div class="modal-footer">
-                    <a href="${config.discord?.inviteUrl || '#'}" target="_blank" class="btn btn-sm btn-ghost" style="color: #5865F2;">
+                    <a href="${config.discord?.inviteUrl || '#'}" target="_blank" style="color: #5865F2; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-brands fa-discord"></i> Join Discord
                     </a>
                 </div>
@@ -221,7 +221,7 @@
     }
 
     // ==========================================
-    // 2. GLOBAL PANIC KEY
+    // 2. GLOBAL PANIC KEY - Fast white screen redirect
     // ==========================================
     if (settings.panicKey) {
         document.addEventListener('keydown', (e) => {
@@ -236,71 +236,32 @@
 
             if (ctrlMatch && shiftMatch && altMatch && pressedKey === triggerKey) {
                 e.preventDefault();
+
+                // Show white screen instantly (if panic-overlay exists in parent)
+                const parentOverlay = window.parent?.document?.getElementById('panic-overlay');
+                if (parentOverlay) {
+                    parentOverlay.style.display = 'block';
+                } else {
+                    // Create overlay if it doesn't exist
+                    const overlay = document.createElement('div');
+                    overlay.id = 'panic-overlay';
+                    overlay.style.cssText = 'position:fixed;inset:0;background:white;z-index:99999;';
+                    document.body.appendChild(overlay);
+                }
+
+                // Redirect immediately
                 const url = settings.panicUrl || 'https://classroom.google.com';
                 try { window.top.location.href = url; } catch { window.location.href = url; }
             }
-        });
+        }, true); // Use capture phase for faster response
     }
 
     // ==========================================
-    // 3. CLOAKING (STATIC & ROTATING)
+    // 3. CLOAKING (DELEGATED TO CLOAKING.JS)
     // ==========================================
-    function applyCloak() {
-        // Reload settings
-        try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
+    // Cloaking logic has been moved to scripts/cloaking.js for better synchronization.
+    // If you need cloaking on a specific page, include that script.
 
-        const presets = config.cloakPresets || [];
-        const customs = settings.customCloaks || [];
-        const allCloaks = [...presets, ...customs];
-
-        if (!settings.rotateCloaks) {
-            if (settings.tabTitle) document.title = settings.tabTitle;
-            if (settings.tabFavicon) {
-                let link = document.querySelector("link[rel~='icon']");
-                if (!link) {
-                    link = document.createElement('link');
-                    link.rel = 'icon';
-                    document.head.appendChild(link);
-                }
-                link.href = settings.tabFavicon;
-            }
-        }
-
-        return allCloaks;
-    }
-
-    // Apply immediately and get cloaks
-    let allCloaks = applyCloak();
-
-    // Listen for changes
-    window.addEventListener('storage', (e) => {
-        if (e.key === STORAGE_KEY) allCloaks = applyCloak();
-    });
-
-    // Expose for current tab settings page to call
-    window.updateCloakInstant = () => { allCloaks = applyCloak(); };
-
-    // Rotation Logic
-    let rotationIndex = 0;
-    setInterval(() => {
-        // Check setting live from local var (updated by storage listener)
-        if (settings.rotateCloaks && allCloaks.length > 0) {
-            const cloak = allCloaks[rotationIndex];
-            document.title = cloak.title || cloak.name;
-
-            let link = document.querySelector("link[rel~='icon']");
-            if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = cloak.icon || '';
-
-            try { window.top.document.title = document.title; } catch { }
-
-            rotationIndex = (rotationIndex + 1) % allCloaks.length;
-        }
-    }, (settings.rotateInterval || 5) * 1000);
 
     // ==========================================
     // 4. LEAVE CONFIRMATION
@@ -309,7 +270,7 @@
         // Reload settings to get latest value
         try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
 
-        if (settings.leaveConfirmation) {
+        if (window.top === window.self && settings.leaveConfirmation) {
             e.preventDefault();
             e.returnValue = '';
             return '';

@@ -268,8 +268,15 @@
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
 .presets-grid {
@@ -316,4 +323,95 @@
 .btn-danger:hover {
     background: var(--error);
     color: #fff;
+}
+
+/* Background Presets */
+.bg-preset-btn {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.bg-preset-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-light);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.bg-preset-btn.active {
+    border-color: var(--info);
+    box-shadow: 0 0 0 2px var(--info);
+}
+
+.bg-preset-preview {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--surface-hover);
+    overflow: hidden;
+}
+
+.bg-preset-name {
+    padding: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    width: 100%;
+}
+
+.bg-preset-btn.active .bg-preset-name {
+    color: var(--text);
+}
+
+.bg-preset-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.625rem;
+    z-index: 1;
+}
+
+.bg-preset-delete {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 24px;
+    height: 24px;
+    background: rgba(239, 68, 68, 0.8);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+    z-index: 2;
+    opacity: 0;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.bg-preset-btn:hover .bg-preset-delete {
+    opacity: 1;
+}
+
+.bg-preset-delete:hover {
+    background: #ef4444;
+    transform: scale(1.1);
 }

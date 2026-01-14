@@ -1,0 +1,91 @@
+/**
+ * PHANTOM - BACKGROUND STYLES
+ */
+.phantom-background {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    background: var(--bg);
+    pointer-events: none;
+    opacity: 1;
+    transition: background-color 0.3s ease;
+}
+
+.phantom-background.active {
+    opacity: 1;
+}
+
+.phantom-background-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.4);
+    transition: background-color 1s ease;
+}
+
+.phantom-background-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transition: opacity 1s ease-in-out;
+}
+
+.phantom-background-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border: none;
+}
+
+/* YouTube/Iframe object-fit: cover trick */
+.phantom-background-layer iframe.phantom-background-media {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 100vh;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+@media (min-aspect-ratio: 16/9) {
+    .phantom-background-layer iframe.phantom-background-media {
+        height: 56.25vw;
+    }
+}
+
+@media (max-aspect-ratio: 16/9) {
+    .phantom-background-layer iframe.phantom-background-media {
+        width: 177.78vh;
+    }
+}
+
+/* Ensure content on top remains readable */
+html,
+body {
+    position: relative;
+    z-index: 0;
+    background-color: transparent !important;
+    background: transparent !important;
+    /* Allow background to show through */
+}
+
+/* Specific adjustments for transparency if needed */
+.main-content,
+.home-page {
+    background: transparent !important;
+}
+
+/* Glassmorphism for containers when background is active do whatever fits the best though*/ 
+.phantom-background.active~* .card,
+.phantom-background.active~* .featured-card,
+.phantom-background.active~* .search-bar,
+.phantom-background.active~* .settings-panel {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(15, 15, 15, 0.7) !important;
+}

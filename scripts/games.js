@@ -306,23 +306,42 @@ const Games = {
         // Library Select
         const libSelect = document.getElementById('lib-select');
         if (libSelect) {
-            // Re-populate options to include Multi
-            libSelect.innerHTML = `
-                <option value="multi">Multi (Default)</option>
-                <option value="gnmath">Gnmath</option>
-                <option value="ugs">UGS</option>
-            `;
             libSelect.value = this.lib; // Set current selection
 
             libSelect.onchange = (e) => {
                 this.lib = e.target.value;
                 this.loadGames();
                 // Update settings
-                const s = JSON.parse(localStorage.getItem('void_settings') || '{}');
-                s.gameLibrary = this.lib;
-                localStorage.setItem('void_settings', JSON.stringify(s));
+                if (window.Settings) {
+                    Settings.set('gameLibrary', this.lib);
+                } else {
+                    const s = JSON.parse(localStorage.getItem('void_settings') || '{}');
+                    s.gameLibrary = this.lib;
+                    localStorage.setItem('void_settings', JSON.stringify(s));
+                }
             };
         }
+
+        // Listen for settings changes from other tabs/pages
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'void_settings') {
+                const newSettings = JSON.parse(e.newValue || '{}');
+                if (newSettings.gameLibrary && newSettings.gameLibrary !== this.lib) {
+                    this.lib = newSettings.gameLibrary;
+                    if (libSelect) libSelect.value = this.lib;
+                    this.loadGames();
+                }
+            }
+        });
+
+        // Listen for settings-changed event
+        window.addEventListener('settings-changed', (e) => {
+            if (e.detail.gameLibrary && e.detail.gameLibrary !== this.lib) {
+                this.lib = e.detail.gameLibrary;
+                if (libSelect) libSelect.value = this.lib;
+                this.loadGames();
+            }
+        });
 
         // Sorting
         const sortSelect = document.getElementById('sort-select');

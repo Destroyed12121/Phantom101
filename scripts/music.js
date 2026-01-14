@@ -42,7 +42,8 @@ const state = {
     lyrics: [], lyricIdx: -1, addMenuTrackId: null,
     useInvidiousFallback: false,
     radioLoading: false,
-    iframePaused: false
+    iframePaused: false,
+    showVideo: false
 };
 
 // --- DOM Elements ---
@@ -59,8 +60,12 @@ const currentTimeEl = $('currentTime'), totalTimeEl = $('totalTime');
 const volumeBar = $('volumeBar'), volumeFill = $('volumeFill'), volumeBtn = $('volumeBtn');
 const shuffleBtn = $('shuffleBtn'), repeatBtn = $('repeatBtn'), likeBtn = $('likeBtn');
 const radioBtn = $('radioBtn'), radioBadge = $('radioBadge'), proxyBtn = $('proxyBtn');
+const videoToggleBtn = $('videoToggleBtn');
 const lyricsContent = $('lyricsContent'), addMenu = $('addMenu');
-const fallbackContainer = $('fallbackContainer'), fallbackFrame = $('fallbackFrame');
+const fallbackContainer = $('fallbackContainer');
+// fallbackFrame is dynamic now, using getter/setter when needed or direct query
+let ytPlayer = null;
+let syncTimer = null;
 
 // Mobile menu
 const sidebar = $('sidebar'), mobileMenuBtn = $('mobileMenuBtn'), closeSidebar = $('closeSidebar');
@@ -391,7 +396,11 @@ async function playTrack(track) {
         }
     } else if (track.source === 'youtube') {
         stopNativeAudio();
-        playIframe(track.url, true);
+        if (state.proxyMode) {
+            playProxy(track.url);
+        } else {
+            playYouTube(track.id.replace('yt_', ''));
+        }
     } else if (track.source === 'soundcloud') {
         stopNativeAudio();
         const embed = `https://w.soundcloud.com/player/?url=${encodeURIComponent(track.url)}&auto_play=true`;
@@ -453,7 +462,106 @@ function stopNativeAudio() {
     if (crossfadeTimer) clearInterval(crossfadeTimer);
 }
 
-function playIframe(url, isVideo) {
+function playProxy(url) {
+    state.isPlaying = true;
+    destroyYTPlayer(); // Clean up API player if exists
+
+    let frame = document.getElementById('fallbackFrame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = 'fallbackFrame';
+        frame.allow = "autoplay; encrypted-media; picture-in-picture";
+        fallbackContainer.appendChild(frame);
+    }
+
+    frame.src = PROXY_BASE + encodeURIComponent(url);
+    updateVideoVisibility();
+    updatePlayBtn();
+}
+
+function playYouTube(videoId) {
+    state.isPlaying = true;
+    let frame = document.getElementById('fallbackFrame');
+
+    // Ensure container is ready for YT
+    if (!frame && !ytPlayer) {
+        frame = document.createElement('div'); // YT replaces this
+        frame.id = 'fallbackFrame';
+        fallbackContainer.appendChild(frame);
+    }
+
+    if (ytPlayer) {
+        ytPlayer.loadVideoById(videoId);
+    } else {
+        ytPlayer = new YT.Player('fallbackFrame', {
+            height: '100%',
+            width: '100%',
+            videoId: videoId,
+            playerVars: {
+                'autoplay': 1,
+                'controls': 0,
+                'disablekb': 1,
+                'fs': 0,
+                'rel': 0
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+    updateVideoVisibility();
+    updatePlayBtn();
+}
+
+function destroyYTPlayer() {
+    if (ytPlayer) {
+        try { ytPlayer.destroy(); } catch (e) { }
+        ytPlayer = null;
+    }
+}
+
+function onPlayerReady(event) {
+    event.target.playVideo();
+    setVolume(state.volume); // Sync volume
+}
+
+function onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.PLAYING) {
+        state.isPlaying = true;
+        startSyncTimer();
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        state.isPlaying = false;
+        stopSyncTimer();
+    } else if (event.data === YT.PlayerState.ENDED) {
+        state.isPlaying = false;
+        playNext();
+    }
+    updatePlayBtn();
+}
+
+function startSyncTimer() {
+    if (syncTimer) clearInterval(syncTimer);
+    syncTimer = setInterval(() => {
+        if (ytPlayer && ytPlayer.getCurrentTime) {
+            const curr = ytPlayer.getCurrentTime();
+            const dur = ytPlayer.getDuration();
+            if (dur > 0) {
+                const pct = (curr / dur) * 100;
+                progressFill.style.width = `${pct}%`;
+                currentTimeEl.textContent = formatTime(curr);
+                totalTimeEl.textContent = formatTime(dur);
+            }
+        }
+    }, 500);
+}
+
+function stopSyncTimer() {
+    if (syncTimer) clearInterval(syncTimer);
+}
+
+// Replaced original playIframe logic with playProxy/playYouTube
+function playIframe_LEGACY(url, isVideo) {
     state.isPlaying = true;
     // Proxy mode applies here for playback
     const finalSrc = state.proxyMode ? PROXY_BASE + encodeURIComponent(url) : url;
@@ -474,8 +582,10 @@ function playIframe(url, isVideo) {
 }
 
 function closeFallback() {
-    fallbackContainer.className = 'fallback-container';
-    fallbackFrame.src = '';
+    fallbackContainer.classList.remove('show');
+    destroyYTPlayer();
+    const frame = document.getElementById('fallbackFrame');
+    if (frame) { frame.src = 'about:blank'; frame.remove(); } // clear and remove
 }
 
 $('fallbackClose').addEventListener('click', () => {
@@ -487,7 +597,19 @@ $('fallbackClose').addEventListener('click', () => {
 playPauseBtn.addEventListener('click', () => {
     if (!state.currentTrack) return;
 
-    if (fallbackFrame.src && fallbackFrame.src !== 'about:blank') {
+    if (state.currentTrack.source === 'youtube' && !state.proxyMode) {
+        if (ytPlayer && ytPlayer.playVideo) {
+            if (state.isPlaying) ytPlayer.pauseVideo();
+            else ytPlayer.playVideo();
+        } else {
+            playTrack(state.currentTrack); // Retry load
+        }
+        return;
+    }
+
+    // Legacy proxy/iframe handling
+    const frame = document.getElementById('fallbackFrame');
+    if (frame && frame.style.display !== 'none' && frame.src && frame.src !== 'about:blank') {
         // For iframe content (YouTube/SoundCloud), we toggle visibility
         // and store the src to resume
         if (state.isPlaying && !state.iframePaused) {
@@ -603,10 +725,14 @@ $('nextBtn').addEventListener('click', playNext);
 $('prevBtn').addEventListener('click', playPrev);
 
 progressBar.addEventListener('click', e => {
-    if (currentAudio.duration && !fallbackFrame.src) {
+    if (currentAudio.duration && (!state.currentTrack || state.currentTrack.source !== 'youtube')) {
         const rect = progressBar.getBoundingClientRect();
         const pct = (e.clientX - rect.left) / rect.width;
         currentAudio.currentTime = pct * currentAudio.duration;
+    } else if (state.currentTrack && state.currentTrack.source === 'youtube' && ytPlayer && ytPlayer.seekTo) {
+        const rect = progressBar.getBoundingClientRect();
+        const pct = (e.clientX - rect.left) / rect.width;
+        ytPlayer.seekTo(pct * ytPlayer.getDuration(), true);
     }
 });
 
@@ -614,6 +740,7 @@ function setVolume(v) {
     state.volume = v;
     localStorage.setItem('music_volume', v.toString());
     currentAudio.volume = v;
+    if (ytPlayer && ytPlayer.setVolume) ytPlayer.setVolume(v * 100);
     if (audio1 !== currentAudio) audio1.volume = 0;
     if (audio2 !== currentAudio) audio2.volume = 0;
 
@@ -668,11 +795,26 @@ proxyBtn.addEventListener('click', () => {
     localStorage.setItem('music_proxy', state.proxyMode);
     proxyBtn.classList.toggle('active');
     notify('info', 'Proxy Mode', state.proxyMode ? 'Enabled' : 'Disabled');
+    updateVideoVisibility();
     // Reload current track with new proxy setting if playing
     if (state.currentTrack && (state.currentTrack.source === 'youtube' || state.currentTrack.source === 'soundcloud')) {
         playTrack(state.currentTrack);
     }
 });
+
+videoToggleBtn.addEventListener('click', () => {
+    state.showVideo = !state.showVideo;
+    videoToggleBtn.classList.toggle('active');
+    updateVideoVisibility();
+});
+
+function updateVideoVisibility() {
+    if (state.proxyMode || state.showVideo) {
+        fallbackContainer.classList.remove('audio-only');
+    } else {
+        fallbackContainer.classList.add('audio-only');
+    }
+}
 
 // Queue multiple radio tracks at once
 async function queueRadioTracks(basedOnTrack, count = 10, playFirst = false) {
@@ -1061,4 +1203,12 @@ setTimeout(() => {
         notify('info', 'Radio', 'Search for music or enable Radio mode for auto-play!');
     }
 }, 1000);
+
+// Load YouTube API
+if (!window.YT) {
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
 

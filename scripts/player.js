@@ -189,19 +189,44 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
+// Theater Mode Logic
+let theaterIdleTimer;
+
+function resetTheaterIdle() {
+    if (!document.body.classList.contains('theater-active')) return;
+
+    document.body.classList.remove('user-idle');
+    clearTimeout(theaterIdleTimer);
+
+    theaterIdleTimer = setTimeout(() => {
+        if (document.body.classList.contains('theater-active')) {
+            document.body.classList.add('user-idle');
+        }
+    }, 1500);
+}
+
+window.addEventListener('mousemove', resetTheaterIdle);
+window.addEventListener('keydown', resetTheaterIdle);
+window.addEventListener('click', resetTheaterIdle);
+
 function toggleTheater(force) {
     const btn = document.getElementById('btn-theater');
     const isActive = force !== undefined ? force : !document.body.classList.contains('theater-active');
 
     if (isActive) {
+        window.scrollTo(0, 0); // Reset scroll position
         document.body.classList.add('theater-active');
         if (btn) {
             btn.classList.add('active');
             btn.innerHTML = '<i class="fa-solid fa-compress"></i> Exit Theater';
         }
-        if (window.Notify) window.Notify.info('Theater Mode', 'Enjoy your movie!');
+        if (window.Notify) window.Notify.info('Theater Mode', 'Controls will hide automatically.');
+        resetTheaterIdle();
     } else {
         document.body.classList.remove('theater-active');
+        document.body.classList.remove('user-idle');
+        clearTimeout(theaterIdleTimer);
+
         if (btn) {
             btn.classList.remove('active');
             btn.innerHTML = '<i class="fa-solid fa-masks-theater"></i> Theater Mode';
