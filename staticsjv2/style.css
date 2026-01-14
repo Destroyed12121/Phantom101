@@ -17,6 +17,23 @@ html,
     background: var(--bg);
     overflow: hidden;
     color: var(--text);
+    transition: background 0.3s ease;
+}
+
+/* Background Support */
+body.phantom-bg-active {
+    background: transparent !important;
+}
+
+body.phantom-bg-active #app {
+    background: transparent !important;
+}
+
+body.phantom-bg-active .tabs,
+body.phantom-bg-active .nav {
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 /* Layout */

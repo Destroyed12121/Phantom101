@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Proxy</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
+    <script type="module">
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+        window.BareMux = BareMux;
+    </script>
+</head>
+
+<body>
+    <img id="bg-img" alt="">
+    <script>
+        async function initialize() {
+            // Parse hash params
+            const hash = window.location.hash.substring(1);
+            let targetUrl = hash;
+            let objectPosition = 'center';
+
+            // Check if hash is a simple URL or params
+            if (hash.includes('url=')) {
+                try {
+                    const params = new URLSearchParams(hash);
+                    targetUrl = params.get('url');
+                    objectPosition = params.get('pos') || 'center';
+                } catch (e) {
+                    // Fallback to simple hash if parsing fails
+                    targetUrl = hash;
+                }
+            }
+
+            if (!targetUrl) return;
+
+            try {
+                // Initialize Proxy connection (BareMux + SW)
+                let basePath = location.pathname.replace(/[^/]*$/, '');
+                if (!basePath.endsWith('/')) basePath += '/';
+
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
+                    await navigator.serviceWorker.ready;
+
+                    const wispUrl = localStorage.getItem("proxServer") || "wss://dash.goip.de/wisp/";
+                    const sw = reg.active || navigator.serviceWorker.controller;
+
+                    // Configure SW
+                    if (sw) {
+                        sw.postMessage({ type: "config", wispurl: wispUrl });
+                    }
+
+                    // Configure Transport
+                    const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
+                    await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
+                }
+
+                // Now fetch the image through the proxy (SW should intercept)
+                const response = await fetch(targetUrl);
+                if (!response.ok) throw new Error('Fetch failed');
+
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+
+                const img = document.getElementById('bg-img');
+                img.style.objectPosition = objectPosition; // Apply position
+
+                img.onload = () => {
+                    window.parent.postMessage({ type: 'bg-loaded', url: targetUrl }, '*');
+                };
+                img.onerror = () => {
+                    window.parent.postMessage({ type: 'bg-error', url: targetUrl }, '*');
+                };
+                img.src = objectUrl;
+
+            } catch (err) {
+                console.error("Proxy Load Error:", err);
+                window.parent.postMessage({ type: 'bg-error', url: targetUrl, error: err.message }, '*');
+            }
+        }
+
+        window.addEventListener('load', initialize);
+    </script>
+</body>
+
+</html>

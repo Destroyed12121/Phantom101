@@ -120,7 +120,7 @@
             }
 
             // 2. Handle background images/videos (either from theme or custom)
-            const customBg = s.customBackground;
+            let customBg = s.customBackground;
             const isCustomActive = customBg && customBg.type !== 'none';
 
             if (isCustomActive) {
@@ -167,7 +167,7 @@
     const init = () => {
         // Auto-inject Background System if not present
         if (!window.BackgroundManager && !document.querySelector('script[src*="background.js"]')) {
-            const isSubPage = window.location.pathname.includes('/pages/');
+            const isSubPage = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/staticsjv2/');
             const prefix = isSubPage ? '../' : '';
 
             // Inject CSS
@@ -185,6 +185,16 @@
         }
 
         Settings.apply();
+
+        // Check for Featured Background (Overrides current if ID is new)
+        const featured = window.SITE_CONFIG?.featuredBackground;
+        if (featured && featured.active && featured.id && featured.id !== _settings.lastSeenFeatured) {
+            Settings.update({
+                customBackground: featured,
+                lastSeenFeatured: featured.id,
+                backgroundRotation: false // Override auto-rotate as requested
+            });
+        }
 
         // Panic Key Handler - Fast white screen redirect
         document.addEventListener('keydown', (e) => {

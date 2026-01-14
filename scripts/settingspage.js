@@ -125,7 +125,7 @@ function renderBackgrounds() {
             const bgUrl = btn.dataset.url;
 
             if (bgId === 'none') {
-                delete settings.customBackground;
+                settings.customBackground = { id: 'none', type: 'none' };
                 if (window.Notify) Notify.success('Background Removed', 'Reverted to theme default');
             } else {
                 const bg = allBgs.find(b => (bgId !== 'custom' && b.id === bgId) || (bgId === 'custom' && b.url === bgUrl));
@@ -151,7 +151,7 @@ function renderBackgrounds() {
 
                 // If active, remove it
                 if (settings.customBackground?.url === url) {
-                    delete settings.customBackground;
+                    settings.customBackground = { id: 'none', type: 'none' };
                 }
 
                 saveSettings(settings);

@@ -12,7 +12,8 @@
 /* Sidebar */
 .sidebar {
     width: 280px;
-    background: var(--surface);
+    background: rgba(15, 15, 15, 0.7);
+    backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
     transition: transform var(--transition-normal);
@@ -26,7 +27,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--surface);
+    background: rgba(15, 15, 15, 0.7);
+    backdrop-filter: blur(20px);
     z-index: -1;
 }
 
@@ -118,8 +120,17 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: var(--bg);
+    background: transparent;
     position: relative;
+}
+
+.main-content::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.4);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .chat-header {
@@ -179,6 +190,7 @@
 .ai-message .message-avatar {
     color: var(--accent);
     box-shadow: 0 0 10px var(--accent-glow);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .message-content {
@@ -188,16 +200,26 @@
 
 /* The Glass Look for AI */
 .ai-message .message-content {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border);
+    background: rgba(15, 15, 15, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
     padding: var(--space-md);
     transition: all var(--transition-normal);
+    box-shadow: var(--shadow-md);
+}
+
+.user-message .message-content {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
 }
 
 .ai-message:hover .message-content {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: var(--border-light);
+    background: rgba(15, 15, 15, 0.9);
+    border-color: var(--text-dim);
 }
 
 /* Floating Message Actions */
@@ -352,4 +374,46 @@
     .sidebar.active {
         transform: translateX(0);
     }
+}
+
+/* Image Rendering Fixes */
+.image-wrapper {
+    margin: var(--space-md) 0;
+}
+
+.image-container {
+    position: relative;
+    max-width: 512px;
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: var(--surface-active);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.generated-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--transition-slow);
+}
+
+.generated-image.loaded {
+    opacity: 1;
+}
+
+.image-loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 1.5rem;
+}
+
+.generated-image.loaded+.image-loader {
+    display: none;
 }

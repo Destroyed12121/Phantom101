@@ -5,10 +5,17 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.8 Super",
+    version: "1.0.8 Super++",
 
     // Changelog
     changelog: [
+        "1.0.8 super++",
+        "fixed proxy AGAIN (hopefully the last time)",
+        "fixed backgrounds not working twice",
+        "fixed ai",
+        "fixed ai chat paths",
+
+        "1.0.8 super",
         "ADDED BACKGROUNDS",
         "enhanced theater mode for hopefully the last time",
         "added movies to search in the home page",
@@ -31,6 +38,14 @@ window.SITE_CONFIG = {
     },
 
     firstVisitCloak: false, // this controls the fake error page
+    featuredBackground: {
+        id: 'jynxiixixbxcuiboxcvbhxc8fuiyklfdsngs', // Change this ID to push a new background to all users
+        active: true,
+        name: 'Featured',
+        type: 'video',
+        url: 'https://www.youtube.com/watch?v=UydK8DEbLc4',
+        overlay: 0.3
+    },
     // Default settings
     defaults: {
         cloakMode: "about:blank",
@@ -51,7 +66,9 @@ window.SITE_CONFIG = {
         lastThemeRotation: 0,
         backgroundRotation: true,
         lastBackgroundRotation: 0,
+        lastSeenFeatured: 'none',
         background: { type: 'color', value: '#0a0a0a' },
+        customBackground: { id: 'none', type: 'none' },
         accentColor: '#ffffff',
         surfaceColor: '#0f0f0f',
         secondaryColor: '#2e2e33',
@@ -101,16 +118,19 @@ window.SITE_CONFIG = {
             type: 'image',
             url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg',
             overlay: 0.3,
-            objectPosition: 'top center'
+            objectPosition: 'top left'
         },
         {
-            id: 'desert-stars',
+            id: 'midnight-stars',
             name: 'Midnight Stars',
             type: 'image',
             url: 'https://images.pexels.com/photos/2312040/pexels-photo-2312040.jpeg',
             overlay: 0.3
-        }
+        },
+        
+
     ],
+
 
     // Tab Cloaks
     cloakPresets: [

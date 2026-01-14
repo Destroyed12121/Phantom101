@@ -80,7 +80,7 @@ body {
     background: transparent !important;
 }
 
-/* Glassmorphism for containers when background is active */
+/* Glassmorphism for containers when background is active do whatever fits the best though*/ 
 .phantom-background.active~* .card,
 .phantom-background.active~* .featured-card,
 .phantom-background.active~* .search-bar,

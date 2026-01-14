@@ -117,7 +117,7 @@
     </style>
     <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
     <script type="module">
-        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux@2.1.2/dist/index.mjs";
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
         window.BareMux = BareMux;
     </script>
 </head>
@@ -135,6 +135,8 @@
         <div class="message-content">
             <h1>Connection Error</h1>
             <p id="error-message">An error occurred.</p>
+            <button id="retry-btn"
+                style="margin-top: 20px; padding: 8px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; cursor: pointer;">Retry</button>
         </div>
     </div>
     <div id="iframe-container"></div>
@@ -147,207 +149,93 @@
         const errorMessage = document.getElementById('error-message');
         const iframeContainer = document.getElementById('iframe-container');
         const skipBtn = document.getElementById('skip-btn');
+        const retryBtn = document.getElementById('retry-btn');
 
-        let loadingTimeout = null;
-        let skipButtonTimeout = null;
+        let scramjet;
+        let activeFrame;
 
         function showError(message) {
-            if (loadingTimeout) clearTimeout(loadingTimeout);
-            if (skipButtonTimeout) clearTimeout(skipButtonTimeout);
             loadingContainer.style.display = 'none';
-            iframeContainer.innerHTML = '';
-            errorMessage.textContent = message;
             errorContainer.style.display = 'flex';
+            errorMessage.textContent = message;
         }
 
         function showContent() {
-            if (loadingTimeout) clearTimeout(loadingTimeout);
-            if (skipButtonTimeout) clearTimeout(skipButtonTimeout);
             loadingContainer.style.opacity = '0';
             loadingContainer.style.visibility = 'hidden';
             iframeContainer.classList.add('loaded');
         }
 
-        async function init() {
+        async function initialize() {
             const urlParams = new URLSearchParams(window.location.search);
-            const shouldSkip = urlParams.has('skip');
             const targetUrl = window.location.hash.substring(1);
-            const basePath = location.pathname.replace(/[^/]*$/, '');
+            let basePath = location.pathname.replace(/[^/]*$/, '');
+            if (!basePath.endsWith('/')) basePath += '/';
 
             if (!targetUrl) {
-                showError("No URL provided. Use format: #https://example.com");
-                return;
-            }
-
-            let validatedUrl = targetUrl;
-            try {
-                const decoded = decodeURIComponent(targetUrl);
-                if (decoded !== targetUrl && (decoded.startsWith('http://') || decoded.startsWith('https://'))) {
-                    validatedUrl = decoded;
-                }
-            } catch (e) {
-                showError(`Invalid URL format: ${e.message}`);
+                showError("No URL provided.");
                 return;
             }
 
             try {
-                new URL(validatedUrl);
-            } catch (e) {
-                showError(`Invalid URL: ${e.message}`);
-                return;
-            }
-
-            if (!validatedUrl.startsWith('http://') && !validatedUrl.startsWith('https://')) {
-                showError("Only HTTP/HTTPS URLs are supported.");
-                return;
-            }
-
-            if (shouldSkip) {
-                loadingContainer.style.display = 'none';
-                iframeContainer.classList.add('loaded');
-            }
-
-            // Retry logic for initialization
-            const maxInitRetries = 3;
-            let initAttempt = 0;
-
-            async function attemptInit() {
-                initAttempt++;
-                console.log(`Embed: Init attempt ${initAttempt}/${maxInitRetries}`);
-
-                try {
-                    const { ScramjetController } = $scramjetLoadController();
-                    const scramjet = new ScramjetController({
-                        prefix: basePath + "scramjet/",
-                        files: {
-                            wasm: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm',
-                            all: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js',
-                            sync: 'https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js'
-                        }
-                    });
-                    await scramjet.init();
-
-                    // Register service worker with error handling
-                    let reg;
-                    try {
-                        reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
-                    } catch (swErr) {
-                        console.error("Embed: SW registration failed:", swErr);
-                        throw new Error("Service Worker registration failed");
+                const { ScramjetController } = $scramjetLoadController();
+                scramjet = new ScramjetController({
+                    prefix: basePath + "scramjet/",
+                    files: {
+                        wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
+                        all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
+                        sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
                     }
+                });
 
-                    const wispUrl = localStorage.getItem('proxServer') || 'wss://dash.goip.de/wisp/';
+                await scramjet.init();
 
-                    // Wait for SW ready with timeout
-                    const swReadyPromise = navigator.serviceWorker.ready;
-                    const swReadyTimeout = new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error("SW ready timeout")), 10000)
-                    );
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
+                    await navigator.serviceWorker.ready;
 
-                    await Promise.race([swReadyPromise, swReadyTimeout]);
-
-                    // Force update to get latest SW
-                    reg.update().catch(e => console.warn("SW update check failed:", e));
-
-                    // Wait for controller with timeout
-                    if (!navigator.serviceWorker.controller) {
-                        console.log("Embed: Waiting for SW controller...");
-                        const controllerPromise = new Promise(resolve => {
-                            const onControllerChange = () => {
-                                navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
-                                resolve();
-                            };
-                            navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-                        });
-                        const controllerTimeout = new Promise(resolve => setTimeout(resolve, 5000));
-                        await Promise.race([controllerPromise, controllerTimeout]);
-                    }
-
-                    // Send config to SW
+                    const wispUrl = localStorage.getItem("proxServer") || "wss://dash.goip.de/wisp/";
                     const sw = reg.active || navigator.serviceWorker.controller;
+
                     if (sw) {
-                        console.log("Embed: Sending config to SW:", wispUrl);
-                        sw.postMessage({ type: 'config', wispurl: wispUrl });
-                    }
-                    if (navigator.serviceWorker.controller && navigator.serviceWorker.controller !== sw) {
-                        navigator.serviceWorker.controller.postMessage({ type: 'config', wispurl: wispUrl });
+                        sw.postMessage({ type: "config", wispurl: wispUrl });
                     }
 
-                    // Setup BareMux connection with retry
-                    let connection;
-                    for (let connAttempt = 0; connAttempt < 3; connAttempt++) {
-                        try {
-                            connection = new BareMux.BareMuxConnection(basePath + 'bareworker.js');
-                            await Promise.race([
-                                connection.setTransport('https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs', [{ wisp: wispUrl }]),
-                                new Promise((_, reject) => setTimeout(() => reject(new Error("Transport setup timeout")), 10000))
-                            ]);
-                            break;
-                        } catch (connErr) {
-                            console.warn(`Embed: Connection attempt ${connAttempt + 1} failed:`, connErr);
-                            if (connAttempt === 2) throw connErr;
-                            await new Promise(r => setTimeout(r, 1000 * (connAttempt + 1)));
-                        }
-                    }
-
-                    if (!shouldSkip) {
-                        loadingTitle.textContent = 'Loading';
-                        loadingUrl.textContent = validatedUrl;
-                    }
-
-                    const frame = scramjet.createFrame();
-                    frame.frame.id = 'embed-frame';
-
-                    if (!shouldSkip) {
-                        skipButtonTimeout = setTimeout(() => { skipBtn.style.display = 'inline-block'; }, 1500);
-                        skipBtn.addEventListener('click', showContent);
-
-                        const loadStartTime = Date.now();
-                        const MIN_LOADING_TIME = 1500;
-
-                        frame.frame.addEventListener('load', () => {
-                            const elapsed = Date.now() - loadStartTime;
-                            const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
-                            setTimeout(showContent, remaining);
-                        });
-
-                        frame.frame.addEventListener('error', (err) => {
-                            console.error("Embed: Frame error:", err);
-                            // Don't immediately show error - SW may retry
-                            loadingTitle.textContent = 'Retrying...';
-                        });
-
-                        loadingTimeout = setTimeout(() => {
-                            if (!frame.frame.contentWindow || frame.frame.contentWindow.location.href === 'about:blank') {
-                                showError(`Timeout: Content took too long to load. Try refreshing or switch proxy servers.`);
-                            }
-                        }, 60000);
-                    }
-
-                    iframeContainer.appendChild(frame.frame);
-                    frame.go(validatedUrl);
-
-                } catch (err) {
-                    console.error(`Embed: Init attempt ${initAttempt} failed:`, err);
-
-                    if (initAttempt < maxInitRetries) {
-                        if (!shouldSkip) {
-                            loadingTitle.textContent = 'Retrying...';
-                            loadingUrl.textContent = `Attempt ${initAttempt + 1} of ${maxInitRetries}`;
-                        }
-                        await new Promise(r => setTimeout(r, 1500 * initAttempt));
-                        return attemptInit();
-                    }
-
-                    showError(`Connection failed after ${maxInitRetries} attempts: ${err.message}`);
+                    const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
+                    await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
                 }
-            }
 
-            await attemptInit();
+                loadingTitle.textContent = "Loading Site";
+                loadingUrl.textContent = targetUrl;
+
+                activeFrame = scramjet.createFrame();
+                activeFrame.frame.id = "embed-frame";
+                iframeContainer.appendChild(activeFrame.frame);
+
+                activeFrame.frame.addEventListener('load', () => {
+                    showContent();
+                });
+
+                // Fallback skip button
+                setTimeout(() => {
+                    skipBtn.style.display = "inline-block";
+                    skipBtn.onclick = showContent;
+                }, 2000);
+
+                activeFrame.go(targetUrl);
+
+            } catch (err) {
+                console.error("Embed Error:", err);
+                showError("Failed to initialize proxy: " + err.message);
+            }
         }
 
-        window.addEventListener('load', init);
+        retryBtn.onclick = () => location.reload();
+        window.addEventListener('load', initialize);
     </script>
+</body>
+
+</html>
 </body>
 
 </html>

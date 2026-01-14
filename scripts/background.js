@@ -10,6 +10,8 @@
         layers: [],
         currentLayerIndex: 0,
         settings: null,
+        pendingShowNext: null,
+        pendingUrl: null,
 
         init() {
             // Create container if it doesn't exist
@@ -43,9 +45,27 @@
                 this.updateFromSettings(e.detail);
             });
 
+            // Listen for proxy messages
+            window.addEventListener('message', (e) => this.handleMessage(e));
+
             // Initial load
             const initialSettings = window.Settings ? window.Settings.getAll() : {};
             this.updateFromSettings(initialSettings);
+        },
+
+        handleMessage(e) {
+            if (e.data?.type === 'bg-loaded') {
+                if (this.pendingUrl === e.data.url && this.pendingShowNext) {
+                    this.pendingShowNext();
+                    this.pendingShowNext = null; // Clear to prevent double calls (though showNext handles it too)
+                }
+            } else if (e.data?.type === 'bg-error') {
+                if (this.pendingUrl === e.data.url) {
+                    console.warn('Proxy background failed:', e.data.error);
+                    if (window.Notify) window.Notify.error('Background Error', 'Failed to load background image.');
+                    this.pendingShowNext = null;
+                }
+            }
         },
 
         updateFromSettings(settings) {
@@ -73,15 +93,20 @@
             const currentLayer = this.layers[this.currentLayerIndex];
             const nextLayer = this.layers[nextIndex];
 
+            // Cancel any pending transition if settings changed quickly
+            this.pendingShowNext = null;
+            this.pendingUrl = null;
+
             // Handle "None" - reset to theme default
             if (!bg || bg.type === 'none' || bg.id === 'none') {
                 this.container.classList.remove('active');
+                document.body.classList.remove('phantom-bg-active');
                 this.updateOverlay(0);
 
                 // Fade out layers
                 this.layers.forEach(layer => {
                     layer.style.opacity = '0';
-                    layer.innerHTML = '';
+                    setTimeout(() => { layer.innerHTML = ''; }, 500);
                 });
 
                 // Inform Settings API to re-apply basic theme variables
@@ -97,7 +122,9 @@
 
             // Check if URL is actually different to avoid flickering
             const currentMedia = currentLayer.querySelector('img, video, iframe');
-            const currentSrc = currentMedia?.src || currentMedia?.dataset?.url;
+            // Check dataset.url first (for proxies), then src
+            const currentSrc = currentMedia?.dataset?.url || currentMedia?.src;
+
             if (currentSrc === bg.url || (bg.youtubeId && currentSrc?.includes(bg.youtubeId))) {
                 this.container.classList.add('active');
                 currentLayer.style.opacity = '1';
@@ -106,30 +133,49 @@
             }
 
             this.container.classList.add('active');
+            document.body.classList.add('phantom-bg-active');
             nextLayer.innerHTML = '';
 
             let mediaElement;
             let showNextCalled = false;
+
+            // Define showNext callback
+            const showNext = () => {
+                if (showNextCalled) return;
+                showNextCalled = true;
+
+                nextLayer.style.opacity = '1';
+                currentLayer.style.opacity = '0';
+                this.currentLayerIndex = nextIndex;
+                this.updateOverlay(bg.overlay || 0.3);
+
+                // Cleanup old layer after transition
+                setTimeout(() => {
+                    if (this.currentLayerIndex === nextIndex) {
+                        currentLayer.innerHTML = '';
+                    }
+                }, 1000);
+            };
 
             if (bg.type === 'youtube') {
                 // YouTube embed as background
                 mediaElement = document.createElement('iframe');
                 mediaElement.src = `https://www.youtube.com/embed/${bg.youtubeId}?autoplay=1&mute=1&loop=1&playlist=${bg.youtubeId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0`;
                 mediaElement.dataset.url = bg.url;
+                mediaElement.className = 'phantom-background-media';
                 mediaElement.allow = 'autoplay; encrypted-media';
                 mediaElement.setAttribute('frameborder', '0');
                 mediaElement.setAttribute('allowfullscreen', '');
-                showNextCalled = false;
-                // YouTube iframes are ready immediately
-                setTimeout(() => {
-                    if (!showNextCalled) {
-                        showNextCalled = true;
-                        showNext();
-                    }
-                }, 500);
+
+                nextLayer.appendChild(mediaElement);
+                // YouTube iframes are ready immediately (load event is unreliable for cross-origin iframes)
+                setTimeout(showNext, 500);
+
             } else if (bg.type === 'video') {
                 mediaElement = document.createElement('video');
                 mediaElement.src = bg.url;
+                mediaElement.dataset.url = bg.url;
+                mediaElement.className = 'phantom-background-media';
                 mediaElement.autoplay = true;
                 mediaElement.muted = true;
                 mediaElement.loop = true;
@@ -149,50 +195,76 @@
                 // Error handling for video
                 mediaElement.onerror = () => {
                     console.warn('Video failed to load:', bg.url);
-                    if (!showNextCalled) {
-                        showNextCalled = true;
-                        showNext();
-                    }
+                    if (window.Notify) window.Notify.error('Background Error', 'Video failed to load.');
+                    // User requested to "let videos bug out" so we don't necessarily need to fallback or hide, 
+                    // but we did notify.
                 };
-            } else {
-                mediaElement = document.createElement('img');
-                mediaElement.src = bg.url;
-                mediaElement.onerror = () => {
-                    console.warn('Image failed to load:', bg.url);
-                };
-            }
 
-            mediaElement.className = 'phantom-background-media';
-            if (bg.objectPosition) {
-                mediaElement.style.objectPosition = bg.objectPosition;
-            }
-            nextLayer.appendChild(mediaElement);
-
-            // Wait for media to be ready before fading in
-            const showNext = () => {
-                if (showNextCalled) return;
-                showNextCalled = true;
-
-                nextLayer.style.opacity = '1';
-                currentLayer.style.opacity = '0';
-                this.currentLayerIndex = nextIndex;
-                this.updateOverlay(bg.overlay || 0.3);
-
-                // Cleanup old layer after transition
-                setTimeout(() => {
-                    if (this.currentLayerIndex === nextIndex) {
-                        currentLayer.innerHTML = '';
-                    }
-                }, 1000);
-            };
-
-            if (bg.type === 'video') {
                 mediaElement.oncanplay = showNext;
+                nextLayer.appendChild(mediaElement);
+
                 // Fallback if video takes too long
                 setTimeout(showNext, 3000);
+
             } else {
-                if (mediaElement.complete) showNext();
-                else mediaElement.onload = showNext;
+                // IMAGE HANDLING
+                const isExternal = bg.url && bg.url.startsWith('http');
+
+                if (isExternal) {
+                    // USE PROXY IFRAME
+                    const isSubPage = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/staticsjv2/');
+                    const prefix = isSubPage ? '../' : '';
+                    const proxyPath = prefix + 'staticsjv2/image.html';
+
+                    mediaElement = document.createElement('iframe');
+
+                    // pass params via hash
+                    const params = new URLSearchParams();
+                    params.set('url', bg.url);
+                    if (bg.objectPosition) params.set('pos', bg.objectPosition);
+
+                    mediaElement.src = `${proxyPath}#${params.toString()}`;
+                    mediaElement.dataset.url = bg.url;
+                    mediaElement.className = 'phantom-background-media';
+                    mediaElement.style.border = 'none';
+                    mediaElement.style.width = '100%';
+                    mediaElement.style.height = '100%';
+
+                    // Register pending state
+                    this.pendingUrl = bg.url;
+                    this.pendingShowNext = showNext;
+
+                    nextLayer.appendChild(mediaElement);
+
+                    // Fallback if proxy takes too long (5s)
+                    setTimeout(() => {
+                        // If still pending, notify user
+                        if (this.pendingShowNext === showNext) {
+                            // Don't error, just warn or silently fail
+                            console.warn('Proxy timed out for:', bg.url);
+                        }
+                    }, 5000);
+
+                } else {
+                    // LOCAL IMAGE
+                    mediaElement = document.createElement('img');
+                    mediaElement.src = bg.url;
+                    mediaElement.dataset.url = bg.url;
+                    mediaElement.className = 'phantom-background-media';
+
+                    mediaElement.onerror = () => {
+                        console.warn('Image failed to load:', bg.url);
+                    };
+
+                    if (mediaElement.complete) showNext();
+                    else mediaElement.onload = showNext;
+
+                    nextLayer.appendChild(mediaElement);
+                }
+            }
+
+            if (bg.objectPosition && mediaElement) {
+                mediaElement.style.objectPosition = bg.objectPosition;
             }
         },
 
