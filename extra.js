@@ -25,6 +25,9 @@ revamp movies page to 'watch'(lowk copy vapor v4) and add youtube and twitch
 shorten some page's code
 fix paths in search autocomplete
 fix markdown in ai not using correct text colors
+fix online counter
+make backgrounds show in the loading screen
+fix icons for topbar in code.html
 view github at https://github.com/Destroyed12121/Phantom101
 Latest version ** 1.0.8 Super++ **
 */

@@ -124,11 +124,8 @@
             const isCustomActive = customBg && customBg.type !== 'none';
 
             if (isCustomActive) {
-                // BackgroundManager handles this if present, otherwise fallback
-                if (!window.BackgroundManager) {
-                    if (customBg.type === 'image' || customBg.type === 'video') {
-                        root.style.setProperty('--bg-image', `url(${customBg.url})`);
-                    }
+                if (customBg.url) {
+                    root.style.setProperty('--bg-image', `url(${customBg.url})`);
                 }
             } else {
                 // Revert to theme background if it has an image/gradient

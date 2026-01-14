@@ -40,7 +40,7 @@ window.SITE_CONFIG = {
     firstVisitCloak: false, // this controls the fake error page
     featuredBackground: {
         id: 'jynxiixixbxcuiboxcvbhxc8fuiyklfdsngs', // Change this ID to push a new background to all users
-        active: true,
+        active: false, //true to make it featured
         name: 'Featured',
         type: 'video',
         url: 'https://www.youtube.com/watch?v=UydK8DEbLc4',

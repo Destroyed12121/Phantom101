@@ -187,10 +187,14 @@ if (applyCustomBgBtn) {
 
         // Auto-detect type
         let type = 'image';
-        if (url.match(/\.(mp4|webm|ogg|mov)$/i)) {
+        const urlLower = url.toLowerCase();
+        if (urlLower.match(/\.(mp4|webm|ogg|mov|m4v)$/)) {
             type = 'video';
-        } else if (url.match(/(youtube\.com|youtu\.be)/i)) {
+        } else if (urlLower.match(/(youtube\.com|youtu\.be)/)) {
             type = 'youtube';
+        } else if (urlLower.includes('video') || urlLower.includes('stream')) {
+            // Heuristic for some video providers
+            type = 'video';
         }
 
         // Create custom background object

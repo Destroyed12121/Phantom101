@@ -171,82 +171,32 @@
                 // YouTube iframes are ready immediately (load event is unreliable for cross-origin iframes)
                 setTimeout(showNext, 500);
 
-            } else if (bg.type === 'video') {
-                mediaElement = document.createElement('video');
-                mediaElement.src = bg.url;
-                mediaElement.dataset.url = bg.url;
-                mediaElement.className = 'phantom-background-media';
-                mediaElement.autoplay = true;
-                mediaElement.muted = true;
-                mediaElement.loop = true;
-                mediaElement.playsInline = true;
-                mediaElement.setAttribute('playsinline', '');
-                mediaElement.setAttribute('webkit-playsinline', '');
-                if (bg.poster) mediaElement.poster = bg.poster;
-
-                // Optimization: Preload video
-                mediaElement.preload = 'auto';
-
-                // Force play on load
-                mediaElement.onloadeddata = () => {
-                    mediaElement.play().catch(() => { });
-                };
-
-                // Error handling for video
-                mediaElement.onerror = () => {
-                    console.warn('Video failed to load:', bg.url);
-                    if (window.Notify) window.Notify.error('Background Error', 'Video failed to load.');
-                    // User requested to "let videos bug out" so we don't necessarily need to fallback or hide, 
-                    // but we did notify.
-                };
-
-                mediaElement.oncanplay = showNext;
-                nextLayer.appendChild(mediaElement);
-
-                // Fallback if video takes too long
-                setTimeout(showNext, 3000);
-
             } else {
-                // IMAGE HANDLING
-                const isExternal = bg.url && bg.url.startsWith('http');
-
-                if (isExternal) {
-                    // USE PROXY IFRAME
-                    const isSubPage = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/staticsjv2/');
-                    const prefix = isSubPage ? '../' : '';
-                    const proxyPath = prefix + 'staticsjv2/image.html';
-
-                    mediaElement = document.createElement('iframe');
-
-                    // pass params via hash
-                    const params = new URLSearchParams();
-                    params.set('url', bg.url);
-                    if (bg.objectPosition) params.set('pos', bg.objectPosition);
-
-                    mediaElement.src = `${proxyPath}#${params.toString()}`;
+                // NORMAL MEDIA HANDLING (No Proxy)
+                if (bg.type === 'video') {
+                    mediaElement = document.createElement('video');
+                    mediaElement.src = bg.url;
                     mediaElement.dataset.url = bg.url;
                     mediaElement.className = 'phantom-background-media';
-                    mediaElement.style.border = 'none';
-                    mediaElement.style.width = '100%';
-                    mediaElement.style.height = '100%';
+                    mediaElement.autoplay = true;
+                    mediaElement.muted = true;
+                    mediaElement.loop = true;
+                    mediaElement.playsInline = true;
+                    mediaElement.setAttribute('playsinline', '');
+                    mediaElement.setAttribute('webkit-playsinline', '');
+                    if (bg.poster) mediaElement.poster = bg.poster;
+                    mediaElement.preload = 'auto';
 
-                    // Register pending state
-                    this.pendingUrl = bg.url;
-                    this.pendingShowNext = showNext;
-
+                    mediaElement.onloadeddata = () => { mediaElement.play().catch(() => { }); };
+                    mediaElement.onerror = () => {
+                        console.warn('Video failed to load:', bg.url);
+                        if (window.Notify) window.Notify.error('Background Error', 'Video failed to load.');
+                    };
+                    mediaElement.oncanplay = showNext;
                     nextLayer.appendChild(mediaElement);
-
-                    // Fallback if proxy takes too long (5s)
-                    setTimeout(() => {
-                        // If still pending, notify user
-                        if (this.pendingShowNext === showNext) {
-                            // Don't error, just warn or silently fail
-                            console.warn('Proxy timed out for:', bg.url);
-                        }
-                    }, 5000);
-
+                    setTimeout(showNext, 3000); // Video fallback
                 } else {
-                    // LOCAL IMAGE
+                    // Image Handling
                     mediaElement = document.createElement('img');
                     mediaElement.src = bg.url;
                     mediaElement.dataset.url = bg.url;
@@ -254,11 +204,15 @@
 
                     mediaElement.onerror = () => {
                         console.warn('Image failed to load:', bg.url);
+                        if (window.Notify) window.Notify.error('Background Error', 'Image failed to load.');
+                        showNext();
                     };
 
                     if (mediaElement.complete) showNext();
-                    else mediaElement.onload = showNext;
-
+                    else {
+                        mediaElement.onload = showNext;
+                        setTimeout(showNext, 2500); // Image fallback
+                    }
                     nextLayer.appendChild(mediaElement);
                 }
             }
