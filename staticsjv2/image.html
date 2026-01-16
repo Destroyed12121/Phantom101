@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Proxy</title>
     <style>
-        body,
-        html {
+        body, html {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -21,18 +20,29 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        img.loaded {
+            opacity: 1;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
-    <script type="module">
-        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
-        window.BareMux = BareMux;
-    </script>
 </head>
 
 <body>
-    <img id="bg-img" alt="">
+    <img id="bg-img" alt="" loading="eager">
     <script>
+        const CACHE_NAME = 'phantom-bg-cache-v2';
+        let parentBareMux = null;
+
+        // Listen for BareMux from parent
+        window.addEventListener('message', (e) => {
+            if (e.data?.type === 'baremux-data' && e.data.BareMux) {
+                parentBareMux = e.data.BareMux;
+            }
+        });
+
         async function initialize() {
             // Parse hash params
             const hash = window.location.hash.substring(1);
@@ -46,57 +56,172 @@
                     targetUrl = params.get('url');
                     objectPosition = params.get('pos') || 'center';
                 } catch (e) {
-                    // Fallback to simple hash if parsing fails
                     targetUrl = hash;
                 }
             }
 
             if (!targetUrl) return;
 
+            const img = document.getElementById('bg-img');
+            img.style.objectPosition = objectPosition;
+
+            // Check cache FIRST
             try {
-                // Initialize Proxy connection (BareMux + SW)
-                let basePath = location.pathname.replace(/[^/]*$/, '');
+                const cache = await caches.open(CACHE_NAME);
+                const cachedResponse = await cache.match(targetUrl);
+
+                if (cachedResponse) {
+                    const blob = await cachedResponse.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+                    img.src = objectUrl;
+                    img.onload = () => {
+                        img.classList.add('loaded');
+                        window.parent.postMessage({ type: 'bg-loaded', url: targetUrl }, '*');
+                    };
+                    return;
+                }
+            } catch (e) {
+                console.warn("Cache check failed:", e);
+            }
+
+            // Try parent's BareMux with short wait
+            const bareMuxReady = await waitForParentBareMux(300);
+            
+            if (bareMuxReady && parentBareMux) {
+                await fetchWithParentBareMux(targetUrl);
+                return;
+            }
+
+            // Try direct fetch
+            await tryDirectFetch(targetUrl);
+        }
+
+        async function waitForParentBareMux(maxWait = 300) {
+            if (parentBareMux) return true;
+            
+            return new Promise((resolve) => {
+                const startTime = Date.now();
+                const check = () => {
+                    if (parentBareMux) {
+                        resolve(true);
+                        return;
+                    }
+                    if (Date.now() - startTime > maxWait) {
+                        resolve(false);
+                        return;
+                    }
+                    setTimeout(check, 20);
+                };
+                check();
+            });
+        }
+
+        async function fetchWithParentBareMux(targetUrl) {
+            try {
+                window.parent.postMessage({
+                    type: 'proxy-fetch',
+                    url: targetUrl,
+                    targetOrigin: window.location.origin
+                }, '*');
+
+                const messageHandler = (e) => {
+                    if (e.data?.type === 'proxy-fetch-result' && e.data.url === targetUrl) {
+                        window.removeEventListener('message', messageHandler);
+                        if (e.data.error) {
+                            tryDirectFetch(targetUrl);
+                        } else {
+                            loadBlob(e.data.blob, targetUrl);
+                        }
+                    }
+                };
+                window.addEventListener('message', messageHandler);
+
+                setTimeout(() => {
+                    window.removeEventListener('message', messageHandler);
+                    if (!img.src) {
+                        tryDirectFetch(targetUrl);
+                    }
+                }, 800);
+            } catch (e) {
+                console.warn("Parent BareMux fetch failed:", e);
+                tryDirectFetch(targetUrl);
+            }
+        }
+
+        async function tryDirectFetch(targetUrl) {
+            try {
+                const response = await fetch(targetUrl);
+                if (!response.ok) throw new Error('Direct fetch failed');
+
+                // Cache the response
+                try {
+                    const cache = await caches.open(CACHE_NAME);
+                    cache.put(targetUrl, response.clone());
+                } catch (e) { }
+
+                const blob = await response.blob();
+                loadBlob(blob, targetUrl);
+            } catch (err) {
+                console.error("Direct fetch failed:", err);
+                await tryMinimalProxy(targetUrl);
+            }
+        }
+
+        async function tryMinimalProxy(targetUrl) {
+            try {
+                const basePath = location.pathname.replace(/[^/]*$/, '');
                 if (!basePath.endsWith('/')) basePath += '/';
 
                 if ('serviceWorker' in navigator) {
-                    const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
-                    await navigator.serviceWorker.ready;
+                    try {
+                        const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
+                        await navigator.serviceWorker.ready;
 
-                    const wispUrl = localStorage.getItem("proxServer") || "wss://dash.goip.de/wisp/";
-                    const sw = reg.active || navigator.serviceWorker.controller;
+                        const wispUrl = localStorage.getItem("proxServer") || "wss://wisp.rhw.one/wisp/";
 
-                    // Configure SW
-                    if (sw) {
-                        sw.postMessage({ type: "config", wispurl: wispUrl });
+                        const sw = reg.active || navigator.serviceWorker.controller;
+                        if (sw) {
+                            sw.postMessage({ type: "config", wispurl: wispUrl });
+                        }
+
+                        const BareMuxModule = await import("https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs");
+                        const connection = new BareMuxModule.BareMuxConnection(basePath + "bareworker.js");
+                        await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
+
+                        const response = await fetch(targetUrl);
+                        if (!response.ok) throw new Error('Proxy fetch failed');
+
+                        try {
+                            const cache = await caches.open(CACHE_NAME);
+                            cache.put(targetUrl, response.clone());
+                        } catch (e) { }
+
+                        const blob = await response.blob();
+                        loadBlob(blob, targetUrl);
+                    } catch (swErr) {
+                        console.error("Service worker registration failed:", swErr);
+                        throw swErr;
                     }
-
-                    // Configure Transport
-                    const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-                    await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
+                } else {
+                    throw new Error("Service Worker not supported");
                 }
-
-                // Now fetch the image through the proxy (SW should intercept)
-                const response = await fetch(targetUrl);
-                if (!response.ok) throw new Error('Fetch failed');
-
-                const blob = await response.blob();
-                const objectUrl = URL.createObjectURL(blob);
-
-                const img = document.getElementById('bg-img');
-                img.style.objectPosition = objectPosition; // Apply position
-
-                img.onload = () => {
-                    window.parent.postMessage({ type: 'bg-loaded', url: targetUrl }, '*');
-                };
-                img.onerror = () => {
-                    window.parent.postMessage({ type: 'bg-error', url: targetUrl }, '*');
-                };
-                img.src = objectUrl;
-
             } catch (err) {
-                console.error("Proxy Load Error:", err);
+                console.error("All proxy methods failed:", err);
                 window.parent.postMessage({ type: 'bg-error', url: targetUrl, error: err.message }, '*');
             }
+        }
+
+        function loadBlob(blob, targetUrl) {
+            const img = document.getElementById('bg-img');
+            const objectUrl = URL.createObjectURL(blob);
+            img.src = objectUrl;
+            img.onload = () => {
+                img.classList.add('loaded');
+                window.parent.postMessage({ type: 'bg-loaded', url: targetUrl }, '*');
+            };
+            img.onerror = () => {
+                window.parent.postMessage({ type: 'bg-error', url: targetUrl }, '*');
+            };
         }
 
         window.addEventListener('load', initialize);

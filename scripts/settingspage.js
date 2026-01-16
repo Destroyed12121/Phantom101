@@ -97,7 +97,7 @@ function renderBackgrounds() {
             const ytId = bg.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)?.[1];
             preview = ytId ? `<img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" style="width:100%; height:100%; object-fit:cover;">` : '';
         } else if (bg.type === 'video') {
-            preview = `<video src="${bg.url}" muted loop playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
+            preview = `<video src="${bg.url}" muted loop playsinline volume="0" style="width:100%; height:100%; object-fit:cover;"></video>`;
         } else if (bg.type === 'image') {
             preview = `<img src="${bg.url}" style="width:100%; height:100%; object-fit:cover;">`;
         } else {
@@ -163,7 +163,11 @@ function renderBackgrounds() {
         // Play video on hover
         const video = btn.querySelector('video');
         if (video) {
-            btn.onmouseenter = () => video.play();
+            btn.onmouseenter = () => {
+                video.muted = true;
+                video.volume = 0;
+                video.play().catch(() => {}); // Ignore play promise rejection
+            };
             btn.onmouseleave = () => {
                 video.pause();
                 video.currentTime = 0;
@@ -197,13 +201,18 @@ if (applyCustomBgBtn) {
             type = 'video';
         }
 
+        // Get object-position from input if provided
+        const objectPositionInput = document.getElementById('custom-bg-position');
+        const objectPosition = objectPositionInput?.value?.trim() || null;
+
         // Create custom background object
         const newBg = {
             id: 'custom',
             name: 'Custom',
             type: type,
             url: url,
-            overlay: 0.3
+            overlay: 0.3,
+            objectPosition: objectPosition
         };
 
         settings.customBackgrounds = settings.customBackgrounds || [];

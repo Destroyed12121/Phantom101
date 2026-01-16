@@ -1,10 +1,9 @@
 // =====================================================
 // CONFIGURATION
 // =====================================================
-const DEFAULT_WISP = "wss://dash.goip.de/wisp/";
-const WISP_SERVERS = [
-    { name: "DaydreamX's Wisp", url: "wss://dash.goip.de/wisp/" },
-    { name: "Space's Wisp", url: "wss://register.goip.it/wisp/" },
+const DEFAULT_WISP = window.SITE_CONFIG?.defaultWisp || "wss://dash.goip.de/wisp/";
+const WISP_SERVERS = window.SITE_CONFIG?.wispServers || [
+    { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
     { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" }
 ];
 
@@ -47,20 +46,44 @@ document.addEventListener('DOMContentLoaded', async function () {
         const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
         await navigator.serviceWorker.ready;
         const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
+        const allServers = [...WISP_SERVERS, ...getStoredWisps()];
 
-        // Try to send to both active registration and controller to be safe
+        const swConfig = {
+            type: "config",
+            wispurl: wispUrl,
+            servers: allServers
+        };
+
         const sw = reg.active || navigator.serviceWorker.controller;
         if (sw) {
-            console.log("Sending config to SW:", wispUrl);
-            sw.postMessage({ type: "config", wispurl: wispUrl });
+            console.log("Sending config to SW:", swConfig);
+            sw.postMessage(swConfig);
+            if (localStorage.getItem('wispAutoswitch') !== 'false') {
+                sw.postMessage({ type: "config", autoswitch: true });
+            } else {
+                sw.postMessage({ type: "config", autoswitch: false });
+            }
         }
 
-        // Ensure controller also gets it if different
         if (navigator.serviceWorker.controller && navigator.serviceWorker.controller !== sw) {
-            navigator.serviceWorker.controller.postMessage({ type: "config", wispurl: wispUrl });
+            navigator.serviceWorker.controller.postMessage(swConfig);
         }
 
-        // Force update to get new SW code if available
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data.type === 'wispChanged') {
+                console.log("SW reported Wisp Change:", event.data);
+                localStorage.setItem("proxServer", event.data.url);
+                if (typeof Notify !== 'undefined') {
+                    Notify.info('Autoswitched Proxy', `Now using ${event.data.name} because the previous server was slow or offline.`);
+                }
+            } else if (event.data.type === 'wispError') {
+                console.error("SW reported Wisp Error:", event.data);
+                if (typeof Notify !== 'undefined') {
+                    Notify.error('Proxy Error', event.data.message);
+                }
+            }
+        });
+
         reg.update();
 
         const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
@@ -404,6 +427,44 @@ function renderServerList() {
 
         checkServerHealth(server.url, item);
     });
+
+
+    // Add Autoswitch Toggle
+    const toggleContainer = document.createElement('div');
+    toggleContainer.className = 'wisp-option';
+    toggleContainer.style.marginTop = '10px';
+    toggleContainer.style.cursor = 'default';
+
+    const isAutoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
+
+    toggleContainer.innerHTML = `
+        <div class="wisp-option-header" style="justify-content: space-between;">
+            <div class="wisp-option-name"><i class="fa-solid fa-rotate" style="margin-right:8px"></i> Auto-switch on failure</div>
+            <div class="toggle-switch ${isAutoswitch ? 'active' : ''}" id="autoswitch-toggle">
+                <div class="toggle-knob"></div>
+            </div>
+        </div>
+    `;
+
+    toggleContainer.onclick = () => {
+        const newState = !isAutoswitch;
+        localStorage.setItem('wispAutoswitch', newState);
+        const toggle = document.getElementById('autoswitch-toggle');
+        toggle.classList.toggle('active', newState);
+
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'config', autoswitch: newState });
+        }
+
+        // Re-render to update UI state if needed, but local toggle manipulation is enough
+        // renderServerList(); 
+        // Actually, let's just update the variable for next time or rely on DOM
+        location.reload(); // Simple reload to apply strict changes if needed, or just let SW handle it
+        // Ideally no reload needed for this setting.
+        if (typeof Notify !== 'undefined') Notify.success('Settings Saved', `Autoswitch ${newState ? 'Enabled' : 'Disabled'}`);
+    };
+
+    list.appendChild(toggleContainer);
 }
 
 function saveCustomWisp() {
@@ -427,7 +488,7 @@ function saveCustomWisp() {
     customWisps.push({ name: `Custom ${customWisps.length + 1}`, url });
     localStorage.setItem('customWisps', JSON.stringify(customWisps));
 
-    if (typeof Notify !== 'undefined') Notify.success('Server Added', 'Custom server has been added.');
+    if (typeof Notify !== 'undefined') Notify.success('Server Added', `Added ${url} to your server list.`);
 
     input.value = '';
     renderServerList();
@@ -477,12 +538,6 @@ async function checkServerHealth(url, element) {
     function markOffline() {
         dot.classList.add('status-error');
         text.textContent = "Offline";
-
-        // Notify if this is the currently selected wisp
-        const currentWisp = localStorage.getItem('proxServer') || DEFAULT_WISP;
-        if (url === currentWisp && typeof Notify !== 'undefined') {
-            Notify.error('Connection Failed', 'Current proxy server is offline. Try switching servers.');
-        }
     }
 }
 

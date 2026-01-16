@@ -15,8 +15,10 @@
     <script src="../config.js"></script>
     <script src="../scripts/settings.js"></script>
     <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/background.css">
     <link rel="stylesheet" href="style.css">
 
+    <script src="../scripts/background.js"></script>
     <script src="../scripts/notifications.js"></script>
     <script src="./script.js" defer></script>
     <style>
@@ -37,9 +39,9 @@
                 <button class="close-btn" id="close-wisp-modal"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="settings-content">
-                <div class="section-title">Select Server</div>
+                <div class="section-title"><i class="fa-solid fa-cloud"></i> Select Server</div>
                 <div class="server-list" id="server-list"></div>
-                <div class="section-title">Custom Server</div>
+                <div class="section-title"><i class="fa-solid fa-plus-circle"></i> Custom Server</div>
                 <div class="custom-input-group">
                     <input type="text" id="custom-wisp-input" placeholder="wss://your-wisp-server.com/wisp/">
                     <button id="save-custom-wisp"><i class="fa-solid fa-plus"></i></button>

@@ -164,9 +164,16 @@ const PhantomSearch = {
             const exists = this.allGames.some(g => this.normalizeForDedup(g.name) === normalized);
             if (exists) return;
         }
+
+        // Fix: Don't wrap if it's already a player link or a page link
+        let finalUrl = url;
+        if (!url.includes('player.html') && !url.includes('pages/')) {
+            finalUrl = `pages/player.html?type=game&title=${encodeURIComponent(formattedName)}&url=${encodeURIComponent(url)}`;
+        }
+
         this.allGames.push({
             name: formattedName,
-            url: `pages/player.html?type=game&title=${encodeURIComponent(formattedName)}&url=${encodeURIComponent(url)}`,
+            url: finalUrl,
             img: img,
             type: 'game',
             normalized: normalized
@@ -282,7 +289,10 @@ const PhantomSearch = {
             .sort((a, b) => b.score - a.score)
             .slice(0, 4);
 
-        scoredGames.forEach(g => addResult({ ...g, url: this.rootPrefix + g.url }));
+        scoredGames.forEach(g => {
+            const url = g.url.startsWith('http') ? g.url : this.rootPrefix + g.url;
+            addResult({ ...g, url });
+        });
 
         // 2. PAGES
         this.pages
@@ -290,36 +300,62 @@ const PhantomSearch = {
             .slice(0, 2)
             .forEach(p => addResult({ ...p, url: this.rootPrefix + p.url }));
 
-        // 3. MOVIES (Combo of FEATURED and External)
+        // 3. MOVIES & TV (Combo of FEATURED and External)
         const movieResults = [];
         const IMG_URL = 'https://image.tmdb.org/t/p/w92'; // Small but clear
+
+        // Helper to process movie/tv objects
+        const processMedia = (m, baseScore) => {
+            const type = m.media_type || 'movie';
+            return {
+                name: m.title || m.name,
+                // Ensure media_type is correct in URL
+                url: `${this.rootPrefix}pages/player.html?type=${type}&id=${m.id}&title=${encodeURIComponent(m.title || m.name)}`,
+                type: type, // Use actual type ('movie' or 'tv') for correct icon/label
+                media_type: type, // Store actual type for logic
+                id: m.id,
+                overview: m.overview,
+                score: baseScore,
+                img: m.poster_path ? IMG_URL + m.poster_path : null
+            };
+        };
 
         // First, check FEATURED if available
         if (window.FEATURED) {
             window.FEATURED.filter(m => (m.title || m.name).toLowerCase().includes(q))
-                .forEach(m => movieResults.push({
-                    name: m.title || m.name,
-                    url: `${this.rootPrefix}pages/player.html?type=${m.media_type || 'movie'}&id=${m.id}&title=${encodeURIComponent(m.title || m.name)}`,
-                    type: 'movie',
-                    score: 70,
-                    img: m.poster_path ? IMG_URL + m.poster_path : null
-                }));
+                .forEach(m => movieResults.push(processMedia(m, 70)));
         }
 
         // Add external results if provided
         if (externalResults) {
-            externalResults.forEach(m => movieResults.push({
-                name: m.title || m.name,
-                url: `${this.rootPrefix}pages/player.html?type=${m.media_type || 'movie'}&id=${m.id}&title=${encodeURIComponent(m.title || m.name)}`,
-                type: 'movie',
-                score: 60,
-                img: m.poster_path ? IMG_URL + m.poster_path : null
-            }));
+            externalResults.forEach(m => movieResults.push(processMedia(m, 60)));
         }
 
-        movieResults.sort((a, b) => b.score - a.score)
-            .slice(0, 3)
-            .forEach(m => addResult(m));
+        // Sort by score
+        movieResults.sort((a, b) => b.score - a.score);
+
+        // "1 of the 2 suggested movies and tv" - Ensure diversity if possible
+        const topResults = [];
+        const movies = movieResults.filter(m => m.media_type === 'movie');
+        const tvShows = movieResults.filter(m => m.media_type === 'tv');
+
+        // Try to pick 1 movie and 1 TV show first (Diversity)
+        if (movies.length > 0) topResults.push(movies[0]);
+        if (tvShows.length > 0) topResults.push(tvShows[0]);
+
+        // Fill remaining slots if we don't have enough diversity, up to 2 total (as requested)
+        if (topResults.length < 2) {
+            // Add more from the sorted list that aren't already included
+            for (const m of movieResults) {
+                if (topResults.length >= 2) break;
+                if (!topResults.includes(m)) topResults.push(m);
+            }
+        }
+
+        // Sort the final selection again to prioritize best matches
+        topResults.sort((a, b) => b.score - a.score);
+
+        topResults.forEach(m => addResult(m));
 
         // 4. DOMAINS
         this.popularDomains
@@ -330,29 +366,56 @@ const PhantomSearch = {
                 return true;
             })
             .slice(0, 2)
-            .forEach(d => addResult({
-                name: d.name,
-                domain: d.domain,
-                type: 'domain',
-                icon: 'fa-globe',
-                url: `${this.rootPrefix}staticsjv2/index.html#${encodeURIComponent('https://' + d.domain)}`,
-                displayName: d.name
-            }));
+            .forEach(d => {
+                const url = d.url ? (d.url.startsWith('http') ? d.url : this.rootPrefix + d.url) : `${this.rootPrefix}staticsjv2/index.html#${encodeURIComponent('https://' + d.domain)}`;
+                addResult({
+                    name: d.name,
+                    domain: d.domain,
+                    type: 'domain',
+                    icon: 'fa-globe',
+                    url: url,
+                    displayName: d.name
+                });
+            });
 
         // 5. Special keyword: "all games"
         if (q === "all games" || q === "play games") {
             addResult({ name: 'Browse all games', url: this.rootPrefix + 'pages/games.html', type: 'page', icon: 'fa-gamepad' });
         }
 
-        // 6. Web search fallback
-        results.push({
+        // Create the web search fallback item
+        const webSearchItem = {
             name: `Search the web for "${query}"`,
             query: query,
             type: 'web',
             icon: 'fa-search'
+        };
+
+        const MAX_TOTAL = 5;
+        const MOVIE_LIMIT = 3;
+
+        const nonWebResults = results.filter(r => r.type !== 'web');
+
+        let movieCount = 0;
+        const filteredNonWeb = nonWebResults.filter(r => {
+            const isMedia = r.type === 'movie' || r.type === 'tv';
+            if (isMedia) {
+                if (movieCount < MOVIE_LIMIT) {
+                    movieCount++;
+                    return true;
+                }
+                return false;
+            }
+            return true;
         });
 
-        this.suggestions = results.slice(0, MAX_RESULTS);
+        // Take up to 4 non-web results
+        const finalSuggestions = filteredNonWeb.slice(0, MAX_TOTAL - 1);
+
+        // Always push web search at the end
+        finalSuggestions.push(webSearchItem);
+
+        this.suggestions = finalSuggestions;
         this.render();
         this.show();
     },
@@ -392,6 +455,7 @@ const PhantomSearch = {
                 game: 'fa-gamepad',
                 page: item.icon || 'fa-link',
                 movie: 'fa-film',
+                tv: 'fa-tv',
                 domain: 'fa-globe',
                 web: 'fa-search'
             };
@@ -400,6 +464,7 @@ const PhantomSearch = {
                 game: 'Game',
                 page: 'Page',
                 movie: 'Movie',
+                tv: 'TV Show',
                 domain: 'Website',
                 web: 'Search'
             };
@@ -440,6 +505,20 @@ const PhantomSearch = {
         if (item.type === 'web') {
             this.doWebSearch(item.query);
         } else if (item.url) {
+            // Store movie/TV data for the player to read
+            if (item.type === 'movie' || item.type === 'tv' || item.media_type === 'movie' || item.media_type === 'tv') {
+                sessionStorage.setItem('currentMovie', JSON.stringify({
+                    id: item.id,
+                    title: item.name,
+                    overview: item.overview,
+                    media_type: item.media_type || (item.type === 'movie' ? 'movie' : 'tv')
+                }));
+
+                // Fix TV Show URL path if missing season/episode
+                if (item.media_type === 'tv' && !item.url.includes('season=')) {
+                    item.url += '&season=1&episode=1';
+                }
+            }
             window.location.href = item.url;
         }
     },

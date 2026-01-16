@@ -16,31 +16,39 @@
     backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
-    transition: transform var(--transition-normal);
-    position: relative;
+    transition: width var(--transition-normal), transform var(--transition-normal);
+    position: absolute;
+    top: 0px;
+    left: 0;
+    bottom: 0;
+    height: 91.6vh;
+    border-right: 1px solid var(--border);
+}
+
+.sidebar.collapsed {
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding-top: 70px;
+}
+
+.new-chat-btn,
+.conversations {
+    padding-top: 10px;
 }
 
 .sidebar::before {
     content: '';
     position: absolute;
-    top: -70px;
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(15, 15, 15, 0.7);
     backdrop-filter: blur(20px);
     z-index: -1;
-}
-
-.sidebar::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 280px;
-    bottom: 100px;
-    width: 0.5px;
-    background: var(--border);
-    z-index: 10001;
 }
 
 .sidebar-header {
@@ -122,6 +130,12 @@
     flex-direction: column;
     background: transparent;
     position: relative;
+    margin-left: 280px;
+    transition: margin-left var(--transition-normal);
+}
+
+.app-container.sidebar-collapsed .main-content {
+    margin-left: 0;
 }
 
 .main-content::before {
@@ -346,6 +360,38 @@
 }
 
 /* Markdown Styling inside Chat */
+.message-text {
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.message-text p {
+    color: var(--text);
+    margin-bottom: var(--space-md);
+}
+
+.message-text h1,
+.message-text h2,
+.message-text h3,
+.message-text h4,
+.message-text h5,
+.message-text h6 {
+    color: var(--text);
+    margin: var(--space-lg) 0 var(--space-sm);
+    font-weight: 700;
+}
+
+.message-text ul,
+.message-text ol {
+    margin: var(--space-md) 0;
+    padding-left: var(--space-xl);
+}
+
+.message-text li {
+    margin-bottom: var(--space-xs);
+    color: var(--text);
+}
+
 .message-text pre {
     background: rgba(0, 0, 0, 0.3);
     padding: var(--space-md);
@@ -358,12 +404,22 @@
 .message-text code {
     font-family: var(--font-mono);
     font-size: 0.9em;
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.message-text pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
     .sidebar {
-        position: absolute;
+        position: fixed;
         left: 0;
         top: 0;
         bottom: 0;

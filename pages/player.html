@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/player.css?v=2">
+    <link rel="stylesheet" href="../styles/background.css">
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script>Settings.apply();</script>
 </head>
 
 <body>
@@ -20,25 +24,23 @@
 
         <div class="player-container">
             <div class="player-frame-wrapper" id="frame-wrapper">
-                <div class="theater-glow"></div>
-                <iframe class="player-frame-bg" id="game-frame-bg" tabindex="-1"></iframe>
                 <iframe class="player-frame" id="game-frame" allowfullscreen></iframe>
             </div>
 
             <div class="player-controls" id="controls">
                 <!-- Dynamic Controls -->
-                <div id="movie-controls" style="display:none; gap:12px; align-items:center; margin-right:auto;">
-                    <div style="display:flex; flex-direction:column; gap:2px;">
-                        <span style="font-size:0.75rem; color:var(--text-muted);">Provider</span>
+                <div id="movie-controls" class="player-movie-controls" style="display:none;">
+                    <div class="player-control-group">
+                        <span class="player-control-label">Provider</span>
                         <select id="provider-select" class="provider-select"></select>
                     </div>
 
-                    <label style="display:flex; align-items:center; cursor:pointer;" title="Toggle Proxy">
+                    <label class="player-proxy-toggle" title="Toggle Proxy">
                         <div class="switch">
                             <input type="checkbox" id="proxy-toggle">
                             <span class="slider"></span>
                         </div>
-                        <span style="font-size:0.875rem; color:var(--text);">Proxy</span>
+                        <span class="player-control-label">Proxy</span>
                     </label>
                 </div>
 
@@ -69,6 +71,7 @@
 
     <script src="../config.js"></script>
     <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
     <script src="../scripts/notifications.js"></script>
     <script src="../scripts/quotes.js"></script>
     <script src="../components/footer.js"></script>

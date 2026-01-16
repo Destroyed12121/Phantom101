@@ -4,23 +4,34 @@
 
 const state = {
     files: new Map(),
-    activeFile: 'untitled.js',
+    activeFile: 'index.html',
     editor: null,
     activePanel: 'terminal'
 };
 
 // Default starter file
-state.files.set('untitled.js', {
-    content: `// Welcome to Phantom Code Editor
-// Drag files here or start coding
-
-function hello(name) {
-    return "Hello, " + name + "!";
-}
-
-console.log(hello("World"));
-`,
-    language: 'javascript'
+state.files.set('index.html', {
+    content: `<!DOCTYPE html>
+<html>
+<head>
+  <title>My Page</title>
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          text-align: center;
+          background-color: #f0f0f0;
+      }
+      h1 {
+          color: #333;
+      }
+  </style>
+</head>
+<body>
+  <h1>Welcome to My Page</h1>
+  <p>This is a simple HTML example.</p>
+</body>
+</html>`,
+    language: 'html'
 });
 
 // Load JSZip if needed
@@ -136,8 +147,8 @@ require(['vs/editor/editor.main'], function () {
     });
 
     state.editor = monaco.editor.create(document.getElementById('monaco-container'), {
-        value: state.files.get('untitled.js').content,
-        language: 'javascript',
+        value: state.files.get('index.html').content,
+        language: 'html',
         theme: 'phantom',
         fontSize: 14,
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
@@ -428,7 +439,7 @@ document.getElementById('fix-code-btn').onclick = async () => {
                 while ((match = varRegex.exec(code)) !== null) {
                     fixCount++;
                 }
-                code = code.replace(varRegex, 'const $1 = ');
+                code = code.replace(varRegex, 'let $1 = ');
 
                 // Fix equality
                 const eqRegex = /([^=!])={2}([^=])/g;
@@ -507,55 +518,92 @@ document.getElementById('open-tab-btn').onclick = async () => {
         let content = data.content;
         const lang = data.language;
 
-        // Get cloak method from settings
-        const method = window.Settings?.get('openIn') || 'about:blank';
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-        // Premium Dependency Injection Logic
+        // Premium Project Bundler
         if (lang === 'html') {
-            // Bundle other files into the HTML for a true preview
             state.files.forEach((otherData, otherName) => {
                 const ext = otherName.split('.').pop().toLowerCase();
-                if (ext === 'css') {
-                    // Replace <link href="otherName"> with <style>...
-                    const regex = new RegExp(`<link[^>]*href=["']${otherName}["'][^>]*>`, 'gi');
-                    content = content.replace(regex, `<style>\n/* Bundled: ${otherName} */\n${otherData.content}\n</style>`);
-                } else if (ext === 'js') {
-                    // Replace <script src="otherName"> with <script>...
-                    const regex = new RegExp(`<script[^>]*src=["']${otherName}["'][^>]*><\/script>`, 'gi');
-                    content = content.replace(regex, `<script>\n// Bundled: ${otherName}\n${otherData.content}\n<\/script>`);
-                }
+                const escapedName = escapeRegExp(otherName);
+
+                // Match both "name.js" and "./name.js"
+                const patterns = [escapedName, `./${escapedName}`];
+
+                patterns.forEach(p => {
+                    const escapedP = escapeRegExp(p);
+                    if (ext === 'css') {
+                        const regex = new RegExp(`<link[^>]*href\\s*=\\s*(["']?)${escapedP}\\1[^>]*>`, 'gi');
+                        content = content.replace(regex, `<style data-source="${otherName}">\n${otherData.content}\n</style>`);
+                    } else if (ext === 'js') {
+                        const regex = new RegExp(`<script[^>]*src\\s*=\\s*(["']?)${escapedP}\\1[^>]*><\\/script>`, 'gi');
+                        content = content.replace(regex, `<script data-source="${otherName}">\n${otherData.content.replace(/<\/script>/g, '<\\/script>')}\n<\/script>`);
+                    }
+                });
             });
         } else if (lang === 'javascript') {
-            // Wrap JS in an HTML shell
-            content = `<!DOCTYPE html><html><head><title>Preview: ${state.activeFile}</title></head><body><div id="app"></div><script>\n${content}\n<\/script></body></html>`;
+            const safeCode = content.replace(/<\/script>/g, '<\\/script>');
+            content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview: ${state.activeFile}</title>
+    <style>
+        body { background: #000; color: #fff; margin: 0; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif; }
+        #phantom-runtime-error { background: #1a0505; border: 1px solid #450a0a; color: #ef4444; padding: 20px; margin: 20px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            const el = document.createElement('div');
+            el.id = 'phantom-runtime-error';
+            el.innerHTML = '<strong>Runtime Error:</strong>\\n' + (error?.stack || msg);
+            document.body.appendChild(el);
+            return false;
+        };
+        try {
+            ${safeCode}
+        } catch (err) {
+            window.onerror(err.message, '', 0, 0, err);
+        }
+    <\/script>
+</body>
+</html>`;
         } else if (lang === 'css') {
-            content = `<!DOCTYPE html><html><head><style>${content}</style></head><body><h1>CSS Preview: ${state.activeFile}</h1><div style="padding:20px;border:1px solid #333;margin-top:20px;">Use this tab to preview your styles. Redundant code has been stripped.</div></body></html>`;
+            content = `<!DOCTYPE html><html><head><style>${content}</style></head><body style="background:#0a0a0a;color:#e4e4e7;font-family:sans-serif;padding:40px;text-align:center;">
+                <h1 style="color:var(--accent, #c084fc)">CSS Live Preview</h1>
+                <p style="color:#71717a">Reviewing: ${state.activeFile}</p>
+                <div style="margin-top:40px;padding:30px;border:1px solid #333;border-radius:12px;background:#111;max-width:600px;margin-inline:auto;">
+                    <h2>Sample Header</h2>
+                    <p>This is a sample paragraph to see how your fonts and colors look.</p>
+                    <button style="padding:10px 20px;border-radius:6px;background:#c084fc;color:white;border:none;cursor:pointer;margin-top:10px;">Sample Button</button>
+                    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
+                        <div style="width:40px;height:40px;background:#3b82f6;border-radius:4px;"></div>
+                        <div style="width:40px;height:40px;background:#10b981;border-radius:4px;"></div>
+                        <div style="width:40px;height:40px;background:#f59e0b;border-radius:4px;"></div>
+                    </div>
+                </div>
+            </body></html>`;
         } else {
-            // Fallback for plaintext, markdown, etc.
             content = `<!DOCTYPE html><html><head><title>${state.activeFile}</title><style>body{background:#0a0a0a;color:#e4e4e7;font-family:monospace;padding:24px;line-height:1.5;white-space:pre-wrap;}</style></head><body>${content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body></html>`;
         }
 
-        // Apply cloaking
-        const win = window.open('about:blank', '_blank');
-        if (!win) throw new Error('Popup blocked');
+        // Use Blob URL for the most reliable preview across all browsers/configs
+        const blob = new Blob([content], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
 
-        if (method === 'blob') {
-            const blob = new Blob([content], { type: 'text/html' });
-            win.location.replace(URL.createObjectURL(blob));
-        } else {
-            win.document.open();
-            win.document.write(content);
-            win.document.close();
-
-            // Try to set title in the new tab after writing
-            win.document.title = state.activeFile + " - Phantom Preview";
+        if (!win) {
+            throw new Error('Popup blocked! Please allow popups to see the preview.');
         }
 
         log('Project preview successfully launched', 'info');
-        if (window.Notify) Notify.success('Success', 'Preview started');
+        if (window.Notify) Notify.success('Success', 'Preview opened in new tab');
     } catch (err) {
         log('Run failed: ' + err.message, 'error');
-        if (window.Notify) Notify.error('Failed', err.message);
+        if (window.Notify) Notify.error('Preview Failed', err.message);
     } finally {
         btn.innerHTML = original;
     }

@@ -194,10 +194,10 @@
     </style>
     <script src="config.js"></script>
     <script src="scripts/settings.js"></script>
+    <script src="scripts/background.js"></script>
     <script src="scripts/cloaking.js"></script>
     <script src="scripts/quotes.js"></script>
     <script src="scripts/notifications.js"></script>
-    <script src="scripts/background.js"></script>
     <script src="scripts/featured.js"></script>
     <script src="components/UGSfiles.js"></script>
     <script src="scripts/movies.js"></script>
@@ -287,110 +287,7 @@
     </script>
 
     <script src="components/footer.js"></script>
-
-    <script>
-        (async function initScramjet() {
-            try {
-                if (window.Notify) {
-                    window.Notify.info("Initializing", "Starting proxy service...");
-                }
-
-                const DEFAULT_WISP = "wss://dash.goip.de/wisp/";
-                if (!localStorage.getItem("proxServer")) {
-                    localStorage.setItem("proxServer", DEFAULT_WISP);
-                }
-
-                // 1. Check for BareMux (Module scripts take time)
-                let attempts = 0;
-                while (!window.BareMux && attempts < 60) {
-                    await new Promise(r => setTimeout(r, 100));
-                    attempts++;
-                }
-
-                if (!window.BareMux) {
-                    throw new Error("BareMux library failed to load (Timeout)");
-                }
-
-                // 2. Check Scramjet
-                if (typeof $scramjetLoadController === 'undefined') {
-                    throw new Error("Scramjet library failed to load");
-                }
-
-                const { ScramjetController } = $scramjetLoadController();
-                // Use absolute paths to avoid ambiguity
-                const scramjetPrefix = "/staticsjv2/scramjet/";
-                const swPath = "/staticsjv2/sw.js";
-                const scope = "/staticsjv2/";
-                const bareWorkerPath = "/staticsjv2/bareworker.js";
-
-                const scramjet = new ScramjetController({
-                    prefix: scramjetPrefix,
-                    files: {
-                        wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
-                        all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
-                        sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
-                    }
-                });
-
-                await scramjet.init();
-
-                if ('serviceWorker' in navigator) {
-                    const reg = await navigator.serviceWorker.register(swPath, { scope: scope });
-
-                    // Wait for active
-                    if (!reg.active) {
-                        await new Promise(resolve => {
-                            const check = () => {
-                                if (reg.active) resolve();
-                                else setTimeout(check, 100);
-                            };
-                            check();
-                        });
-                    }
-
-                    const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
-
-                    // Reliable initialization check
-                    const configReady = new Promise(resolve => {
-                        const timeout = setTimeout(() => {
-                            navigator.serviceWorker.removeEventListener('message', handler);
-                            resolve(false);
-                        }, 5000);
-
-                        const handler = (e) => {
-                            if (e.data.type === 'config_ready') {
-                                clearTimeout(timeout);
-                                navigator.serviceWorker.removeEventListener('message', handler);
-                                resolve(true);
-                            }
-                        };
-                        navigator.serviceWorker.addEventListener('message', handler);
-                    });
-
-                    reg.active.postMessage({ type: "config", wispurl: wispUrl });
-                    const isReady = await configReady;
-
-                    const connection = new BareMux.BareMuxConnection(bareWorkerPath);
-                    await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: wispUrl }]);
-
-                    if (window.Notify) {
-                        if (isReady) {
-                            window.Notify.success("Ready", "Proxy service initialized");
-                        } else {
-                            window.Notify.warning("Partial Ready", "Proxy initialized with possible connection delay");
-                        }
-                    }
-                } else {
-                    throw new Error("Service Worker not supported");
-                }
-            } catch (error) {
-                console.error("Scramjet Init Error:", error);
-                if (window.Notify) {
-                    window.Notify.error("Initialization Failed", error.message);
-                }
-            }
-        })();
-    </script>
+    <script src="staticsjv2/init.js"></script>
 </body>
 
 </html>

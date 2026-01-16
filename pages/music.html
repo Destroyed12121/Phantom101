@@ -9,10 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/music.css">
+    <link rel="stylesheet" href="../styles/background.css">
     <script src="../config.js"></script>
     <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
     <script src="../scripts/notifications.js"></script>
-    <link rel="stylesheet" href="../styles/music.css">
 
 
 </head>
@@ -65,7 +67,7 @@
                 <div class="search-wrapper">
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="searchInput" placeholder="Search or paste YouTube/SoundCloud URL...">
+                        <input type="text" id="searchInput" placeholder="Search or paste YouTube/Itunes URL...">
                     </div>
                     <div class="results" id="searchResults"></div>
                 </div>
@@ -84,8 +86,6 @@
                         <div class="mode-badge" id="radioBadge"><i class="fa-solid fa-radio"></i> Radio</div>
                         <button class="mode-badge" id="proxyBtn" title="Use Proxy for embedded content"><i
                                 class="fa-solid fa-shield-halved"></i> Proxy</button>
-                        <button class="mode-badge show" id="videoToggleBtn" title="Toggle Video"><i
-                                class="fa-solid fa-ellipsis"></i></button>
                     </div>
                     <div class="track-title" id="trackTitle">No track selected</div>
                     <div class="track-artist" id="trackArtist">Select a source and search</div>

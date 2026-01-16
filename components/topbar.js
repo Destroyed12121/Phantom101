@@ -11,12 +11,15 @@
         }
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/lucide@latest';
-    script.onload = () => {
-        if (window.lucide) lucide.createIcons();
-    };
-    document.head.appendChild(script);
+    // Load Lucide icons if not already present
+    if (!window.lucide && !document.querySelector('script[src*="lucide"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/lucide@latest';
+        script.onload = () => {
+            if (window.lucide) lucide.createIcons();
+        };
+        document.head.appendChild(script);
+    }
 
     initTopbar();
 
@@ -40,7 +43,7 @@
             { name: 'Movies', icon: 'film', link: 'pages/movies.html' },
             { name: 'Games', icon: 'gamepad-2', link: 'pages/games.html' },
             { name: 'Search', icon: 'search', link: 'staticsjv2/index.html' },
-            { name: 'PhantomAI', icon: 'bot', link: 'pages/chat.html' },
+            { name: 'AI Chat', icon: 'bot', link: 'pages/chat.html' },
             { separator: true },
             { name: 'Settings', icon: 'settings', link: 'pages/settings.html' }
         ];
@@ -78,7 +81,12 @@
         topbarContainer.appendChild(navButtons);
         document.body.prepend(topbarContainer);
 
-        if (window.lucide) lucide.createIcons();
+        if (window.lucide) {
+            lucide.createIcons();
+            // Retry a few times to ensure icons are rendered even if there's a race condition
+            setTimeout(() => lucide.createIcons(), 100);
+            setTimeout(() => lucide.createIcons(), 500);
+        }
     }
 
     function initTopbar() {
