@@ -10,7 +10,6 @@ const season = params.get('season');
 const episode = params.get('episode');
 
 const frame = document.getElementById('game-frame');
-const frameBg = document.getElementById('game-frame-bg');
 const titleEl = document.getElementById('player-title');
 const descEl = document.getElementById('player-desc');
 const proxyToggle = document.getElementById('proxy-toggle');
@@ -220,7 +219,7 @@ function toggleTheater(force) {
             btn.classList.add('active');
             btn.innerHTML = '<i class="fa-solid fa-compress"></i> Exit Theater';
         }
-        if (window.Notify) window.Notify.info('Theater Mode', 'Controls will hide automatically.');
+        if (window.Notify) window.Notify.info('Theater Mode', 'Enjoy Your Movie!');
         resetTheaterIdle();
     } else {
         document.body.classList.remove('theater-active');
@@ -244,7 +243,6 @@ async function loadGame(url, silent = false) {
 
         if (url.includes('#') || url.includes('staticsjv2/')) {
             frame.src = url;
-            if (frameBg) frameBg.src = url;
             currentUrl = url;
             return;
         }
@@ -252,8 +250,6 @@ async function loadGame(url, silent = false) {
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch game');
         const html = await res.text();
-
-        if (frameBg) frameBg.src = url;
 
         const doc = frame.contentDocument || frame.contentWindow.document;
         doc.open();
@@ -265,7 +261,6 @@ async function loadGame(url, silent = false) {
         console.error("Game load error", e);
         if (url.startsWith('http') || url.includes('#')) {
             frame.src = url;
-            if (frameBg) frameBg.src = url;
         } else if (window.Notify) {
             window.Notify.error('Error', 'Failed to load game');
         }
@@ -297,7 +292,6 @@ function loadProvider(providerId, silent = false) {
 
     currentUrl = u;
     frame.src = u;
-    if (frameBg) frameBg.src = u;
 }
 
 document.getElementById('btn-reload').onclick = () => {

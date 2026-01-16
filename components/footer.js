@@ -33,7 +33,7 @@
     footer.innerHTML = `
         <style>
             #site-footer {
-                margin-top: 40px;
+                margin-top: 0px;
                 padding: 20px;
                 border-top: 1px solid var(--border, #1f1f1f);
                 text-align: center;

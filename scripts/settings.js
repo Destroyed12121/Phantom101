@@ -126,15 +126,28 @@
             if (isCustomActive) {
                 if (customBg.url) {
                     root.style.setProperty('--bg-image', `url(${customBg.url})`);
+                    // Apply object-position for custom backgrounds
+                    if (customBg.objectPosition) {
+                        root.style.setProperty('--bg-image-position', customBg.objectPosition);
+                    } else {
+                        root.style.setProperty('--bg-image-position', 'center');
+                    }
                 }
             } else {
                 // Revert to theme background if it has an image/gradient
                 if (themeBg.type === 'image' || themeBg.type === 'video') {
                     root.style.setProperty('--bg-image', `url(${themeBg.value})`);
+                    if (themeBg.objectPosition) {
+                        root.style.setProperty('--bg-image-position', themeBg.objectPosition);
+                    } else {
+                        root.style.setProperty('--bg-image-position', 'center');
+                    }
                 } else if (themeBg.type === 'gradient') {
                     root.style.setProperty('--bg-image', themeBg.value);
+                    root.style.setProperty('--bg-image-position', 'center');
                 } else {
                     root.style.setProperty('--bg-image', 'none');
+                    root.style.setProperty('--bg-image-position', 'center');
                 }
             }
         },
@@ -163,22 +176,30 @@
     // Initialize on load
     const init = () => {
         // Auto-inject Background System if not present
+        // Only inject on main pages (index.html), NOT on sub-pages (pages/*.html, staticsjv2/*.html, index2.html)
         if (!window.BackgroundManager && !document.querySelector('script[src*="background.js"]')) {
-            const isSubPage = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/staticsjv2/');
-            const prefix = isSubPage ? '../' : '';
+            const isSubPage = window.location.pathname.includes('/pages/') ||
+                             window.location.pathname.includes('/staticsjv2/') ||
+                             window.location.pathname.includes('/components/') ||
+                             window.location.pathname.endsWith('/index2.html');
+            
+            // Only inject background on main pages, not sub-pages
+            if (!isSubPage) {
+                const prefix = '';
 
-            // Inject CSS
-            if (!document.querySelector('link[href*="background.css"]')) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = prefix + 'styles/background.css';
-                document.head.appendChild(link);
+                // Inject CSS
+                if (!document.querySelector('link[href*="background.css"]')) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = prefix + 'styles/background.css';
+                    document.head.appendChild(link);
+                }
+
+                // Inject JS
+                const script = document.createElement('script');
+                script.src = prefix + 'scripts/background.js';
+                document.head.appendChild(script);
             }
-
-            // Inject JS
-            const script = document.createElement('script');
-            script.src = prefix + 'scripts/background.js';
-            document.head.appendChild(script);
         }
 
         Settings.apply();

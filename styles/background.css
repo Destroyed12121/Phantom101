@@ -8,7 +8,7 @@
     height: 100vh;
     z-index: -1;
     overflow: hidden;
-    background: var(--bg);
+    background: transparent;
     pointer-events: none;
     opacity: 1;
     transition: background-color 0.3s ease;
@@ -22,46 +22,47 @@
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: rgba(0, 0, 0, 0.4);
-    transition: background-color 1s ease;
+    background: rgba(0, 0, 0, var(--bg-overlay, 0.4));
+    transition: background-color 0.3s ease;
 }
 
 .phantom-background-layer {
     position: absolute;
     inset: 0;
     z-index: 1;
-    transition: opacity 1s ease-in-out;
+    transition: opacity 0.3s ease-in-out;
 }
 
 .phantom-background-media {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: var(--bg-image-position, center);
     display: block;
     border: none;
 }
 
-/* YouTube/Iframe object-fit: cover trick */
+/* Video and Iframe positioning for full background cover */
+.phantom-background-layer video.phantom-background-media,
 .phantom-background-layer iframe.phantom-background-media {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100vw;
-    height: 100vh;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: none;
     pointer-events: none;
+    min-width: 100%;
+    min-height: 100%;
+    max-width: none;
+    max-height: none;
+    object-position: var(--bg-image-position, center);
 }
 
-@media (min-aspect-ratio: 16/9) {
-    .phantom-background-layer iframe.phantom-background-media {
-        height: 56.25vw;
-    }
-}
-
-@media (max-aspect-ratio: 16/9) {
-    .phantom-background-layer iframe.phantom-background-media {
-        width: 177.78vh;
-    }
+/* Ensure iframes cover entire background */
+.phantom-background-layer iframe.phantom-background-media {
+    border: none;
+    object-fit: cover;
 }
 
 /* Ensure content on top remains readable */
@@ -80,11 +81,12 @@ body {
     background: transparent !important;
 }
 
-/* Glassmorphism for containers when background is active do whatever fits the best though*/ 
-.phantom-background.active~* .card,
-.phantom-background.active~* .featured-card,
-.phantom-background.active~* .search-bar,
-.phantom-background.active~* .settings-panel {
+/* Glassmorphism for containers when background is active */
+.phantom-background.active ~ .offline-banner,
+.phantom-background.active ~ .home-page .card,
+.phantom-background.active ~ .home-page .featured-card,
+.phantom-background.active ~ .home-page .search-bar,
+.phantom-background.active ~ .settings-panel {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     background: rgba(15, 15, 15, 0.7) !important;

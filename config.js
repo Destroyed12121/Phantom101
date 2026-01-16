@@ -5,29 +5,28 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.8 Super++",
+    version: "1.0.9",
+
+    // Proxy Configuration
+    defaultWisp: "wss://dash.goip.de/wisp/",
+    wispServers: [
+        { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" },
+        { name: "DaydreamX's Wisp", url: "wss://dash.goip.de/wisp/" },
+        { name: "Space's Wisp", url: "wss://register.goip.it/wisp/" }
+    ],
 
     // Changelog
     changelog: [
-        "1.0.8 super++",
-        "fixed proxy AGAIN (hopefully the last time)",
-        "fixed backgrounds not working twice",
-        "fixed ai",
-        "fixed ai chat paths",
-
-        "1.0.8 super",
-        "ADDED BACKGROUNDS",
-        "enhanced theater mode for hopefully the last time",
-        "added movies to search in the home page",
-        "enhanced search in home page",
-        "changed shortcuts in home page",
-        "fixed panickey + added white screen when pressed",
-        "didnt feel like fixxing ai",
-        "tried to fix music",
-        "minor things u can find in the extra page",
-        "fixed panickey",
-        "made cloaks instantly update",
-        "JOIN THE DISCORD"
+     "ai chat more",
+     "fixxed backgrounds",
+     "fixxed backgrounrds not showing in loading screen",
+     "added more backgrounds",
+     "added autoswitching for wisp servers and deleted old ones",
+     "fixxed movie search suggestions",
+     "fixxed game search suggestions",
+     "fixxed code runner page not opening your code",
+     "many misc fixxes",
+     "suggest features in the discord server"
     ],
 
     // Discord
@@ -37,7 +36,6 @@ window.SITE_CONFIG = {
         widgetChannel: "1447673726228496617",
     },
 
-    firstVisitCloak: false, // this controls the fake error page
     featuredBackground: {
         id: 'jynxiixixbxcuiboxcvbhxc8fuiyklfdsngs', // Change this ID to push a new background to all users
         active: false, //true to make it featured
@@ -47,6 +45,7 @@ window.SITE_CONFIG = {
         overlay: 0.3
     },
     // Default settings
+    firstVisitCloak: false, // this controls the fake error page
     defaults: {
         cloakMode: "about:blank",
         tabTitle: "You've already responded",
@@ -90,45 +89,22 @@ window.SITE_CONFIG = {
 
     // Background Presets
     backgroundPresets: [
+      
         { id: 'none', name: 'None (Theme Default)', type: 'none' },
-        {
-            id: 'scenic-mountains',
-            name: 'Mountain Peak',
-            type: 'image',
-            url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920&auto=format&fit=crop',
-            overlay: 0.25
-        },
-        {
-            id: 'winter-mountains',
-            name: 'Winter mountains',
-            type: 'image',
-            url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg',
-            overlay: 0.3
-        },
-        {
-            id: 'f1 car',
-            name: 'F1 Car',
-            type: 'image',
-            url: 'https://images.pexels.com/photos/14401632/pexels-photo-14401632.jpeg',
-            overlay: 0.3
-        },
-        {
-            id: 'moon-landing',
-            name: 'Moon Landing',
-            type: 'image',
-            url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg',
-            overlay: 0.3,
-            objectPosition: 'top left'
-        },
-        {
-            id: 'midnight-stars',
-            name: 'Midnight Stars',
-            type: 'image',
-            url: 'https://images.pexels.com/photos/2312040/pexels-photo-2312040.jpeg',
-            overlay: 0.3
-        },
-        
-
+        { id: 'Night sky', name: 'Night sky', type: 'image', url: 'https://images.pexels.com/photos/5675745/pexels-photo-5675745.jpeg', overlay: 0.3 },
+        { id: 'winter-mountains', name: 'Winter mountains', type: 'image', url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg', overlay: 0.3 },
+        { id: 'f1 car', name: 'F1 Car', type: 'image', url: 'https://images.pexels.com/photos/14401632/pexels-photo-14401632.jpeg', overlay: 0.3 },
+        { id: 'moon-landing', name: 'Moon Landing', type: 'image', url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg', overlay: 0.3, objectPosition: 'top left' },
+        { id: 'turtle', name: 'Turtle', type: 'image', url: 'https://images.unsplash.com/photo-1501791187590-9ef2612ba1eb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', overlay: 0.3 },
+        { id: 'road', name: 'Road', type: 'image', url: 'https://images.unsplash.com/photo-1508233620467-f79f1e317a05', overlay: 0.3 },
+        { id: 'railroad', name: 'Railroad', type: 'image', url: 'https://images.unsplash.com/photo-1505832018823-50331d70d237', overlay: 0.3 },
+        { id: 'another-mountain', name: 'Another Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/jms-kFHz9Xh3PPU-unsplash.jpg', overlay: 0.3 },
+        { id: 'mountain', name: 'Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/clay-banks-u27Rrbs9Dwc-unsplash.jpg', overlay: 0.3 },
+    
+    
+    
+    
+    
     ],
 
 
@@ -141,7 +117,7 @@ window.SITE_CONFIG = {
         { name: "Desmos", icon: "https://www.desmos.com/favicon.ico", title: "Desmos | Graphing Calculator" },
         { name: "Khan Academy", icon: "https://cdn.kastatic.org/images/favicon.ico", title: "Khan Academy" },
         { name: "Wikipedia", icon: "https://en.wikipedia.org/favicon.ico", title: "World War II - Wikipedia" },
-        { name: "Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png", title: "Home" },
+        { name: "Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png", title: "Home - Classroom" },
         { name: "Canva", icon: "https://static.canva.com/static/images/android-192x192-2.png", title: "Home - Canva" },
         { name: "Quiz", icon: "https://ssl.gstatic.com/docs/spreadsheets/forms/forms_icon_2023q4.ico", title: "You've already responded" },
         { name: "Blooket", icon: "https://play.blooket.com/favicon.ico", title: "Play Blooket | Blooket" },
@@ -149,14 +125,6 @@ window.SITE_CONFIG = {
         { name: "YouTube", icon: "https://www.youtube.com/favicon.ico", title: "YouTube" },
         { name: "Powerschool", icon: "https://waverlyk12.powerschool.com/favicon.ico", title: "Grades and Attendance" },
         { name: "nothing", icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", title: "\u200B" },
-    ],
-
-    // Wisp servers
-    // wispServers: [
-    //   { name: "Primary", url: "wss://dash.goip.de/wisp/" },
-    //  { name: "Backup 1", url: "wss://register.goip.it/wisp/" },
-    //   { name: "Backup 2", url: "wss://wisp.rhw.one/wisp/" }
-    // commeteted because they arent supposed to be here
-    //]
-};
+    ]
+}
 

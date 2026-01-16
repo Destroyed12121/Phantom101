@@ -37,9 +37,9 @@
         .loading-screen {
             position: fixed;
             inset: 0;
-            background: var(--bg, #0a0a0a);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -99,7 +99,9 @@
         .launch-screen {
             position: fixed;
             inset: 0;
-            background: var(--bg, #0a0a0a);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -131,7 +133,6 @@
             opacity: 0.5;
         }
 
-
         iframe {
             width: 100%;
             height: 100%;
@@ -149,10 +150,12 @@
     </style>
     <script src="config.js"></script>
     <script src="scripts/settings.js"></script>
+    <script src="scripts/background.js"></script>
     <script src="scripts/cloaking.js"></script>
+    <script>Settings.apply();</script>
     <link rel="stylesheet" href="styles/error.css">
     <link rel="stylesheet" href="styles/background.css">
-    <script src="scripts/background.js"></script>
+
 </head>
 
 <body>

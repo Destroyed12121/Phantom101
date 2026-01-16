@@ -189,21 +189,42 @@
                 const cloakMode = settings.cloakMode || 'none';
                 const realUrl = window.location.href.replace(/\?fake/, '');
                 const doRedirect = () => {
-                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                    const randomUrls = [
+                        "https://kahoot.it",
+                        "https://classroom.google.com",
+                        "https://drive.google.com",
+                        "https://google.com",
+                        "https://docs.google.com",
+                        "https://slides.google.com",
+                        "https://www.nasa.gov",
+                        "https://blooket.com",
+                        "https://clever.com",
+                        "https://edpuzzle.com",
+                        "https://khanacademy.org",
+                        "https://wikipedia.org",
+                        "https://dictionary.com",
+                    ];
+                    const randomTarget = randomUrls[Math.floor(Math.random() * randomUrls.length)];
                     window.location.replace(randomTarget);
                 };
+
                 if (cloakMode === 'blob') {
                     fetch(realUrl).then(r => r.text()).then(html => {
                         const blob = new Blob([html], { type: 'text/html' });
                         const win = window.open(URL.createObjectURL(blob), '_blank');
-                        if (win) {
-                            doRedirect();
-                        } else {
-                            iframe.src = 'index2.html';
-                        }
+
+                        // Verification delay
+                        setTimeout(() => {
+                            if (win && !win.closed) {
+                                doRedirect();
+                            } else {
+                                iframe.src = 'index2.html';
+                                showLaunchScreen();
+                            }
+                        }, 2000);
                     }).catch(() => {
                         iframe.src = 'index2.html';
+                        showLaunchScreen();
                     });
                 } else if (cloakMode === 'about:blank') {
                     const title = settings.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
@@ -223,9 +244,19 @@
 </body>
 </html>`);
                         win.document.close();
-                        doRedirect();
+
+                        // Verification delay
+                        setTimeout(() => {
+                            if (win && !win.closed) {
+                                doRedirect();
+                            } else {
+                                iframe.src = 'index2.html';
+                                showLaunchScreen();
+                            }
+                        }, 2000);
                     } else {
                         iframe.src = 'index2.html';
+                        showLaunchScreen();
                     }
                 } else {
                     const win = window.open(realUrl, '_blank');
@@ -308,33 +339,46 @@
         if (window.top === window.self && cloakMode !== 'none') {
             const currentUrl = window.location.href;
             const doRedirect = () => {
-                const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                const randomUrls = [
+                    "https://kahoot.it",
+                    "https://classroom.google.com",
+                    "https://drive.google.com",
+                    "https://google.com",
+                    "https://docs.google.com",
+                    "https://slides.google.com",
+                    "https://www.nasa.gov",
+                    "https://blooket.com",
+                    "https://clever.com",
+                    "https://edpuzzle.com",
+                    "https://khanacademy.org",
+                    "https://wikipedia.org",
+                    "https://dictionary.com",
+                ];
+                const randomTarget = randomUrls[Math.floor(Math.random() * randomUrls.length)];
                 window.location.replace(randomTarget);
             };
-            let popupOpened = false;
+
             if (cloakMode === 'blob') {
                 fetch(currentUrl).then(r => r.text()).then(html => {
                     const blob = new Blob([html], { type: 'text/html' });
                     const win = window.open(URL.createObjectURL(blob), '_blank');
-                    if (win) {
-                        popupOpened = true;
-                        doRedirect();
-                    } else {
-                        showLaunchScreen();
-                    }
+
+                    setTimeout(() => {
+                        if (win && !win.closed) {
+                            doRedirect();
+                        } else {
+                            showLaunchScreen();
+                        }
+                    }, 2000);
                 }).catch(() => {
                     showLaunchScreen();
                 });
             } else if (cloakMode === 'about:blank') {
-                // Get cloak values with fallbacks BEFORE opening window
                 const title = settings.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
                 const icon = settings.tabFavicon || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
 
                 const win = window.open('about:blank', '_blank');
                 if (win) {
-                    popupOpened = true;
-                    // Write complete HTML including title and favicon in one go
                     win.document.open();
                     win.document.write(`<!DOCTYPE html>
 <html>
@@ -348,18 +392,16 @@
 </html>`);
                     win.document.close();
 
-                    doRedirect();
+                    setTimeout(() => {
+                        if (win && !win.closed) {
+                            doRedirect();
+                        } else {
+                            showLaunchScreen();
+                        }
+                    }, 2000);
                 } else {
                     showLaunchScreen();
                 }
-            }
-            // If popup was opened, check if it closed
-            if (popupOpened) {
-                setTimeout(() => {
-                    if (win && win.closed) {
-                        showLaunchScreen();
-                    }
-                }, 1000);
             }
         }
     };
@@ -542,16 +584,28 @@
             const blobUrl = URL.createObjectURL(blob);
             const win = window.open(blobUrl, '_blank');
 
-            if (win && !win.closed) {
-                // Handle redirect of original tab ONLY if win was successful
-                const redirect = window.Settings?.get('redirectTarget');
-                if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
-                else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
-                else {
-                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-                    window.location.replace(randomTarget);
-                }
+            if (win) {
+                // Verification delay
+                setTimeout(() => {
+                    if (win && !win.closed) {
+                        // Handle redirect of original tab ONLY if win was successful
+                        const randomUrls = [
+                            "https://kahoot.it",
+                            "https://classroom.google.com",
+                            "https://drive.google.com",
+                            "https://youtube.com",
+                            "https://edpuzzle.com",
+                            "https://docs.google.com",
+                            "https://slides.google.com",
+                            "https://www.nasa.gov",
+                            "https://blooket.com",
+                            "https://wikipedia.org",
+
+                        ];
+                        const randomTarget = randomUrls[Math.floor(Math.random() * randomUrls.length)];
+                        window.location.replace(randomTarget);
+                    }
+                }, 2000);
             }
 
             return win;

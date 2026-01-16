@@ -20,14 +20,19 @@
 ***fix background not turning off soon*** done
 fix music page to hide youtube player unless toggled via 3 dot small button, and always shown on proxy mode, fix all the controls for video time, volume,
 add singlefile using cdns for each page so it autoupdates and is easy enough to make
-prolly should advertise phantom
+advertise phantom (too much work tbh)
 revamp movies page to 'watch'(lowk copy vapor v4) and add youtube and twitch
 shorten some page's code
-fix paths in search autocomplete
-fix markdown in ai not using correct text colors
-fix online counter
-make backgrounds show in the loading screen
-fix icons for topbar in code.html
+***fix paths in search autocomplete***
+***fix markdown in ai not using correct text colors***
+***make backgrounds show in the loading screen***
+***fix icons for topbar in code.html***
+***fix wisp server not notifying or autoswitiching when offline in proxy***
+***fix code runner open not working at all***
+***make backgrounds show in player.html***
+make backgrounds show in staticsjv2
+***make player.html player controls use theme colros not hardcoded***
+make ai chat and music sidebar go all the way down and up with borders
 view github at https://github.com/Destroyed12121/Phantom101
-Latest version ** 1.0.8 Super++ **
+Latest version ** 1.0.9 **
 */

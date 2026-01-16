@@ -1,6 +1,5 @@
-/**
+/*
  * PHANTOM AI - Core Logic
- * Fully integrated with Phantom Design System (main.css)
  */
 
 class PhantomChat {
@@ -21,12 +20,9 @@ class PhantomChat {
         // UI: Auto-typing placeholders
         this.placeholders = [
             "Explain physics in simple terms...",
-            "Generate a cinematic concept art...",
-            "Write a dark atmospheric poem...",
-            "What is the best way to center a div?",
-            "Design a futuristic cyberpunk city...",
-            "Explain how quantum computers work...",
-            "how to cheat in math class 101"
+            "Explain point slope form in simple terms",
+            "How do I time travel!?",
+            "How to cheat in math class 101"
         ];
 
         this.dom = {};
@@ -34,7 +30,7 @@ class PhantomChat {
         this.storageKey = 'phantom_ai_data';
         this.apiKey = 'sk_j66iDfX2lPbTZ2Otb9MI7xje7kRZQUyE';
         this.baseTextUrl = 'https://gen.pollinations.ai/v1/chat/completions';
-        this.baseImageUrl = 'https://gen.pollinations.ai/prompt/';
+        this.baseImageUrl = 'https://gen.pollinations.ai/image/';
 
         this.cacheDOM();
         this.loadState();
@@ -496,7 +492,10 @@ class PhantomChat {
         } else if (type === 'image') {
             innerHTML += `
                 <p class="text-xs text-dim mb-sm">Generated: ${prompt}</p>
-                <img src="${content}" class="generated-image" loading="lazy" alt="${prompt}">
+                <div class="image-container">
+                    <img src="${content}" class="generated-image" loading="lazy" alt="${prompt}" onload="this.classList.add('loaded')" onerror="this.parentElement.innerHTML='<div class=\\'image-loader\\'><i class=\\'fas fa-exclamation-triangle\\'></i><p>Failed to load image</p></div>'">
+                    <div class="image-loader"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
             `;
         } else {
             const parsed = window.marked ? marked.parse(content) : content;

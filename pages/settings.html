@@ -10,10 +10,12 @@
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/settings.css">
+    <link rel="stylesheet" href="../styles/background.css">
     <script src="../config.js"></script>
     <script src="../scripts/notifications.js"></script>
     <script src="../scripts/cloaking.js"></script>
     <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
     <script src="../components/topbar.js"></script>
 </head>
 
@@ -136,6 +138,10 @@
                             <button class="btn btn-primary" id="apply-custom-bg" style="min-width: 100px;">
                                 <i class="fa-solid fa-check"></i> Apply
                             </button>
+                        </div>
+                        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" class="setting-input" id="custom-bg-position"
+                                placeholder="Image position (e.g., top left, center, bottom right)" style="flex: 1; min-width: 250px;">
                         </div>
                         <div style="margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap;">
                             <span

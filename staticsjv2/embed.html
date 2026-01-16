@@ -194,11 +194,19 @@
                     const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
                     await navigator.serviceWorker.ready;
 
-                    const wispUrl = localStorage.getItem("proxServer") || "wss://dash.goip.de/wisp/";
-                    const sw = reg.active || navigator.serviceWorker.controller;
+                    const wispUrl = localStorage.getItem("proxServer") || "wss://wisp.rhw.one/wisp/";
+                    const customWisps = JSON.parse(localStorage.getItem('customWisps') || '[]');
+                    const allServers = [
+                        { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" },
+                        { name: "DaydreamX's Wisp", url: "wss://dash.goip.de/wisp/" },
+                        { name: "Space's Wisp", url: "wss://register.goip.it/wisp/" },
+                        ...customWisps
+                    ];
 
+                    const autoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
+                    const sw = reg.active || navigator.serviceWorker.controller;
                     if (sw) {
-                        sw.postMessage({ type: "config", wispurl: wispUrl });
+                        sw.postMessage({ type: "config", wispurl: wispUrl, servers: allServers, autoswitch: autoswitch });
                     }
 
                     const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
