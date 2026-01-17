@@ -105,6 +105,9 @@
 
             // Activate container
             this.container.classList.add('active');
+            
+            // Add class to body for CSS styling
+            document.body.classList.add('phantom-bg-active');
         },
 
         createVideo(url) {
@@ -195,6 +198,7 @@
             this.currentType = null;
             this.currentUrl = null;
             this.container.classList.remove('active');
+            document.body.classList.remove('phantom-bg-active');
         },
 
         cleanup() {

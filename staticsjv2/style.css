@@ -31,9 +31,7 @@ body.phantom-bg-active #app {
 
 body.phantom-bg-active .tabs,
 body.phantom-bg-active .nav {
-    background: rgba(10, 10, 10, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: transparent;
 }
 
 /* Layout */
@@ -49,15 +47,9 @@ body.phantom-bg-active .nav {
     display: flex;
     padding: 8px 8px 0;
     gap: 4px;
-    background: transparent;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
     overflow-x: auto;
-}
-
-/* Glass effect when background is active */
-body.phantom-bg-active .tabs {
-    background: rgba(10, 10, 10, 0.3);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
 
 .tabs::-webkit-scrollbar {
@@ -86,6 +78,10 @@ body.phantom-bg-active .tabs {
 .tab.active {
     background: var(--surface-hover);
     border-color: var(--border-light);
+}
+
+.tabs::-webkit-scrollbar {
+    height: 0;
 }
 
 .tab-favicon {
@@ -153,9 +149,7 @@ body.phantom-bg-active .tabs {
 
 /* Glass effect when background is active */
 body.phantom-bg-active .nav {
-    background: rgba(10, 10, 10, 0.3);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: transparent;
 }
 
 .nav button {

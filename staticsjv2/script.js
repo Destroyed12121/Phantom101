@@ -2,10 +2,7 @@
 // CONFIGURATION
 // =====================================================
 const DEFAULT_WISP = window.SITE_CONFIG?.defaultWisp || "wss://dash.goip.de/wisp/";
-const WISP_SERVERS = window.SITE_CONFIG?.wispServers || [
-    { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
-    { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" }
-];
+const WISP_SERVERS = window.SITE_CONFIG?.wispServers || [];
 
 if (!localStorage.getItem("proxServer")) {
     localStorage.setItem("proxServer", DEFAULT_WISP);
@@ -428,15 +425,11 @@ function renderServerList() {
         checkServerHealth(server.url, item);
     });
 
-
     // Add Autoswitch Toggle
+    const isAutoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
     const toggleContainer = document.createElement('div');
     toggleContainer.className = 'wisp-option';
-    toggleContainer.style.marginTop = '10px';
-    toggleContainer.style.cursor = 'default';
-
-    const isAutoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
-
+    toggleContainer.style.cssText = 'margin-top: 10px; cursor: default;';
     toggleContainer.innerHTML = `
         <div class="wisp-option-header" style="justify-content: space-between;">
             <div class="wisp-option-name"><i class="fa-solid fa-rotate" style="margin-right:8px"></i> Auto-switch on failure</div>
@@ -449,19 +442,14 @@ function renderServerList() {
     toggleContainer.onclick = () => {
         const newState = !isAutoswitch;
         localStorage.setItem('wispAutoswitch', newState);
-        const toggle = document.getElementById('autoswitch-toggle');
-        toggle.classList.toggle('active', newState);
+        document.getElementById('autoswitch-toggle').classList.toggle('active', newState);
 
         if (navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({ type: 'config', autoswitch: newState });
         }
 
-        // Re-render to update UI state if needed, but local toggle manipulation is enough
-        // renderServerList(); 
-        // Actually, let's just update the variable for next time or rely on DOM
-        location.reload(); // Simple reload to apply strict changes if needed, or just let SW handle it
-        // Ideally no reload needed for this setting.
         if (typeof Notify !== 'undefined') Notify.success('Settings Saved', `Autoswitch ${newState ? 'Enabled' : 'Disabled'}`);
+        location.reload();
     };
 
     list.appendChild(toggleContainer);
@@ -514,7 +502,6 @@ async function checkServerHealth(url, element) {
 
     try {
         const socket = new WebSocket(url);
-
         const timeout = setTimeout(() => {
             if (socket.readyState !== WebSocket.OPEN) {
                 socket.close();
@@ -524,15 +511,12 @@ async function checkServerHealth(url, element) {
 
         socket.onopen = () => {
             clearTimeout(timeout);
-            const latency = Date.now() - start;
-            socket.close();
-
             dot.classList.add('status-success');
-            text.textContent = `${latency}ms`;
+            text.textContent = `${Date.now() - start}ms`;
+            socket.close();
         };
 
         socket.onerror = () => { clearTimeout(timeout); markOffline(); };
-
     } catch { markOffline(); }
 
     function markOffline() {
@@ -545,7 +529,6 @@ function setWisp(url) {
     const oldUrl = localStorage.getItem('proxServer');
     localStorage.setItem('proxServer', url);
 
-    // Show notification before reload
     if (typeof Notify !== 'undefined' && oldUrl !== url) {
         const serverName = [...WISP_SERVERS, ...getStoredWisps()].find(s => s.url === url)?.name || 'Custom Server';
         Notify.success('Proxy Changed', `Switching to ${serverName}...`);
@@ -555,7 +538,6 @@ function setWisp(url) {
         navigator.serviceWorker.controller.postMessage({ type: 'config', wispurl: url });
     }
 
-    // Small delay to show notification
     setTimeout(() => location.reload(), 600);
 }
 

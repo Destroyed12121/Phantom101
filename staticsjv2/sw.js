@@ -141,16 +141,13 @@ const ADBLOCK = {
         "youtube.com/api/stats/*ad*",
         "*.youtube.com/get_midroll_*",
         "*.youtube.com/ptracking*",
-
         "*.facebook.com/ads/*",
         "*.facebook.com/tr/*",
         "*.fbcdn.net/ads/*",
         "graph.facebook.com/ads/*",
-
         "ads-api.twitter.com/*",
         "analytics.twitter.com/*",
         "*.twitter.com/i/ads/*",
-
         "*.ads.yahoo.com",
         "*.advertising.com",
         "*.adtechus.com",
@@ -158,7 +155,6 @@ const ADBLOCK = {
         "*.adnxs.com",
         "*.doubleclick.net/*",
         "*.googlesyndication.com/*",
-
         "*.rubiconproject.com",
         "*.pubmatic.com",
         "*.criteo.com",
@@ -166,10 +162,8 @@ const ADBLOCK = {
         "*.taboola.com",
         "*.outbrain.com",
         "*.moatads.com",
-
         "*.unityads.unity3d.com",
         "*.unityads.unity3d.com/*",
-
         "*/ads/*",
         "*/adserver/*",
         "*/banner_ads/*",
@@ -202,7 +196,7 @@ async function notifyClients(type, data) {
         client.postMessage({ type, ...data });
     });
 }
-//...
+// Message handler for config updates
 self.addEventListener("message", ({ data }) => {
     if (data.type === "config") {
         if (data.wispurl && wispConfig.wispurl !== data.wispurl) {
@@ -211,12 +205,8 @@ self.addEventListener("message", ({ data }) => {
             bareClient = null;
             console.log("SW: Wisp config updated", data.wispurl);
         }
-        if (data.servers) {
-            wispConfig.servers = data.servers;
-        }
-        if (typeof data.autoswitch !== 'undefined') {
-            wispConfig.autoswitch = data.autoswitch;
-        }
+        if (data.servers) wispConfig.servers = data.servers;
+        if (typeof data.autoswitch !== 'undefined') wispConfig.autoswitch = data.autoswitch;
     }
 });
 
@@ -348,20 +338,6 @@ self.addEventListener("fetch", (event) => {
         }
         return fetch(event.request);
     })());
-});
-
-self.addEventListener("message", ({ data }) => {
-    if (data.type === "config") {
-        if (data.wispurl && wispConfig.wispurl !== data.wispurl) {
-            wispConfig.wispurl = data.wispurl;
-            bareClientReady = false;
-            bareClient = null;
-            console.log("SW: Wisp config updated", data.wispurl);
-        }
-        if (data.servers) {
-            wispConfig.servers = data.servers;
-        }
-    }
 });
 
 scramjet.addEventListener("request", async (e) => {

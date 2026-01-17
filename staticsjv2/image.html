@@ -36,7 +36,6 @@
         const CACHE_NAME = 'phantom-bg-cache-v2';
         let parentBareMux = null;
 
-        // Listen for BareMux from parent
         window.addEventListener('message', (e) => {
             if (e.data?.type === 'baremux-data' && e.data.BareMux) {
                 parentBareMux = e.data.BareMux;
@@ -44,12 +43,10 @@
         });
 
         async function initialize() {
-            // Parse hash params
             const hash = window.location.hash.substring(1);
             let targetUrl = hash;
             let objectPosition = 'center';
 
-            // Check if hash is a simple URL or params
             if (hash.includes('url=')) {
                 try {
                     const params = new URLSearchParams(hash);
@@ -65,29 +62,20 @@
             const img = document.getElementById('bg-img');
             img.style.objectPosition = objectPosition;
 
-            // Check cache FIRST
+            // Check cache first
             try {
                 const cache = await caches.open(CACHE_NAME);
-                const cachedResponse = await cache.match(targetUrl);
-
-                if (cachedResponse) {
-                    const blob = await cachedResponse.blob();
-                    const objectUrl = URL.createObjectURL(blob);
-                    img.src = objectUrl;
-                    img.onload = () => {
-                        img.classList.add('loaded');
-                        window.parent.postMessage({ type: 'bg-loaded', url: targetUrl }, '*');
-                    };
+                const cached = await cache.match(targetUrl);
+                if (cached) {
+                    loadBlob(await cached.blob(), targetUrl);
                     return;
                 }
             } catch (e) {
                 console.warn("Cache check failed:", e);
             }
 
-            // Try parent's BareMux with short wait
-            const bareMuxReady = await waitForParentBareMux(300);
-            
-            if (bareMuxReady && parentBareMux) {
+            // Try parent's BareMux
+            if (await waitForParentBareMux(300) && parentBareMux) {
                 await fetchWithParentBareMux(targetUrl);
                 return;
             }
@@ -98,54 +86,32 @@
 
         async function waitForParentBareMux(maxWait = 300) {
             if (parentBareMux) return true;
-            
             return new Promise((resolve) => {
-                const startTime = Date.now();
+                const start = Date.now();
                 const check = () => {
-                    if (parentBareMux) {
-                        resolve(true);
-                        return;
-                    }
-                    if (Date.now() - startTime > maxWait) {
-                        resolve(false);
-                        return;
-                    }
-                    setTimeout(check, 20);
+                    if (parentBareMux) resolve(true);
+                    else if (Date.now() - start > maxWait) resolve(false);
+                    else setTimeout(check, 20);
                 };
                 check();
             });
         }
 
         async function fetchWithParentBareMux(targetUrl) {
-            try {
-                window.parent.postMessage({
-                    type: 'proxy-fetch',
-                    url: targetUrl,
-                    targetOrigin: window.location.origin
-                }, '*');
+            window.parent.postMessage({ type: 'proxy-fetch', url: targetUrl, targetOrigin: window.location.origin }, '*');
 
-                const messageHandler = (e) => {
-                    if (e.data?.type === 'proxy-fetch-result' && e.data.url === targetUrl) {
-                        window.removeEventListener('message', messageHandler);
-                        if (e.data.error) {
-                            tryDirectFetch(targetUrl);
-                        } else {
-                            loadBlob(e.data.blob, targetUrl);
-                        }
-                    }
-                };
-                window.addEventListener('message', messageHandler);
+            const handler = (e) => {
+                if (e.data?.type === 'proxy-fetch-result' && e.data.url === targetUrl) {
+                    window.removeEventListener('message', handler);
+                    e.data.error ? tryDirectFetch(targetUrl) : loadBlob(e.data.blob, targetUrl);
+                }
+            };
+            window.addEventListener('message', handler);
 
-                setTimeout(() => {
-                    window.removeEventListener('message', messageHandler);
-                    if (!img.src) {
-                        tryDirectFetch(targetUrl);
-                    }
-                }, 800);
-            } catch (e) {
-                console.warn("Parent BareMux fetch failed:", e);
-                tryDirectFetch(targetUrl);
-            }
+            setTimeout(() => {
+                window.removeEventListener('message', handler);
+                if (!document.getElementById('bg-img').src) tryDirectFetch(targetUrl);
+            }, 800);
         }
 
         async function tryDirectFetch(targetUrl) {
@@ -153,14 +119,12 @@
                 const response = await fetch(targetUrl);
                 if (!response.ok) throw new Error('Direct fetch failed');
 
-                // Cache the response
                 try {
                     const cache = await caches.open(CACHE_NAME);
                     cache.put(targetUrl, response.clone());
                 } catch (e) { }
 
-                const blob = await response.blob();
-                loadBlob(blob, targetUrl);
+                loadBlob(await response.blob(), targetUrl);
             } catch (err) {
                 console.error("Direct fetch failed:", err);
                 await tryMinimalProxy(targetUrl);
@@ -172,39 +136,28 @@
                 const basePath = location.pathname.replace(/[^/]*$/, '');
                 if (!basePath.endsWith('/')) basePath += '/';
 
-                if ('serviceWorker' in navigator) {
-                    try {
-                        const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
-                        await navigator.serviceWorker.ready;
+                if (!('serviceWorker' in navigator)) throw new Error("Service Worker not supported");
 
-                        const wispUrl = localStorage.getItem("proxServer") || "wss://wisp.rhw.one/wisp/";
+                const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
+                await navigator.serviceWorker.ready;
 
-                        const sw = reg.active || navigator.serviceWorker.controller;
-                        if (sw) {
-                            sw.postMessage({ type: "config", wispurl: wispUrl });
-                        }
+                const wispUrl = localStorage.getItem("proxServer") || "wss://wisp.rhw.one/wisp/";
+                const sw = reg.active || navigator.serviceWorker.controller;
+                if (sw) sw.postMessage({ type: "config", wispurl: wispUrl });
 
-                        const BareMuxModule = await import("https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs");
-                        const connection = new BareMuxModule.BareMuxConnection(basePath + "bareworker.js");
-                        await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
+                const BareMuxModule = await import("https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs");
+                const connection = new BareMuxModule.BareMuxConnection(basePath + "bareworker.js");
+                await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
 
-                        const response = await fetch(targetUrl);
-                        if (!response.ok) throw new Error('Proxy fetch failed');
+                const response = await fetch(targetUrl);
+                if (!response.ok) throw new Error('Proxy fetch failed');
 
-                        try {
-                            const cache = await caches.open(CACHE_NAME);
-                            cache.put(targetUrl, response.clone());
-                        } catch (e) { }
+                try {
+                    const cache = await caches.open(CACHE_NAME);
+                    cache.put(targetUrl, response.clone());
+                } catch (e) { }
 
-                        const blob = await response.blob();
-                        loadBlob(blob, targetUrl);
-                    } catch (swErr) {
-                        console.error("Service worker registration failed:", swErr);
-                        throw swErr;
-                    }
-                } else {
-                    throw new Error("Service Worker not supported");
-                }
+                loadBlob(await response.blob(), targetUrl);
             } catch (err) {
                 console.error("All proxy methods failed:", err);
                 window.parent.postMessage({ type: 'bg-error', url: targetUrl, error: err.message }, '*');

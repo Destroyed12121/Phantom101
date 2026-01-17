@@ -8,15 +8,15 @@ window.SITE_CONFIG = {
     version: "1.0.9",
 
     // Proxy Configuration
-    defaultWisp: "wss://dash.goip.de/wisp/",
+    defaultWisp: "wss://glseries.net/wisp/",
     wispServers: [
+        { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
         { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" },
-        { name: "DaydreamX's Wisp", url: "wss://dash.goip.de/wisp/" },
-        { name: "Space's Wisp", url: "wss://register.goip.it/wisp/" }
     ],
 
     // Changelog
     changelog: [
+     "added adblock to proxy",
      "ai chat more",
      "fixxed backgrounds",
      "fixxed backgrounrds not showing in loading screen",
