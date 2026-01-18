@@ -1,0 +1,93 @@
+/**
+ * PHANTOM - BACKGROUND STYLES
+ */
+.phantom-background {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    background: transparent;
+    pointer-events: none;
+    opacity: 1;
+    transition: background-color 0.3s ease;
+}
+
+.phantom-background.active {
+    opacity: 1;
+}
+
+.phantom-background-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgba(0, 0, 0, var(--bg-overlay, 0.4));
+    transition: background-color 0.3s ease;
+}
+
+.phantom-background-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.phantom-background-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--bg-image-position, center);
+    display: block;
+    border: none;
+}
+
+/* Video and Iframe positioning for full background cover */
+.phantom-background-layer video.phantom-background-media,
+.phantom-background-layer iframe.phantom-background-media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: none;
+    pointer-events: none;
+    min-width: 100%;
+    min-height: 100%;
+    max-width: none;
+    max-height: none;
+    object-position: var(--bg-image-position, center);
+}
+
+/* Ensure iframes cover entire background */
+.phantom-background-layer iframe.phantom-background-media {
+    border: none;
+    object-fit: cover;
+}
+
+/* Ensure content on top remains readable */
+html,
+body {
+    position: relative;
+    z-index: 0;
+    background-color: transparent !important;
+    background: transparent !important;
+    /* Allow background to show through */
+}
+
+/* Specific adjustments for transparency if needed */
+.main-content,
+.home-page {
+    background: transparent !important;
+}
+
+/* Glassmorphism for containers when background is active */
+.phantom-background.active ~ .offline-banner,
+.phantom-background.active ~ .home-page .card,
+.phantom-background.active ~ .home-page .featured-card,
+.phantom-background.active ~ .home-page .search-bar,
+.phantom-background.active ~ .settings-panel {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(15, 15, 15, 0.7) !important;
+}

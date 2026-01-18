@@ -36,20 +36,37 @@
 
     // Set favicon
     const setFavicon = (url) => {
+        if (!url) return;
+
         const updateLink = (doc, href) => {
-            // Remove existing icon links
+            // Force browser to refresh favicon by re-creating it OR updating existing one
             const links = doc.querySelectorAll('link[rel*="icon"]');
-            links.forEach(l => l.parentNode.removeChild(l));
 
-            // Create new icon link to force refresh
-            const link = doc.createElement('link');
-            link.rel = 'icon';
-            link.href = href;
-            doc.head.appendChild(link);
+            // Remove all existing icons to ensure the browser strictly notices the change
+            links.forEach(l => l.remove());
 
-            link.onerror = () => {
+            // Create new standard icon
+            const newLink = doc.createElement('link');
+            newLink.rel = 'icon';
+            newLink.href = href;
+            doc.head.appendChild(newLink);
+
+            // Create shortcut icon for older/stricter browsers
+            const shortcutLink = doc.createElement('link');
+            shortcutLink.rel = 'shortcut icon';
+            shortcutLink.href = href;
+            doc.head.appendChild(shortcutLink);
+
+            // Experimental trick: toggle visibility of one link or re-append to force refresh
+            setTimeout(() => {
+                if (newLink) {
+                    newLink.href = href;
+                }
+            }, 10);
+
+            newLink.onerror = () => {
                 if (href.includes('favicon.svg')) {
-                    link.href = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjUgMTMuNUMyMi41IDE4LjQ3NCAxOC40NzQgMjIuNSAxMy41IDIyLjVDOC41MjYgMjIuNS40NSAxOC40NzQuNDUgMTMuNUMuNDUgOC41MjYgOC41MjYuNDUgMTMuNS40NUMxOC40NzQuNDUgMjIuNS44NTI2IDIyLjUgMTMuNVoiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTEzLjUgMTYuNUMxNS4xMDQgMTYuNSAxNi41IDE1LjEwNCAxNi41IDEzLjVDMTYuNSAxMS44OTYgMTUuMTA0IDEwLjUgMTMuNSAxMC41QzExLjg5NiAxMC41IDEwLjUgMTEuODk2IDEwLjUgMTMuNUMxMC41IDE1LjEwNCAxMS44OTYgMTYuNSAxMy41IDE2LjVaIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=';
+                    newLink.href = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjUgMTMuNUMyMi41IDE4LjQ3NCAxOC40NzQgMjIuNSAxMy41IDIyLjVDOC41MjYgMjIuNS40NSAxOC40NzQuNDUgMTMuNUMuNDUgOC41MjYgOC41MjYuNDUgMTMuNS40NUMxOC40NzQuNDUgMjIuNS44NTI2IDIyLjUgMTMuNVoiIGZpbGw9IiM2MzY2RjEiLz4KPHBhdGggZD0iTTEzLjUgMTYuNUMxNS4xMDQgMTYuNSAxNi41IDE1LjEwNCAxNi41IDEzLjVDMTYuNSAxMS44OTYgMTUuMTA0IDEwLjUgMTMuNSAxMC41QzExLjg5NiAxMC41IDEwLjUgMTEuODk2IDEwLjUgMTMuNUMxMC41IDE1LjEwNCAxMS44OTYgMTYuNSAxMy41IDE2LjVaIiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=';
                 }
             };
         };
@@ -59,7 +76,9 @@
             if (window.top !== window.self) {
                 updateLink(window.top.document, url);
             }
-        } catch (e) { }
+        } catch (e) {
+            console.debug('Failed to update top favicon:', e);
+        }
     };
 
     // Apply cloak
@@ -170,38 +189,74 @@
                 const cloakMode = settings.cloakMode || 'none';
                 const realUrl = window.location.href.replace(/\?fake/, '');
                 const doRedirect = () => {
-                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                    const randomUrls = [
+                        "https://kahoot.it",
+                        "https://classroom.google.com",
+                        "https://drive.google.com",
+                        "https://google.com",
+                        "https://docs.google.com",
+                        "https://slides.google.com",
+                        "https://www.nasa.gov",
+                        "https://blooket.com",
+                        "https://clever.com",
+                        "https://edpuzzle.com",
+                        "https://khanacademy.org",
+                        "https://wikipedia.org",
+                        "https://dictionary.com",
+                    ];
+                    const randomTarget = randomUrls[Math.floor(Math.random() * randomUrls.length)];
                     window.location.replace(randomTarget);
                 };
+
                 if (cloakMode === 'blob') {
                     fetch(realUrl).then(r => r.text()).then(html => {
                         const blob = new Blob([html], { type: 'text/html' });
                         const win = window.open(URL.createObjectURL(blob), '_blank');
-                        if (win) {
-                            doRedirect();
-                        } else {
-                            iframe.src = 'index2.html';
-                        }
+
+                        // Verification delay
+                        setTimeout(() => {
+                            if (win && !win.closed) {
+                                doRedirect();
+                            } else {
+                                iframe.src = 'index2.html';
+                                showLaunchScreen();
+                            }
+                        }, 2000);
                     }).catch(() => {
                         iframe.src = 'index2.html';
+                        showLaunchScreen();
                     });
                 } else if (cloakMode === 'about:blank') {
+                    const title = settings.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
+                    const icon = settings.tabFavicon || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
+
                     const win = window.open('about:blank', '_blank');
                     if (win) {
                         win.document.open();
-                        win.document.write('<iframe src="' + realUrl + '" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>');
+                        win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+    <title>${title}</title>
+    <link rel="icon" href="${icon}">
+</head>
+<body style="margin:0;padding:0;overflow:hidden;">
+    <iframe src="${realUrl}" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>
+</body>
+</html>`);
                         win.document.close();
-                        if (settings.tabTitle) win.document.title = settings.tabTitle;
-                        if (settings.tabFavicon) {
-                            const link = win.document.createElement('link');
-                            link.rel = 'icon';
-                            link.href = settings.tabFavicon;
-                            win.document.head.appendChild(link);
-                        }
-                        doRedirect();
+
+                        // Verification delay
+                        setTimeout(() => {
+                            if (win && !win.closed) {
+                                doRedirect();
+                            } else {
+                                iframe.src = 'index2.html';
+                                showLaunchScreen();
+                            }
+                        }, 2000);
                     } else {
                         iframe.src = 'index2.html';
+                        showLaunchScreen();
                     }
                 } else {
                     const win = window.open(realUrl, '_blank');
@@ -284,51 +339,69 @@
         if (window.top === window.self && cloakMode !== 'none') {
             const currentUrl = window.location.href;
             const doRedirect = () => {
-                const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                const randomTarget = targets[Math.floor(Math.random() * targets.length)];
+                const randomUrls = [
+                    "https://kahoot.it",
+                    "https://classroom.google.com",
+                    "https://drive.google.com",
+                    "https://google.com",
+                    "https://docs.google.com",
+                    "https://slides.google.com",
+                    "https://www.nasa.gov",
+                    "https://blooket.com",
+                    "https://clever.com",
+                    "https://edpuzzle.com",
+                    "https://khanacademy.org",
+                    "https://wikipedia.org",
+                    "https://dictionary.com",
+                ];
+                const randomTarget = randomUrls[Math.floor(Math.random() * randomUrls.length)];
                 window.location.replace(randomTarget);
             };
-            let popupOpened = false;
+
             if (cloakMode === 'blob') {
                 fetch(currentUrl).then(r => r.text()).then(html => {
                     const blob = new Blob([html], { type: 'text/html' });
                     const win = window.open(URL.createObjectURL(blob), '_blank');
-                    if (win) {
-                        popupOpened = true;
-                        doRedirect();
-                    } else {
-                        showLaunchScreen();
-                    }
+
+                    setTimeout(() => {
+                        if (win && !win.closed) {
+                            doRedirect();
+                        } else {
+                            showLaunchScreen();
+                        }
+                    }, 2000);
                 }).catch(() => {
                     showLaunchScreen();
                 });
             } else if (cloakMode === 'about:blank') {
+                const title = settings.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
+                const icon = settings.tabFavicon || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
+
                 const win = window.open('about:blank', '_blank');
                 if (win) {
-                    popupOpened = true;
                     win.document.open();
-                    win.document.write('<iframe src="' + currentUrl + '" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>');
+                    win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+    <title>${title}</title>
+    <link rel="icon" href="${icon}">
+</head>
+<body style="margin:0;padding:0;overflow:hidden;">
+    <iframe src="${currentUrl}" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>
+</body>
+</html>`);
                     win.document.close();
-                    // Copy disguised title/icon to new window
-                    if (settings.tabTitle) win.document.title = settings.tabTitle;
-                    if (settings.tabFavicon) {
-                        const link = win.document.createElement('link');
-                        link.rel = 'icon';
-                        link.href = settings.tabFavicon;
-                        win.document.head.appendChild(link);
-                    }
-                    doRedirect();
+
+                    setTimeout(() => {
+                        if (win && !win.closed) {
+                            doRedirect();
+                        } else {
+                            showLaunchScreen();
+                        }
+                    }, 2000);
                 } else {
                     showLaunchScreen();
                 }
-            }
-            // If popup was opened, check if it closed
-            if (popupOpened) {
-                setTimeout(() => {
-                    if (win && win.closed) {
-                        showLaunchScreen();
-                    }
-                }, 1000);
             }
         }
     };
@@ -360,15 +433,24 @@
         };
     };
 
-    // Key listener for panic (hiding)
+    // Key listener for panic (hiding) - Fast white screen redirect
     document.addEventListener('keydown', (e) => {
         if (!panicShortcut) return;
 
+        // Ignore if user is typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
         if (matchesShortcut(e, panicShortcut)) {
             e.preventDefault();
+
+            // Show white screen instantly (if panic-overlay exists)
+            const overlay = document.getElementById('panic-overlay');
+            if (overlay) overlay.style.display = 'block';
+
+            // Redirect immediately
             panic();
         }
-    });
+    }, true); // Use capture phase for faster response
 
     // Key listener for spawning cloaked instance (c key)
     document.addEventListener('keydown', (e) => {
@@ -410,8 +492,8 @@
         }
 
         // Apply initial cloak
-        const title = window.Settings?.get('tabTitle') || 'Google';
-        const favicon = window.Settings?.get('tabFavicon') || 'https://www.google.com/favicon.ico';
+        const title = window.Settings?.get('tabTitle') || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
+        const favicon = window.Settings?.get('tabFavicon') || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
         applyCloak(title, favicon);
 
         // Start rotation if enabled
@@ -439,9 +521,9 @@
         openInBlank(url) {
             const win = window.open('about:blank', '_blank');
             if (win && !win.closed) {
-                // Determine title/icon to use for the new window
-                const title = window.Settings?.get('tabTitle') || 'Google';
-                const icon = window.Settings?.get('tabFavicon') || 'https://www.google.com/favicon.ico';
+                // Determine title/icon to use for the new window (with proper fallbacks)
+                const title = window.Settings?.get('tabTitle') || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
+                const icon = window.Settings?.get('tabFavicon') || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
 
                 win.document.write(`
                     <!DOCTYPE html>
@@ -478,8 +560,8 @@
 
         // Open page in blob URL
         openInBlob(url) {
-            const title = window.Settings?.get('tabTitle') || 'Google';
-            const icon = window.Settings?.get('tabFavicon') || 'https://www.google.com/favicon.ico';
+            const title = window.Settings?.get('tabTitle') || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
+            const icon = window.Settings?.get('tabFavicon') || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
 
             const html = `
                 <!DOCTYPE html>
@@ -502,16 +584,28 @@
             const blobUrl = URL.createObjectURL(blob);
             const win = window.open(blobUrl, '_blank');
 
-            if (win && !win.closed) {
-                // Handle redirect of original tab ONLY if win was successful
-                const redirect = window.Settings?.get('redirectTarget');
-                if (redirect === 'youtube') window.location.replace('https://www.youtube.com');
-                else if (redirect === 'edpuzzle') window.location.replace('https://edpuzzle.com');
-                else {
-                    const targets = ['https://www.youtube.com', 'https://edpuzzle.com'];
-                    const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-                    window.location.replace(randomTarget);
-                }
+            if (win) {
+                // Verification delay
+                setTimeout(() => {
+                    if (win && !win.closed) {
+                        // Handle redirect of original tab ONLY if win was successful
+                        const randomUrls = [
+                            "https://kahoot.it",
+                            "https://classroom.google.com",
+                            "https://drive.google.com",
+                            "https://youtube.com",
+                            "https://edpuzzle.com",
+                            "https://docs.google.com",
+                            "https://slides.google.com",
+                            "https://www.nasa.gov",
+                            "https://blooket.com",
+                            "https://wikipedia.org",
+
+                        ];
+                        const randomTarget = randomUrls[Math.floor(Math.random() * randomUrls.length)];
+                        window.location.replace(randomTarget);
+                    }
+                }, 2000);
             }
 
             return win;

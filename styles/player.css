@@ -9,22 +9,23 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-    background: var(--bg);
+    background: transparent;
 }
 
 .player-container {
     width: 100%;
     max-width: 1200px;
     background: var(--surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     display: flex;
     flex-direction: column;
     position: relative;
     z-index: 10;
     overflow: hidden;
-    /* Clean "start of chat" look - Standard Card */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-xl);
 }
 
 .player-frame-wrapper {
@@ -32,7 +33,7 @@
     width: 100%;
     padding-top: 56.25%;
     /* 16:9 Aspect Ratio */
-    background: #000;
+    background: var(--bg);
     z-index: 5;
     overflow: hidden;
 }
@@ -40,8 +41,11 @@
 /* ============================================
    THEATER MODE
    ============================================ */
+/* ============================================
+   THEATER MODE
+   ============================================ */
 body.theater-active {
-    background: #000 !important;
+    background: var(--bg) !important;
     overflow: hidden;
     /* Prevent scrolling */
 }
@@ -63,7 +67,7 @@ body.theater-active .player-container {
     height: 100vh;
     border: none;
     border-radius: 0;
-    background: #000;
+    background: var(--bg);
     box-shadow: none;
 }
 
@@ -80,45 +84,48 @@ body.theater-active .player-frame-wrapper {
 body.theater-active .player-controls,
 body.theater-active .player-info {
     position: absolute;
-    bottom: 0;
     left: 0;
     width: 100%;
     z-index: 100;
     border: none;
     background: transparent;
+    transition: opacity 0.5s ease;
+}
+
+/* Hide when idle */
+body.theater-active.user-idle .player-controls,
+body.theater-active.user-idle .player-info {
     opacity: 0;
-    transition: opacity 0.3s ease;
     pointer-events: none;
-    /* Let clicks pass through empty space */
 }
 
 /* Stack styling */
 body.theater-active .player-controls {
     bottom: 0;
-    padding-bottom: 20px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
+    padding-bottom: 30px;
+    /* Add some padding for the fade */
+    background: linear-gradient(to top, var(--bg) 0%, rgba(var(--bg-rgb), 0.9) 40%, rgba(var(--bg-rgb), 0.6) 80%, transparent 100%);
+    padding-top: 60px;
+    /* Extend gradient upwards */
+    align-items: flex-end;
+    /* Align items to bottom */
+    pointer-events: none;
+    /* Allow clicks to pass through to controls */
 }
 
 body.theater-active .player-info {
-    bottom: auto;
-    /* Reset bottom */
-    top: 0;
-    /* Move to top to avoid clipping controls */
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
-    /* Top gradient */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    bottom: 90px;
+    /* Stack slightly above controls */
+    top: auto;
+    background: transparent;
+    /* Remove separate background to avoid "cut out" look */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+    padding-bottom: 0;
 }
 
-/* Move Title/Desc container to top left in Theater Mode */
-body.theater-active .player-info {
-    justify-content: flex-start;
-    padding-top: 20px;
-}
-
-/* Show on Hover */
-body.theater-active .player-container:hover .player-controls,
-body.theater-active .player-container:hover .player-info {
-    opacity: 1;
+body.theater-active .player-info>* {
+    pointer-events: auto;
 }
 
 /* Re-enable clicks on the actual interactive elements */
@@ -128,8 +135,8 @@ body.theater-active .player-info>* {
 }
 
 /* ============================================
-   FRAME & AMBIENCE
-   ============================================ */
+    FRAME
+    ============================================ */
 .player-frame {
     position: absolute;
     top: 0;
@@ -142,29 +149,6 @@ body.theater-active .player-info>* {
     background: transparent;
 }
 
-/* Ambilight - Hidden by default */
-.player-frame-bg {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1.1);
-    width: 100%;
-    height: 100%;
-    border: none;
-    z-index: 1;
-    /* Below video */
-    filter: blur(80px) saturate(1.5) brightness(0.8);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 1s ease;
-}
-
-body.theater-active .player-frame-bg {
-    display: block;
-    opacity: 0.6;
-}
-
 /* ============================================
    UI COMPONENTS
    ============================================ */
@@ -174,16 +158,16 @@ body.theater-active .player-frame-bg {
     gap: 12px;
     align-items: center;
     justify-content: flex-end;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
+    background: var(--surface-hover);
+    border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
     transition: background 0.2s, opacity 0.2s;
 }
 
 .player-info {
     padding: 24px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
+    background: transparent;
+    border-top: none;
     /* Visually separate if needed */
     transition: background 0.2s, opacity 0.2s;
 }
@@ -201,10 +185,41 @@ body.theater-active .player-frame-bg {
     font-size: 0.875rem;
 }
 
+/* Movie Controls */
+.player-movie-controls {
+    display: none;
+    gap: 12px;
+    align-items: center;
+    margin-right: auto;
+}
+
+.player-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.player-control-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.player-proxy-toggle {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.player-proxy-toggle .player-control-label {
+    font-size: 0.875rem;
+    color: var(--text);
+    margin-left: 8px;
+}
+
 /* Dropdown */
 .provider-select {
     padding: 8px 12px;
-    background: var(--surface-hover);
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
@@ -265,9 +280,4 @@ input:checked+.slider:before {
 .btn {
     position: relative;
     z-index: 101;
-}
-
-/* Legacy fallback */
-.theater-glow {
-    display: none;
 }

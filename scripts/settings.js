@@ -19,7 +19,7 @@
             cloakMode: 'none',
             cloakRotation: false,
             cloakInterval: 5000,
-            panicKey: 'Escape',
+            panicKey: 'x',
             panicModifiers: ['ctrl', 'shift'],
             panicUrl: 'https://classroom.google.com',
 
@@ -109,22 +109,50 @@
             root.style.setProperty('--text', s.textColor || d.textColor || '#e4e4e7');
             root.style.setProperty('--text-muted', s.textSecondaryColor || d.textSecondaryColor || '#71717a');
             root.style.setProperty('--text-dim', s.textDimColor || d.textDimColor || '#52525b');
+            
+            // Toggle switch colors (for wisp settings)
+            root.style.setProperty('--toggle', s.toggleColor || d.toggleColor || undefined);
+            root.style.setProperty('--toggle-knob', s.toggleKnobColor || d.toggleKnobColor || undefined);
 
-            // Background
-            if (s.background) {
-                const bg = s.background;
-                if (bg.type === 'color') {
-                    root.style.setProperty('--bg', bg.value);
-                    root.style.setProperty('--bg-image', 'none');
-                } else if (bg.type === 'gradient') {
-                    root.style.setProperty('--bg', 'transparent');
-                    root.style.setProperty('--bg-image', bg.value);
-                } else if (bg.type === 'image' || bg.type === 'video') {
-                    root.style.setProperty('--bg-image', `url(${bg.value})`);
+            // Background Management
+            // 1. Always apply theme background color as the base
+            const themeBg = s.background || d.background || { type: 'color', value: '#0a0a0a' };
+            if (themeBg.type === 'color') {
+                root.style.setProperty('--bg', themeBg.value);
+            } else if (themeBg.type === 'gradient') {
+                root.style.setProperty('--bg', 'transparent');
+            }
+
+            // 2. Handle background images/videos (either from theme or custom)
+            let customBg = s.customBackground;
+            const isCustomActive = customBg && customBg.type !== 'none';
+
+            if (isCustomActive) {
+                if (customBg.url) {
+                    root.style.setProperty('--bg-image', `url(${customBg.url})`);
+                    // Apply object-position for custom backgrounds
+                    if (customBg.objectPosition) {
+                        root.style.setProperty('--bg-image-position', customBg.objectPosition);
+                    } else {
+                        root.style.setProperty('--bg-image-position', 'center');
+                    }
                 }
             } else {
-                root.style.setProperty('--bg', d.background?.value || '#0a0a0a');
-                root.style.setProperty('--bg-image', 'none');
+                // Revert to theme background if it has an image/gradient
+                if (themeBg.type === 'image' || themeBg.type === 'video') {
+                    root.style.setProperty('--bg-image', `url(${themeBg.value})`);
+                    if (themeBg.objectPosition) {
+                        root.style.setProperty('--bg-image-position', themeBg.objectPosition);
+                    } else {
+                        root.style.setProperty('--bg-image-position', 'center');
+                    }
+                } else if (themeBg.type === 'gradient') {
+                    root.style.setProperty('--bg-image', themeBg.value);
+                    root.style.setProperty('--bg-image-position', 'center');
+                } else {
+                    root.style.setProperty('--bg-image', 'none');
+                    root.style.setProperty('--bg-image-position', 'center');
+                }
             }
         },
 
@@ -151,33 +179,87 @@
 
     // Initialize on load
     const init = () => {
+        // Auto-inject Background System if not present
+        // Only inject on main pages (index.html), NOT on sub-pages (pages/*.html, staticsjv2/*.html, index2.html)
+        if (!window.BackgroundManager && !document.querySelector('script[src*="background.js"]')) {
+            const isSubPage = window.location.pathname.includes('/pages/') ||
+                             window.location.pathname.includes('/staticsjv2/') ||
+                             window.location.pathname.includes('/components/') ||
+                             window.location.pathname.endsWith('/index2.html');
+            
+            // Only inject background on main pages, not sub-pages
+            if (!isSubPage) {
+                const prefix = '';
+
+                // Inject CSS
+                if (!document.querySelector('link[href*="background.css"]')) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = prefix + 'styles/background.css';
+                    document.head.appendChild(link);
+                }
+
+                // Inject JS
+                const script = document.createElement('script');
+                script.src = prefix + 'scripts/background.js';
+                document.head.appendChild(script);
+            }
+        }
+
         Settings.apply();
 
-        // Panic Key Handler
+        // Check for Featured Background (Overrides current if ID is new)
+        const featured = window.SITE_CONFIG?.featuredBackground;
+        if (featured && featured.active && featured.id && featured.id !== _settings.lastSeenFeatured) {
+            Settings.update({
+                customBackground: featured,
+                lastSeenFeatured: featured.id,
+                backgroundRotation: false // Override auto-rotate as requested
+            });
+        }
+
+        // Panic Key Handler - Fast white screen redirect
         document.addEventListener('keydown', (e) => {
             const mods = _settings.panicModifiers || [];
-            const key = _settings.panicKey || 'Escape';
+            const key = _settings.panicKey || 'x';
 
-            // Check modifiers
-            const ctrl = mods.includes('ctrl') === e.ctrlKey;
-            const shift = mods.includes('shift') === e.shiftKey;
-            const alt = mods.includes('alt') === e.altKey;
+            // Check if all required modifiers are pressed
+            const ctrlRequired = mods.includes('ctrl');
+            const shiftRequired = mods.includes('shift');
+            const altRequired = mods.includes('alt');
 
-            if (ctrl && shift && alt && e.key.toLowerCase() === key.toLowerCase()) {
+            // Match if required modifiers match AND unrequired modifiers are not pressed
+            const ctrlMatch = ctrlRequired ? e.ctrlKey : !e.ctrlKey;
+            const shiftMatch = shiftRequired ? e.shiftKey : !e.shiftKey;
+            const altMatch = altRequired ? e.altKey : !e.altKey;
+
+            if (ctrlMatch && shiftMatch && altMatch && e.key.toLowerCase() === key.toLowerCase()) {
                 e.preventDefault();
-                const url = _settings.panicUrl || 'https://classroom.google.com';
 
-                // Try to use replace to avoid history
+                // Show white screen instantly (if panic-overlay exists in parent)
+                const parentOverlay = window.parent?.document?.getElementById('panic-overlay');
+                if (parentOverlay) {
+                    parentOverlay.style.display = 'block';
+                } else {
+                    // Create overlay if it doesn't exist
+                    const overlay = document.createElement('div');
+                    overlay.id = 'panic-overlay';
+                    overlay.style.cssText = 'position:fixed;inset:0;background:white;z-index:99999;';
+                    document.body.appendChild(overlay);
+                }
+
+                // Redirect immediately
+                const url = _settings.panicUrl || 'https://classroom.google.com';
                 try {
                     window.location.replace(url);
                 } catch (err) {
                     window.location.href = url;
                 }
             }
-        });
+        }, true); // Use capture phase for faster response
 
         window.addEventListener('settings-changed', (e) => {
-            if (e.detail.rotateCloaks !== undefined || e.detail.rotateInterval !== undefined) {
+            if (e.detail.rotateCloaks !== undefined || e.detail.rotateInterval !== undefined || e.detail.backgroundRotation !== undefined) {
                 // Update local ref
                 _settings = e.detail;
             }
@@ -201,6 +283,8 @@
                 const newSettings = load();
                 _settings = newSettings;
                 Settings.apply();
+                // Ensure cloaking and other listeners are notified
+                window.dispatchEvent(new CustomEvent('settings-changed', { detail: newSettings }));
             }
         });
 
@@ -258,9 +342,48 @@
         };
         checkThemeRotation();
 
+        // Background Rotation Logic
+        const checkBackgroundRotation = () => {
+            if (!_settings.backgroundRotation) return;
+
+            const now = Date.now();
+            const lastRotation = _settings.lastBackgroundRotation || 0;
+            const TWO_DAYS = 172800000;
+
+            if (now - lastRotation >= TWO_DAYS) {
+                const presets = window.SITE_CONFIG?.backgroundPresets || [];
+                // Filter out 'none' and optional 'custom' (though custom shouldn't be in presets)
+                const validPresets = presets.filter(p => p.id !== 'none' && p.id !== 'custom');
+
+                if (validPresets.length > 0) {
+                    let randomPreset;
+                    // Avoid repeating current background if possible
+                    if (validPresets.length > 1) {
+                        let attempts = 0;
+                        const currentId = _settings.customBackground?.id;
+                        do {
+                            randomPreset = validPresets[Math.floor(Math.random() * validPresets.length)];
+                            attempts++;
+                        } while (randomPreset.id === currentId && attempts < 5);
+                    } else {
+                        randomPreset = validPresets[0];
+                    }
+
+                    if (randomPreset) {
+                        Settings.update({
+                            customBackground: randomPreset,
+                            lastBackgroundRotation: now
+                        });
+                    }
+                }
+            }
+        };
+        checkBackgroundRotation();
+
         // Leave Confirmation
         window.addEventListener('beforeunload', (e) => {
-            if (_settings.leaveConfirmation) {
+            const isMainContainer = !!document.getElementById('main-frame');
+            if (isMainContainer && _settings.leaveConfirmation) {
                 e.preventDefault();
                 e.returnValue = '';
                 return '';

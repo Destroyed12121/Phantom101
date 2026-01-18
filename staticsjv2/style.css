@@ -17,6 +17,23 @@ html,
     background: var(--bg);
     overflow: hidden;
     color: var(--text);
+    transition: background 0.3s ease;
+}
+
+/* Background Support */
+body.phantom-bg-active {
+    background: transparent !important;
+}
+
+body.phantom-bg-active #app {
+    background: transparent !important;
+}
+
+body.phantom-bg-active .tabs,
+body.phantom-bg-active .nav {
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
 }
 
 /* Layout */
@@ -32,8 +49,15 @@ html,
     display: flex;
     padding: 8px 8px 0;
     gap: 4px;
-    background: var(--bg);
+    background: transparent;
     overflow-x: auto;
+}
+
+/* Glass effect when background is active */
+body.phantom-bg-active .tabs {
+    background: rgba(10, 10, 10, 0.3);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
 }
 
 .tabs::-webkit-scrollbar {
@@ -124,7 +148,14 @@ html,
     align-items: center;
     gap: 6px;
     padding: 8px;
-    background: var(--bg);
+    background: transparent;
+}
+
+/* Glass effect when background is active */
+body.phantom-bg-active .nav {
+    background: rgba(10, 10, 10, 0.3);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
 }
 
 .nav button {
@@ -482,47 +513,69 @@ input.bar::placeholder {
 .custom-input-group {
     display: flex;
     gap: 8px;
+    background: var(--bg);
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.custom-input-group:focus-within {
+    border-color: var(--accent);
 }
 
 .custom-input-group input {
     flex: 1;
-    height: 36px;
-    padding: 0 12px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    height: 32px;
+    padding: 0 10px;
+    background: transparent;
+    border: none;
     color: var(--text);
     font-family: 'Consolas', monospace;
     font-size: 12px;
     outline: none;
-    transition: all 0.15s;
-}
-
-.custom-input-group input:focus {
-    border-color: var(--accent);
 }
 
 .custom-input-group button {
-    height: 36px;
-    padding: 0 14px;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--accent);
     border: none;
     border-radius: 6px;
     color: #fff;
     cursor: pointer;
-    transition: opacity 0.15s;
+    transition: opacity 0.15s, transform 0.15s;
+    flex-shrink: 0;
 }
 
 .custom-input-group button:hover {
     opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.custom-input-group button:active {
+    transform: scale(0.95);
 }
 
 .settings-footer {
     padding: 12px 20px;
     border-top: 1px solid var(--border);
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+
+.settings-footer::before {
+    content: '\f05a';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
 
 .delete-wisp-btn {
     background: transparent;
@@ -540,4 +593,35 @@ input.bar::placeholder {
 
 .flex {
     display: flex;
+}
+/* Toggle Switch */
+.toggle-switch {
+    width: 36px;
+    height: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.toggle-switch.active {
+    background: var(--toggle, var(--accent));
+    border-color: var(--toggle, var(--accent));
+}
+
+.toggle-knob {
+    width: 16px;
+    height: 16px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    transition: all 0.2s;
+}
+
+.toggle-switch.active .toggle-knob {
+    background: var(--toggle-knob, #fff);
+    left: 17px;
 }

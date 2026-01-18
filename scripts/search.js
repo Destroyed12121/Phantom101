@@ -7,55 +7,61 @@ const PhantomSearch = {
     inputEl: null,
     dropdownEl: null,
     suggestions: [],
-    selectedIndex: -1,
+    selectedIndex: 0,
     isOpen: false,
     allGames: [],
     gamesLoaded: false,
     domainsLoaded: false,
+    rootPrefix: '',
+
+    // Caching and Debouncing
+    searchTimeout: null,
+    movieCache: {},
+    lastQuery: '',
 
     // Static configuration
     pages: [
-        { name: 'Games', url: 'pages/games.html', icon: 'fa-gamepad', type: 'page' },
-        { name: 'Movies & TV', url: 'pages/movies.html', icon: 'fa-film', type: 'page' },
-        { name: 'AI Chatbot', url: 'pages/chatbot.html', icon: 'fa-robot', type: 'page' },
-        { name: 'Code Editor', url: 'pages/code.html', icon: 'fa-code', type: 'page' },
-        { name: 'Music', url: 'pages/music.html', icon: 'fa-music', type: 'page' },
-        { name: 'Settings', url: 'pages/settings.html', icon: 'fa-gear', type: 'page' }
+        { name: 'Games', url: 'pages/games.html', icon: 'fa-gamepad', type: 'page', keywords: ['all games', 'play games', 'unblocked games', 'game library'] },
+        { name: 'Movies & TV', url: 'pages/movies.html', icon: 'fa-film', type: 'page', keywords: ['netflix', 'streaming', 'shows', 'tv', 'watch'] },
+        { name: 'AI Chatbot', url: 'pages/chatbot.html', icon: 'fa-robot', type: 'page', keywords: ['chat', 'gpt', 'phantomai', 'bot', 'ai'] },
+        { name: 'Code Editor', url: 'pages/code.html', icon: 'fa-code', type: 'page', keywords: ['coding', 'ide', 'editor', 'html', 'js', 'javascript'] },
+        { name: 'Music', url: 'pages/music.html', icon: 'fa-music', type: 'page', keywords: ['songs', 'spotify', 'audio', 'beats', 'listen'] },
+        { name: 'Settings', url: 'pages/settings.html', icon: 'fa-gear', type: 'page', keywords: ['preferences', 'cloak', 'panic', 'theme', 'options'] },
+        { name: 'Disclaimer', url: 'pages/disclaimer.html', icon: 'fa-scale-balanced', type: 'page', keywords: ['legal', 'notice'] },
+        { name: 'Terms of Service', url: 'pages/terms.html', icon: 'fa-file-contract', type: 'page', keywords: ['tos', 'rules'] }
     ],
 
-    popularMovies: [
-        { name: 'Avengers: Endgame', id: 299534 },
-        { name: 'Spider-Man: No Way Home', id: 634649 },
-        { name: 'The Dark Knight', id: 155 },
-        { name: 'Fnaf', id: 950779 },
-        { name: 'Interstellar', id: 157336 },
-        { name: 'Breaking Bad', id: 1396 },
-        { name: 'Stranger Things', id: 66732 }
-    ],
+    // Websites that also exist as games (priority goes to games)
+    gameConflictDomains: ['roblox', 'minecraft', 'fortnite', 'chess', 'tetris', 'poki', 'crazygames', 'coolmathgames'],
 
     popularDomains: [
         { domain: 'google.com', name: 'Google' },
         { domain: 'youtube.com', name: 'YouTube' },
         { domain: 'tiktok.com', name: 'TikTok' },
-        { domain: 'imdb.com', name: 'IMDB' },
-        { domain: 'x.com', name: 'X' },
-        { domain: 'fandom.com', name: 'Fandom' },
-        { domain: 'instagram.com', name: 'Instagram' },
+        { domain: 'character.ai', name: 'Character.AI' },
+        { domain: 'chatgpt.com', name: 'ChatGPT' },
+        { domain: 'roblox.com', name: 'Roblox', isGame: true },
         { domain: 'discord.com', name: 'Discord' },
         { domain: 'spotify.com', name: 'Spotify' },
         { domain: 'twitch.tv', name: 'Twitch' },
-        { domain: 'netflix.com', name: 'Netflix' },
-        { domain: 'facebook.com', name: 'Facebook' },
-        { domain: 'reddit.com', name: 'Reddit' },
-        { domain: 'wikipedia.org', name: 'Wikipedia' },
+        { domain: 'poki.com', name: 'Poki', isGame: true },
+        { domain: 'crazygames.com', name: 'CrazyGames', isGame: true },
+        { domain: 'coolmathgames.com', name: 'CoolMathGames', isGame: true },
+        { domain: 'chess.com', name: 'Chess.com', isGame: true },
+        { domain: 'geoguessr.com', name: 'GeoGuessr' },
         { domain: 'amazon.com', name: 'Amazon' },
         { domain: 'github.com', name: 'GitHub' },
-        { domain: 'stackoverflow.com', name: 'Stack Overflow' },
-        { domain: 'linkedin.com', name: 'LinkedIn' },
+        { domain: 'x.com', name: 'X (Twitter)' },
+        { domain: 'instagram.com', name: 'Instagram' },
+        { domain: 'wikipedia.org', name: 'Wikipedia' },
+        { domain: 'steamcommunity.com', name: 'Steam' },
+        { domain: 'facebook.com', name: 'Facebook' },
+        { domain: 'snapchat.com', name: 'Snapchat' },
+        { domain: 'tumblr.com', name: 'Tumblr' },
         { domain: 'pinterest.com', name: 'Pinterest' },
-        { domain: 'steampowered.com', name: 'Steam' },
-        { domain: 'zoom.us', name: 'Zoom' },
-        { domain: 'paypal.com', name: 'PayPal' }
+        { domain: 'linkedin.com', name: 'LinkedIn' },
+        { domain: 'ebay.com', name: 'eBay' },
+        { domain: 'soundcloud.com', name: 'SoundCloud' }
     ],
 
     /**
@@ -65,6 +71,15 @@ const PhantomSearch = {
     init(inputId) {
         this.inputEl = document.getElementById(inputId);
         if (!this.inputEl) return;
+
+        // Detect root prefix
+        const script = document.currentScript || Array.from(document.querySelectorAll('script')).find(s => s.src.includes('scripts/search.js'));
+        if (script) {
+            const src = script.getAttribute('src');
+            if (src && src.includes('scripts/search.js')) {
+                this.rootPrefix = src.split('scripts/search.js')[0];
+            }
+        }
 
         // Create dropdown
         this.createDropdown();
@@ -96,64 +111,75 @@ const PhantomSearch = {
     },
 
     /**
+     * Normalize a game name for deduplication
+     */
+    normalizeForDedup(name) {
+        if (!name) return '';
+        return name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .trim();
+    },
+
+    /**
      * Load games from sources
      */
     async loadGames() {
         if (this.gamesLoaded) return;
-
+        const seenNormalized = new Set();
         try {
-            // Load from FeaturedGames
             if (window.FeaturedGames?.games) {
                 window.FeaturedGames.games.forEach(g => {
-                    if (g.name && g.url) {
-                        this.addGame(g.name, g.url, g.img);
-                    }
+                    if (g.name && g.url) this.addGame(g.name, g.url, g.img, seenNormalized);
                 });
             }
-
-            // Load from zones.json CDN
             const res = await fetch("https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json");
             const data = await res.json();
-
             data.forEach(g => {
                 const name = (g.name || g.title).replace('-a.html', '');
                 const url = (g.url || g.file)?.replace('{HTML_URL}', "https://cdn.jsdelivr.net/gh/gn-math/html@main");
-                if (name && url) this.addGame(name, url);
+                if (name && url) this.addGame(name, url, null, seenNormalized);
             });
-
-            // Load UGS files
             if (window.UGS_FILES) {
                 const prefix = "https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/";
                 window.UGS_FILES.forEach(file => {
                     const name = file.replace(/^cl/i, '');
                     const url = `${prefix}${encodeURIComponent(file.includes('.') ? file : file + '.html')}`;
-                    this.addGame(name, url);
+                    this.addGame(name, url, null, seenNormalized);
                 });
             }
-
             this.gamesLoaded = true;
         } catch (e) {
             console.warn('PhantomSearch: Failed to load games', e);
         }
     },
 
-    addGame(name, url, img) {
+    addGame(name, url, img, seenNormalized = null) {
         const formattedName = this.formatName(name);
-        const exists = this.allGames.some(g => g.name.toLowerCase() === formattedName.toLowerCase());
-        
-        if (!exists) {
-            this.allGames.push({
-                name: formattedName,
-                url: `pages/player.html?type=game&title=${encodeURIComponent(formattedName)}&url=${encodeURIComponent(url)}`,
-                img: img,
-                type: 'game'
-            });
+        const normalized = this.normalizeForDedup(formattedName);
+        if (seenNormalized) {
+            if (seenNormalized.has(normalized)) return;
+            seenNormalized.add(normalized);
+        } else {
+            const exists = this.allGames.some(g => this.normalizeForDedup(g.name) === normalized);
+            if (exists) return;
         }
+
+        // Fix: Don't wrap if it's already a player link or a page link
+        let finalUrl = url;
+        if (!url.includes('player.html') && !url.includes('pages/')) {
+            finalUrl = `pages/player.html?type=game&title=${encodeURIComponent(formattedName)}&url=${encodeURIComponent(url)}`;
+        }
+
+        this.allGames.push({
+            name: formattedName,
+            url: finalUrl,
+            img: img,
+            type: 'game',
+            normalized: normalized
+        });
     },
 
-    /**
-     * Load domains
-     */
     async loadDomains() {
         if (this.domainsLoaded) return;
         this.domainsLoaded = true;
@@ -169,21 +195,25 @@ const PhantomSearch = {
             .trim() : '';
     },
 
-    /**
-     * Handle input changes
-     */
     onInput(e) {
         const query = e.target.value.trim();
         if (query.length === 0) {
             this.hide();
             return;
         }
+
+        // Immediate local search
         this.search(query);
+
+        // Debounced external search (movies)
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            if (query.length >= 2) {
+                this.fetchExternalResults(query);
+            }
+        }, 300);
     },
 
-    /**
-     * Handle focus event
-     */
     onFocus() {
         const query = this.inputEl.value.trim();
         if (query.length > 0 && this.suggestions.length > 0) {
@@ -191,113 +221,229 @@ const PhantomSearch = {
         }
     },
 
-    /**
-     * Handle keyboard navigation
-     */
     onKeydown(e) {
-        if (!this.isOpen) {
-            if (e.key === 'Enter') {
-                // No dropdown open, do default search
-                return;
-            }
-            return;
-        }
-
+        if (!this.isOpen) return;
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
                 this.selectedIndex = Math.min(this.selectedIndex + 1, this.suggestions.length - 1);
                 this.updateSelection();
                 break;
-
             case 'ArrowUp':
                 e.preventDefault();
-                this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
                 this.updateSelection();
                 break;
-
             case 'Enter':
                 e.preventDefault();
-                if (this.selectedIndex >= 0) {
+                if (this.suggestions.length > 0) {
                     this.selectItem(this.suggestions[this.selectedIndex]);
-                } else if (this.suggestions.length > 0) {
-                    // Select first item
-                    this.selectItem(this.suggestions[0]);
                 }
                 break;
-
             case 'Escape':
                 this.hide();
                 break;
         }
     },
 
-    /**
-     * Handle click outside dropdown
-     */
     onClickOutside(e) {
         if (!this.dropdownEl.contains(e.target) && e.target !== this.inputEl) {
             this.hide();
         }
     },
 
-    search(query) {
+    /**
+     * Smart search with deduplication and prioritization
+     */
+    search(query, externalResults = null) {
         const q = query.toLowerCase();
+        const qNormalized = this.normalizeForDedup(query);
         const MAX_RESULTS = 7;
         const results = [];
+        const addedIds = new Set(); // Using ID or URL for stronger uniqueness
 
-        // Add matching games (max 4)
-        this.allGames
-            .filter(g => g.name.toLowerCase().includes(q))
-            .slice(0, 4)
-            .forEach(g => results.push(g));
+        const addResult = (item) => {
+            const id = item.url || item.id || item.name;
+            if (addedIds.has(id)) return false;
+            addedIds.add(id);
+            results.push(item);
+            return true;
+        };
 
-        // Add matching pages (max 2)
-        this.pages
-            .filter(p => p.name.toLowerCase().includes(q))
-            .slice(0, 2)
-            .forEach(p => results.push(p));
+        const queryMatchesGameDomain = this.gameConflictDomains.some(d => q.includes(d));
 
-        // Add matching movies (max 2)
-        this.popularMovies
-            .filter(movie => movie.name.toLowerCase().includes(q))
-            .slice(0, 2)
-            .forEach(movie => results.push({
-                name: movie.name,
-                url: `pages/player.html?type=movie&id=${movie.id}&title=${encodeURIComponent(movie.name)}`,
-                type: 'movie'
-            }));
+        // 1. GAMES (High Priority)
+        const scoredGames = this.allGames
+            .map(g => {
+                const nameLower = g.name.toLowerCase();
+                let score = 0;
+                if (nameLower === q) score = 100;
+                else if (g.normalized === qNormalized) score = 95;
+                else if (nameLower.startsWith(q)) score = 80;
+                else if (g.normalized.startsWith(qNormalized)) score = 75;
+                else if (nameLower.includes(q)) score = 50;
+                else if (g.normalized.includes(qNormalized)) score = 45;
+                return { ...g, score };
+            })
+            .filter(g => g.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4);
 
-        // Add matching domains (max 3)
-        this.popularDomains
-            .filter(d => d.domain.includes(q) || d.name.toLowerCase().includes(q))
-            .slice(0, 3)
-            .forEach(d => results.push({
-                name: d.name,
-                domain: d.domain,
-                type: 'domain',
-                icon: 'fa-globe',
-                url: `staticsjv2/index.html#https://${d.domain}`,
-                displayName: d.name
-            }));
-
-        // Add web search option
-        results.push({
-            name: `Search web for "${query}"`,
-            query: query,
-            type: 'web',
-            icon: 'fa-globe'
+        scoredGames.forEach(g => {
+            const url = g.url.startsWith('http') ? g.url : this.rootPrefix + g.url;
+            addResult({ ...g, url });
         });
 
-        this.suggestions = results.slice(0, MAX_RESULTS);
-        this.selectedIndex = -1;
+        // 2. PAGES
+        this.pages
+            .filter(p => p.name.toLowerCase().includes(q) || (p.keywords && p.keywords.some(k => k.includes(q))))
+            .slice(0, 2)
+            .forEach(p => addResult({ ...p, url: this.rootPrefix + p.url }));
+
+        // 3. MOVIES & TV (Combo of FEATURED and External)
+        const movieResults = [];
+        const IMG_URL = 'https://image.tmdb.org/t/p/w92'; // Small but clear
+
+        // Helper to process movie/tv objects
+        const processMedia = (m, baseScore) => {
+            const type = m.media_type || 'movie';
+            return {
+                name: m.title || m.name,
+                // Ensure media_type is correct in URL
+                url: `${this.rootPrefix}pages/player.html?type=${type}&id=${m.id}&title=${encodeURIComponent(m.title || m.name)}`,
+                type: type, // Use actual type ('movie' or 'tv') for correct icon/label
+                media_type: type, // Store actual type for logic
+                id: m.id,
+                overview: m.overview,
+                score: baseScore,
+                img: m.poster_path ? IMG_URL + m.poster_path : null
+            };
+        };
+
+        // First, check FEATURED if available
+        if (window.FEATURED) {
+            window.FEATURED.filter(m => (m.title || m.name).toLowerCase().includes(q))
+                .forEach(m => movieResults.push(processMedia(m, 70)));
+        }
+
+        // Add external results if provided
+        if (externalResults) {
+            externalResults.forEach(m => movieResults.push(processMedia(m, 60)));
+        }
+
+        // Sort by score
+        movieResults.sort((a, b) => b.score - a.score);
+
+        // "1 of the 2 suggested movies and tv" - Ensure diversity if possible
+        const topResults = [];
+        const movies = movieResults.filter(m => m.media_type === 'movie');
+        const tvShows = movieResults.filter(m => m.media_type === 'tv');
+
+        // Try to pick 1 movie and 1 TV show first (Diversity)
+        if (movies.length > 0) topResults.push(movies[0]);
+        if (tvShows.length > 0) topResults.push(tvShows[0]);
+
+        // Fill remaining slots if we don't have enough diversity, up to 2 total (as requested)
+        if (topResults.length < 2) {
+            // Add more from the sorted list that aren't already included
+            for (const m of movieResults) {
+                if (topResults.length >= 2) break;
+                if (!topResults.includes(m)) topResults.push(m);
+            }
+        }
+
+        // Sort the final selection again to prioritize best matches
+        topResults.sort((a, b) => b.score - a.score);
+
+        topResults.forEach(m => addResult(m));
+
+        // 4. DOMAINS
+        this.popularDomains
+            .filter(d => {
+                const matches = d.domain.includes(q) || d.name.toLowerCase().includes(q);
+                if (!matches) return false;
+                if (d.isGame && queryMatchesGameDomain && scoredGames.length > 0) return false;
+                return true;
+            })
+            .slice(0, 2)
+            .forEach(d => {
+                const url = d.url ? (d.url.startsWith('http') ? d.url : this.rootPrefix + d.url) : `${this.rootPrefix}staticsjv2/index.html#${encodeURIComponent('https://' + d.domain)}`;
+                addResult({
+                    name: d.name,
+                    domain: d.domain,
+                    type: 'domain',
+                    icon: 'fa-globe',
+                    url: url,
+                    displayName: d.name
+                });
+            });
+
+        // 5. Special keyword: "all games"
+        if (q === "all games" || q === "play games") {
+            addResult({ name: 'Browse all games', url: this.rootPrefix + 'pages/games.html', type: 'page', icon: 'fa-gamepad' });
+        }
+
+        // Create the web search fallback item
+        const webSearchItem = {
+            name: `Search the web for "${query}"`,
+            query: query,
+            type: 'web',
+            icon: 'fa-search'
+        };
+
+        const MAX_TOTAL = 5;
+        const MOVIE_LIMIT = 3;
+
+        const nonWebResults = results.filter(r => r.type !== 'web');
+
+        let movieCount = 0;
+        const filteredNonWeb = nonWebResults.filter(r => {
+            const isMedia = r.type === 'movie' || r.type === 'tv';
+            if (isMedia) {
+                if (movieCount < MOVIE_LIMIT) {
+                    movieCount++;
+                    return true;
+                }
+                return false;
+            }
+            return true;
+        });
+
+        // Take up to 4 non-web results
+        const finalSuggestions = filteredNonWeb.slice(0, MAX_TOTAL - 1);
+
+        // Always push web search at the end
+        finalSuggestions.push(webSearchItem);
+
+        this.suggestions = finalSuggestions;
         this.render();
         this.show();
     },
 
     /**
-     * Render the dropdown
+     * Fetch external results with a cache
      */
+    async fetchExternalResults(query) {
+        if (this.movieCache[query]) {
+            this.search(query, this.movieCache[query]);
+            return;
+        }
+
+        const API_KEY = window.API_KEY || '2713804610e1e236b1cf44bfac3a7776';
+        const url = `https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`;
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            const movies = data.results.filter(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path).slice(0, 5);
+
+            this.movieCache[query] = movies;
+            this.search(query, movies);
+        } catch (e) {
+            console.warn('PhantomSearch: External search failed', e);
+        }
+    },
+
     render() {
         if (this.suggestions.length === 0) {
             this.dropdownEl.innerHTML = '';
@@ -307,31 +453,36 @@ const PhantomSearch = {
         this.dropdownEl.innerHTML = this.suggestions.map((item, index) => {
             const icons = {
                 game: 'fa-gamepad',
-                page: item.icon,
+                page: item.icon || 'fa-link',
                 movie: 'fa-film',
+                tv: 'fa-tv',
                 domain: 'fa-globe',
-                web: 'fa-globe'
+                web: 'fa-search'
             };
-            
+
             const labels = {
                 game: 'Game',
                 page: 'Page',
                 movie: 'Movie',
+                tv: 'TV Show',
                 domain: 'Website',
-                web: 'Web'
+                web: 'Search'
             };
+
+            const iconHtml = item.img ?
+                `<img src="${item.img}" class="search-autocomplete-thumb" alt="">` :
+                `<i class="fa-solid ${icons[item.type]}"></i>`;
 
             return `
                 <div class="search-autocomplete-item${index === this.selectedIndex ? ' selected' : ''}"
                      data-index="${index}" role="option" aria-selected="${index === this.selectedIndex}">
-                    <span class="search-autocomplete-icon"><i class="fa-solid ${icons[item.type]}"></i></span>
+                    <span class="search-autocomplete-icon">${iconHtml}</span>
                     <span class="search-autocomplete-text">${this.escapeHtml(item.displayName || item.name)}</span>
                     <span class="search-autocomplete-type">${labels[item.type]}</span>
                 </div>
             `;
         }).join('');
 
-        // Add click handlers
         this.dropdownEl.querySelectorAll('.search-autocomplete-item').forEach((el, index) => {
             el.addEventListener('click', () => this.selectItem(this.suggestions[index]));
             el.addEventListener('mouseenter', () => {
@@ -341,9 +492,6 @@ const PhantomSearch = {
         });
     },
 
-    /**
-     * Update visual selection
-     */
     updateSelection() {
         const items = this.dropdownEl.querySelectorAll('.search-autocomplete-item');
         items.forEach((el, i) => {
@@ -352,53 +500,49 @@ const PhantomSearch = {
         });
     },
 
-    /**
-     * Select an item and navigate
-     */
     selectItem(item) {
         this.hide();
-
         if (item.type === 'web') {
-            // Web search
             this.doWebSearch(item.query);
         } else if (item.url) {
-            // Navigate to page/game
+            // Store movie/TV data for the player to read
+            if (item.type === 'movie' || item.type === 'tv' || item.media_type === 'movie' || item.media_type === 'tv') {
+                sessionStorage.setItem('currentMovie', JSON.stringify({
+                    id: item.id,
+                    title: item.name,
+                    overview: item.overview,
+                    media_type: item.media_type || (item.type === 'movie' ? 'movie' : 'tv')
+                }));
+
+                // Fix TV Show URL path if missing season/episode
+                if (item.media_type === 'tv' && !item.url.includes('season=')) {
+                    item.url += '&season=1&episode=1';
+                }
+            }
             window.location.href = item.url;
         }
     },
 
-    /**
-     * Perform web search
-     */
     doWebSearch(query) {
         const isDomain = query.includes('.') && !query.includes(' ');
         const url = isDomain ?
             (query.startsWith('http') ? query : 'https://' + query) :
             'https://search.brave.com/search?q=' + encodeURIComponent(query);
-            
-        window.location.href = 'staticsjv2/index.html#' + encodeURIComponent(url);
+
+        window.location.href = this.rootPrefix + 'staticsjv2/index.html#' + encodeURIComponent(url);
     },
 
-    /**
-     * Show dropdown
-     */
     show() {
         this.isOpen = true;
         this.dropdownEl.classList.add('open');
     },
 
-    /**
-     * Hide dropdown
-     */
     hide() {
         this.isOpen = false;
-        this.selectedIndex = -1;
+        this.selectedIndex = 0;
         this.dropdownEl.classList.remove('open');
     },
 
-    /**
-     * Escape HTML to prevent XSS
-     */
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -406,13 +550,10 @@ const PhantomSearch = {
     }
 };
 
-// Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize on the search input if it exists
     if (document.getElementById('search-input')) {
         PhantomSearch.init('search-input');
     }
 });
 
-// Expose globally
 window.PhantomSearch = PhantomSearch;

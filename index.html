@@ -37,9 +37,9 @@
         .loading-screen {
             position: fixed;
             inset: 0;
-            background: var(--bg, #0a0a0a);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -99,7 +99,9 @@
         .launch-screen {
             position: fixed;
             inset: 0;
-            background: var(--bg, #0a0a0a);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -131,17 +133,29 @@
             opacity: 0.5;
         }
 
-
         iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
+
+        /* Panic white screen */
+        #panic-overlay {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 99999;
+            display: none;
+        }
     </style>
     <script src="config.js"></script>
     <script src="scripts/settings.js"></script>
+    <script src="scripts/background.js"></script>
     <script src="scripts/cloaking.js"></script>
+    <script>Settings.apply();</script>
     <link rel="stylesheet" href="styles/error.css">
+    <link rel="stylesheet" href="styles/background.css">
+
 </head>
 
 <body>
@@ -230,7 +244,52 @@
         <button id="launch-button" class="launch-button"> Launch Phantom</button>
     </div>
 
+    <!-- Panic White Screen Overlay -->
+    <div id="panic-overlay"></div>
+
     <iframe id="main-frame"></iframe>
+
+    <script>
+        // Panic Key Handler for index.html - Fast white screen
+        document.addEventListener('keydown', (e) => {
+            // Get settings
+            let panicKey = 'x';
+            let panicModifiers = ['ctrl', 'shift'];
+            let panicUrl = 'https://classroom.google.com';
+
+            try {
+                const settings = JSON.parse(localStorage.getItem('void_settings') || '{}');
+                if (settings.panicKey) panicKey = settings.panicKey;
+                if (settings.panicModifiers) panicModifiers = settings.panicModifiers;
+                if (settings.panicUrl) panicUrl = settings.panicUrl;
+            } catch (err) { }
+
+            // Check if required modifiers are pressed
+            const ctrlRequired = panicModifiers.includes('ctrl');
+            const shiftRequired = panicModifiers.includes('shift');
+            const altRequired = panicModifiers.includes('alt');
+
+            // Match if required modifiers match AND unrequired modifiers are not pressed
+            const ctrlMatch = ctrlRequired ? e.ctrlKey : !e.ctrlKey;
+            const shiftMatch = shiftRequired ? e.shiftKey : !e.shiftKey;
+            const altMatch = altRequired ? e.altKey : !e.altKey;
+
+            if (ctrlMatch && shiftMatch && altMatch && e.key.toLowerCase() === panicKey.toLowerCase()) {
+                e.preventDefault();
+
+                // Show white screen instantly
+                const overlay = document.getElementById('panic-overlay');
+                overlay.style.display = 'block';
+
+                // Redirect immediately
+                try {
+                    window.location.replace(panicUrl);
+                } catch (err) {
+                    window.location.href = panicUrl;
+                }
+            }
+        }, true); // Use capture phase for faster response
+    </script>
 
     <script>
         const loadingScreen = document.getElementById('loading-screen');

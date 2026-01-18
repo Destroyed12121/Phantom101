@@ -6,6 +6,10 @@ window.QUOTES = [
     "FULL BOX",
     "FULL PIECE",
     "200!",
-    "press ctrl+shift+q+q for hacks",
-    "TEACHERR!"
+    "press esc + refresh + power button for hacks",
+    "press ctrl+x to hide your screen",
+    "change the tab title and favicon in settings",
+    "TEACHERR!",
+    "lebron lebron lebronn james",
+    "lebron OUR goat"
 ];
