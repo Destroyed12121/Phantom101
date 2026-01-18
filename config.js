@@ -16,17 +16,17 @@ window.SITE_CONFIG = {
 
     // Changelog
     changelog: [
-     "added adblock to proxy",
-     "ai chat more",
-     "fixxed backgrounds",
-     "fixxed backgrounrds not showing in loading screen",
-     "added more backgrounds",
-     "added autoswitching for wisp servers and deleted old ones",
-     "fixxed movie search suggestions",
-     "fixxed game search suggestions",
-     "fixxed code runner page not opening your code",
-     "many misc fixxes",
-     "suggest features in the discord server"
+        "added adblock to proxy",
+        "ai chat more",
+        "fixxed backgrounds",
+        "fixxed backgrounrds not showing in loading screen",
+        "added more backgrounds",
+        "added autoswitching for wisp servers and deleted old ones",
+        "fixxed movie search suggestions",
+        "fixxed game search suggestions",
+        "fixxed code runner page not opening your code",
+        "many misc fixxes",
+        "suggest features in the discord server"
     ],
 
     // Discord
@@ -45,17 +45,31 @@ window.SITE_CONFIG = {
         overlay: 0.3
     },
     // Default settings
+    featuredBackground: {
+        id: 'jynxiixixbxcuiboxcvbhxc8fuiyklfdsngs', // Change this ID to push a new background to all users
+        active: false, //true to make it featured
+        name: 'Featured',
+        type: 'video',
+        url: 'https://www.youtube.com/watch?v=UydK8DEbLc4',
+        overlay: 0.3
+    },
+    // Default settings
     firstVisitCloak: false, // this controls the fake error page
     defaults: {
         cloakMode: "about:blank",
+        tabTitle: "You've already responded",
+        tabFavicon: "https://ssl.gstatic.com/docs/spreadsheets/forms/forms_icon_2023q4.ico",
         tabTitle: "You've already responded",
         tabFavicon: "https://ssl.gstatic.com/docs/spreadsheets/forms/forms_icon_2023q4.ico",
         cloakRotation: false,
         cloakInterval: 5000,
         panicKey: "x",
         panicModifiers: ["ctrl", "shift"],
+        panicKey: "x",
+        panicModifiers: ["ctrl", "shift"],
         panicUrl: "https://classroom.google.com",
         maxMovieRating: "R",
+        gameLibrary: "multi",
         gameLibrary: "multi",
         discordWidget: true,
         miniplayer: true, //not here yet
@@ -63,6 +77,15 @@ window.SITE_CONFIG = {
         showChangelogOnUpdate: true,
         themeRotation: true,
         lastThemeRotation: 0,
+        backgroundRotation: true,
+        lastBackgroundRotation: 0,
+        lastSeenFeatured: 'none',
+        background: { type: 'color', value: '#0a0a0a' },
+        customBackground: { id: 'none', type: 'none' },
+        accentColor: '#ffffff',
+        surfaceColor: '#0f0f0f',
+        secondaryColor: '#2e2e33',
+        textColor: '#e4e4e7',
         backgroundRotation: true,
         lastBackgroundRotation: 0,
         lastSeenFeatured: 'none',
@@ -89,7 +112,7 @@ window.SITE_CONFIG = {
 
     // Background Presets
     backgroundPresets: [
-      
+
         { id: 'none', name: 'None (Theme Default)', type: 'none' },
         { id: 'Night sky', name: 'Night sky', type: 'image', url: 'https://images.pexels.com/photos/5675745/pexels-photo-5675745.jpeg', overlay: 0.3 },
         { id: 'winter-mountains', name: 'Winter mountains', type: 'image', url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg', overlay: 0.3 },
@@ -100,16 +123,38 @@ window.SITE_CONFIG = {
         { id: 'railroad', name: 'Railroad', type: 'image', url: 'https://images.unsplash.com/photo-1505832018823-50331d70d237', overlay: 0.3 },
         { id: 'another-mountain', name: 'Another Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/jms-kFHz9Xh3PPU-unsplash.jpg', overlay: 0.3 },
         { id: 'mountain', name: 'Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/clay-banks-u27Rrbs9Dwc-unsplash.jpg', overlay: 0.3 },
-    
-    
-    
-    
-    
+
+
+
+
+
+    ],
+
+
+    // Background Presets
+    backgroundPresets: [
+
+        { id: 'none', name: 'None (Theme Default)', type: 'none' },
+        { id: 'Night sky', name: 'Night sky', type: 'image', url: 'https://images.pexels.com/photos/5675745/pexels-photo-5675745.jpeg', overlay: 0.3 },
+        { id: 'winter-mountains', name: 'Winter mountains', type: 'image', url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg', overlay: 0.3 },
+        { id: 'f1 car', name: 'F1 Car', type: 'image', url: 'https://images.pexels.com/photos/14401632/pexels-photo-14401632.jpeg', overlay: 0.3 },
+        { id: 'moon-landing', name: 'Moon Landing', type: 'image', url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg', overlay: 0.3, objectPosition: 'top left' },
+        { id: 'turtle', name: 'Turtle', type: 'image', url: 'https://images.unsplash.com/photo-1501791187590-9ef2612ba1eb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', overlay: 0.3 },
+        { id: 'road', name: 'Road', type: 'image', url: 'https://images.unsplash.com/photo-1508233620467-f79f1e317a05', overlay: 0.3 },
+        { id: 'railroad', name: 'Railroad', type: 'image', url: 'https://images.unsplash.com/photo-1505832018823-50331d70d237', overlay: 0.3 },
+        { id: 'another-mountain', name: 'Another Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/jms-kFHz9Xh3PPU-unsplash.jpg', overlay: 0.3 },
+        { id: 'mountain', name: 'Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/clay-banks-u27Rrbs9Dwc-unsplash.jpg', overlay: 0.3 },
+
+
+
+
+
     ],
 
 
     // Tab Cloaks
     cloakPresets: [
+        { name: "Phantom", icon: "/favicon.svg", title: "Phantom Unblocked" },
         { name: "Phantom", icon: "/favicon.svg", title: "Phantom Unblocked" },
         { name: "Edpuzzle", icon: "https://edpuzzle.imgix.net/favicons/favicon-32.png", title: "Edpuzzle" },
         { name: "Google Docs", icon: "https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico", title: "Untitled document - Google Docs" },
@@ -117,6 +162,7 @@ window.SITE_CONFIG = {
         { name: "Desmos", icon: "https://www.desmos.com/favicon.ico", title: "Desmos | Graphing Calculator" },
         { name: "Khan Academy", icon: "https://cdn.kastatic.org/images/favicon.ico", title: "Khan Academy" },
         { name: "Wikipedia", icon: "https://en.wikipedia.org/favicon.ico", title: "World War II - Wikipedia" },
+        { name: "Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png", title: "Home - Classroom" },
         { name: "Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png", title: "Home - Classroom" },
         { name: "Canva", icon: "https://static.canva.com/static/images/android-192x192-2.png", title: "Home - Canva" },
         { name: "Quiz", icon: "https://ssl.gstatic.com/docs/spreadsheets/forms/forms_icon_2023q4.ico", title: "You've already responded" },

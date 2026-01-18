@@ -21,6 +21,7 @@
 fix music page to hide youtube player unless toggled via 3 dot small button, and always shown on proxy mode, fix all the controls for video time, volume,
 add singlefile using cdns for each page so it autoupdates and is easy enough to make
 advertise phantom (too much work tbh)
+advertise phantom (too much work tbh)
 revamp movies page to 'watch'(lowk copy vapor v4) and add youtube and twitch
 shorten some page's code
 ***fix paths in search autocomplete***

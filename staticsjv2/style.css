@@ -50,6 +50,7 @@ body.phantom-bg-active .nav {
     padding: 8px 8px 0;
     gap: 4px;
     background: transparent;
+    background: transparent;
     overflow-x: auto;
 }
 
@@ -522,10 +523,23 @@ input.bar::placeholder {
 
 .custom-input-group:focus-within {
     border-color: var(--accent);
+    background: var(--bg);
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.custom-input-group:focus-within {
+    border-color: var(--accent);
 }
 
 .custom-input-group input {
     flex: 1;
+    height: 32px;
+    padding: 0 10px;
+    background: transparent;
+    border: none;
     height: 32px;
     padding: 0 10px;
     background: transparent;
@@ -542,6 +556,11 @@ input.bar::placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--accent);
     border: none;
     border-radius: 6px;
@@ -549,10 +568,17 @@ input.bar::placeholder {
     cursor: pointer;
     transition: opacity 0.15s, transform 0.15s;
     flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    flex-shrink: 0;
 }
 
 .custom-input-group button:hover {
     opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.custom-input-group button:active {
+    transform: scale(0.95);
     transform: scale(1.05);
 }
 
@@ -568,7 +594,18 @@ input.bar::placeholder {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+
+.settings-footer::before {
+    content: '\f05a';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
 
 .settings-footer::before {
     content: '\f05a';
@@ -594,6 +631,7 @@ input.bar::placeholder {
 .flex {
     display: flex;
 }
+
 /* Toggle Switch */
 .toggle-switch {
     width: 36px;

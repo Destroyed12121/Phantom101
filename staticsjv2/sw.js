@@ -291,7 +291,7 @@ scramjet.addEventListener("request", async (e) => {
                     errMsg.includes("handshake") ||
                     errMsg.includes("reset");
 
-                if (!isRetryable || i === MAX_RETRIES || e.method !== 'GET') break;
+                    if (!isRetryable || i === MAX_RETRIES || e.method !== 'GET') break;
 
                 console.warn(`Scramjet retry ${i + 1}/${MAX_RETRIES} for ${e.url} due to: ${err.message}`);
                 await new Promise(r => setTimeout(r, 500 * (i + 1)));
@@ -325,7 +325,47 @@ scramjet.addEventListener("request", async (e) => {
             }
         }
 
-        console.error("Scramjet Final Fetch Error:", lastErr);
-        return new Response("Scramjet Fetch Error: " + lastErr.message, { status: 502 });
+            console.error("Scramjet Final Fetch Error:", lastErr);
+
+            // Auto-refreshing error page for main document requests
+            const isHtml = e.url.split('?')[0].split('#')[0].match(/\.(html|php|asp|aspx)$/i) || !e.url.split('?')[0].split('#')[0].includes('.');
+
+            if (isHtml && e.method === 'GET') {
+                return new Response(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Proxy Error - Auto Refreshing...</title>
+                        <style>
+                            body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                            .card { padding: 40px; border-radius: 16px; background: #111; border: 1px solid #222; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+                            .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+                            @keyframes spin { to { transform: rotate(360deg); } }
+                            h1 { font-size: 1.5rem; margin-bottom: 12px; font-weight: 600; color: #ef4444; }
+                            p { color: #9ca3af; font-size: 0.95rem; line-height: 1.5; }
+                            .error-code { font-family: monospace; background: #1a1a1a; padding: 4px 8px; border-radius: 4px; color: #f87171; font-size: 0.8rem; margin: 15px 0; display: inline-block; }
+                        </style>
+                        <script>
+                            setTimeout(() => location.reload(), 3000);
+                        </script>
+                    </head>
+                    <body>
+                        <div class="card">
+                            <div class="spinner"></div>
+                            <h1>Site Unavailable</h1>
+                            <p>We're having trouble connecting to the destination. This could be due to a server issue or an offline proxy.</p>
+                            <div class="error-code">${lastErr.message}</div>
+                            <p style="font-size: 0.85em; opacity: 0.7;">StaticsJ is automatically attempting to reconnect and find a working server...</p>
+                        </div>
+                    </body>
+                    </html>
+                `, { status: 502, headers: { 'Content-Type': 'text/html' } });
+            }
+
+            return new Response("Proxy Fetch Error: " + lastErr.message, { status: 502 });
+        } catch (fatalErr) {
+            console.error("SW: Fatal fetch error:", fatalErr);
+            return new Response("Fatal Proxy Error: " + fatalErr.message, { status: 500 });
+        }
     })();
 });
