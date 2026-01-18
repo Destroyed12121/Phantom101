@@ -1,12 +1,10 @@
 // =====================================================
 // CONFIGURATION - Gets from config.js
 // =====================================================
-const DEFAULT_WISP = window.SITE_CONFIG?.defaultWisp || "wss://dash.goip.de/wisp/";
-const WISP_SERVERS = window.SITE_CONFIG?.wispServers || [
-    { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
-    { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" }
-];
+const DEFAULT_WISP = window.SITE_CONFIG?.defaultWisp ?? "wss://glseries.net/wisp/";
+const WISP_SERVERS = window.SITE_CONFIG?.wispServers ?? [];
 
+// Initialize default proxy server if not set
 if (!localStorage.getItem("proxServer")) {
     localStorage.setItem("proxServer", DEFAULT_WISP);
 }
@@ -28,20 +26,20 @@ async function pingWispServer(url, timeout = 2000) {
         try {
             const ws = new WebSocket(url);
             const timer = setTimeout(() => {
-                try { ws.close(); } catch { }
+                try { ws.close(); } catch {}
                 resolve({ url, success: false, latency: null });
             }, timeout);
 
             ws.onopen = () => {
                 clearTimeout(timer);
                 const latency = Date.now() - start;
-                try { ws.close(); } catch { }
+                try { ws.close(); } catch {}
                 resolve({ url, success: true, latency });
             };
 
             ws.onerror = () => {
                 clearTimeout(timer);
-                try { ws.close(); } catch { }
+                try { ws.close(); } catch {}
                 resolve({ url, success: false, latency: null });
             };
         } catch {
@@ -82,10 +80,10 @@ async function initializeWithBestServer() {
     }
 
     const currentUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
-
+    
     // Check if current server is working, if not find a better one
     const currentCheck = await pingWispServer(currentUrl, 2000);
-
+    
     if (currentCheck.success) {
         console.log("Init: Current server is working:", currentUrl, currentCheck.latency + "ms");
         return;
@@ -94,7 +92,7 @@ async function initializeWithBestServer() {
     // Current server is bad, find the fastest working server
     console.log("Init: Current server not responding, finding better server...");
     const best = await findBestWispServer(allServers, currentUrl);
-
+    
     if (best && best !== currentUrl) {
         console.log("Init: Auto-switching to faster server:", best);
         localStorage.setItem("proxServer", best);
@@ -106,7 +104,7 @@ async function initializeWithBestServer() {
 // =====================================================
 // BROWSER STATE
 // =====================================================
-const BareMux = window.BareMux ?? { BareMuxConnection: class { setTransport() { } } };
+const BareMux = window.BareMux ?? { BareMuxConnection: class { setTransport() {} } };
 
 // SINGLETON: Shared resources for all tabs (prevents connection exhaustion)
 let sharedScramjet = null;
@@ -146,7 +144,7 @@ async function getSharedScramjet() {
 
     const basePath = getBasePath();
     const { ScramjetController } = $scramjetLoadController();
-
+    
     sharedScramjet = new ScramjetController({
         prefix: basePath + "scramjet/",
         files: {
@@ -155,63 +153,51 @@ async function getSharedScramjet() {
             sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
         }
     });
-
-    await scramjet.init();
-
-    if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.register(basePath + 'sw.js', { scope: basePath });
-        await navigator.serviceWorker.ready;
-        const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
-        const allServers = [...WISP_SERVERS, ...getStoredWisps()];
-
-        const swConfig = {
-            type: "config",
-            wispurl: wispUrl,
-            servers: allServers
-        };
-
-        const sw = reg.active || navigator.serviceWorker.controller;
-        if (sw) {
-            console.log("Sending config to SW:", swConfig);
-            sw.postMessage(swConfig);
-            if (localStorage.getItem('wispAutoswitch') !== 'false') {
-                sw.postMessage({ type: "config", autoswitch: true });
-            } else {
-                sw.postMessage({ type: "config", autoswitch: false });
-            }
-        }
-
-        if (navigator.serviceWorker.controller && navigator.serviceWorker.controller !== sw) {
-            navigator.serviceWorker.controller.postMessage(swConfig);
-        }
-
-        navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data.type === 'wispChanged') {
-                console.log("SW reported Wisp Change:", event.data);
-                localStorage.setItem("proxServer", event.data.url);
-                if (typeof Notify !== 'undefined') {
-                    Notify.info('Autoswitched Proxy', `Now using ${event.data.name} because the previous server was slow or offline.`);
+    
+    try {
+        await sharedScramjet.init();
+    } catch (err) {
+        // Handle IndexedDB schema errors by clearing cache and retrying
+        if (err.message && err.message.includes('IDBDatabase') || err.message && err.message.includes('object stores')) {
+            console.warn('Scramjet IndexedDB error, clearing cache and retrying...');
+            
+            // Clear IndexedDB for Scramjet
+            try {
+                const dbNames = ['scramjet-data', 'scrambase', 'ScramjetData'];
+                for (const dbName of dbNames) {
+                    const req = indexedDB.deleteDatabase(dbName);
+                    req.onsuccess = () => console.log(`Cleared IndexedDB: ${dbName}`);
+                    req.onerror = () => console.warn(`Failed to clear IndexedDB: ${dbName}`);
                 }
-            } else if (event.data.type === 'wispError') {
-                console.error("SW reported Wisp Error:", event.data);
-                if (typeof Notify !== 'undefined') {
-                    Notify.error('Proxy Error', event.data.message);
-                }
+            } catch (clearErr) {
+                console.warn('Failed to clear IndexedDB:', clearErr);
             }
-        });
-
-        reg.update();
-
-        const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-        await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
+            
+            // Reset shared instance and retry
+            sharedScramjet = null;
+            return getSharedScramjet();
+        }
+        throw err;
     }
+    
+    return sharedScramjet;
+}
 
-    await initializeBrowser();
-};
+async function getSharedConnection() {
+    if (sharedConnectionReady) return sharedConnection;
 
-// =====================================================
-// BROWSER UI
-// =====================================================
+    const basePath = getBasePath();
+    const wispUrl = localStorage.getItem("proxServer") ?? DEFAULT_WISP;
+    
+    sharedConnection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
+    await sharedConnection.setTransport(
+        "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
+        [{ wisp: wispUrl }]
+    );
+    sharedConnectionReady = true;
+    return sharedConnection;
+}
+
 async function initializeBrowser() {
     const root = document.getElementById("app");
     root.innerHTML = `
@@ -321,7 +307,7 @@ function createTab(makeActive = true) {
             tab.title = "Browsing";
             tab.favicon = null;
         }
-
+        
         updateTabsUI();
         updateAddressBar();
         updateLoadingBar(tab, 10);
@@ -386,7 +372,7 @@ function switchTab(tabId) {
 
     if (tab) {
         showIframeLoading(tab.loading, tab.url);
-
+        
         const skipBtn = document.getElementById('skip-btn');
         if (tab.loading && tab.loadStartTime && skipBtn) {
             const elapsed = Date.now() - tab.loadStartTime;
@@ -404,12 +390,12 @@ function closeTab(tabId) {
 
     const tab = tabs[idx];
     clearTimeout(tab.skipTimeout);
-
+    
     if (tab.frame?.frame) {
         tab.frame.frame.src = 'about:blank';
         tab.frame.frame.remove();
     }
-
+    
     tabs.splice(idx, 1);
 
     if (activeTabId === tabId) {
@@ -428,9 +414,9 @@ function updateTabsUI() {
         const el = document.createElement("div");
         el.className = `tab ${tab.id === activeTabId ? "active" : ""}`;
 
-        const iconHtml = tab.loading
+        const iconHtml = tab.loading 
             ? `<div class="tab-spinner"></div>`
-            : tab.favicon
+            : tab.favicon 
                 ? `<img src="${tab.favicon}" class="tab-favicon" onerror="this.style.display='none'">`
                 : '';
 
@@ -461,11 +447,11 @@ function handleSubmit(url) {
     if (!input) return;
 
     if (!input.startsWith('http')) {
-        input = input.includes('.') && !input.includes(' ')
+        input = input.includes('.') && !input.includes(' ') 
             ? `https://${input}`
             : `https://search.brave.com/search?q=${encodeURIComponent(input)}`;
     }
-
+    
     tab.loading = true;
     showIframeLoading(true, input);
     updateLoadingBar(tab, 10);
@@ -532,15 +518,11 @@ function renderServerList() {
         checkServerHealth(server.url, item);
     });
 
-
     // Add Autoswitch Toggle
+    const isAutoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
     const toggleContainer = document.createElement('div');
     toggleContainer.className = 'wisp-option';
-    toggleContainer.style.marginTop = '10px';
-    toggleContainer.style.cursor = 'default';
-
-    const isAutoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
-
+    toggleContainer.style.cssText = 'margin-top: 10px; cursor: default;';
     toggleContainer.innerHTML = `
         <div class="wisp-option-header" style="justify-content: space-between;">
             <div class="wisp-option-name"><i class="fa-solid fa-rotate" style="margin-right:8px"></i> Auto-switch on failure</div>
@@ -553,19 +535,11 @@ function renderServerList() {
     toggleContainer.onclick = () => {
         const newState = !isAutoswitch;
         localStorage.setItem('wispAutoswitch', newState);
-        const toggle = document.getElementById('autoswitch-toggle');
-        toggle.classList.toggle('active', newState);
+        document.getElementById('autoswitch-toggle').classList.toggle('active', newState);
 
-        if (navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({ type: 'config', autoswitch: newState });
-        }
-
-        // Re-render to update UI state if needed, but local toggle manipulation is enough
-        // renderServerList(); 
-        // Actually, let's just update the variable for next time or rely on DOM
-        location.reload(); // Simple reload to apply strict changes if needed, or just let SW handle it
-        // Ideally no reload needed for this setting.
-        if (typeof Notify !== 'undefined') Notify.success('Settings Saved', `Autoswitch ${newState ? 'Enabled' : 'Disabled'}`);
+        navigator.serviceWorker.controller?.postMessage({ type: 'config', autoswitch: newState });
+        notify('success', 'Settings Saved', `Autoswitch ${newState ? 'Enabled' : 'Disabled'}`);
+        location.reload();
     };
 
     list.appendChild(toggleContainer);
@@ -590,9 +564,10 @@ function saveCustomWisp() {
     const newServer = { name: `Custom ${customWisps.length + 1}`, url };
     customWisps.push(newServer);
     localStorage.setItem('customWisps', JSON.stringify(customWisps));
-
-    if (typeof Notify !== 'undefined') Notify.success('Server Added', `Added ${url} to your server list.`);
-
+    
+    // Switch to the newly added server
+    setWisp(url);
+    
     input.value = '';
 }
 
@@ -617,6 +592,39 @@ async function checkServerHealth(url, element) {
     const markOffline = () => {
         dot.classList.add('status-error');
         text.textContent = "Offline";
+    };
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
+        
+        await fetch(url.replace('wss://', 'https://').replace('/wisp/', '/health') || url, {
+            method: 'HEAD',
+            signal: controller.signal,
+            mode: 'no-cors'
+        });
+        
+        clearTimeout(timeout);
+        dot.classList.add('status-success');
+        text.textContent = `${Date.now() - start}ms`;
+    } catch {
+        // Fallback: quick WebSocket test
+        try {
+            const wsTest = new WebSocket(url);
+            wsTest.onopen = () => {
+                dot.classList.add('status-success');
+                text.textContent = `${Date.now() - start}ms`;
+                wsTest.close();
+            };
+            wsTest.onerror = markOffline;
+            
+            setTimeout(() => {
+                if (wsTest.readyState !== WebSocket.OPEN) {
+                    wsTest.close();
+                    markOffline();
+                }
+            }, 1000);
+        } catch { markOffline(); }
     }
 }
 
@@ -664,20 +672,20 @@ document.addEventListener('DOMContentLoaded', async function () {
     try {
         // Proactively find the best server before initializing
         await initializeWithBestServer();
-
+        
         await getSharedScramjet();
         await getSharedConnection();
 
         if ('serviceWorker' in navigator) {
             const reg = await navigator.serviceWorker.register(getBasePath() + 'sw.js', { scope: getBasePath() });
-
+            
             // Wait for SW to be ready
             await navigator.serviceWorker.ready;
-
+            
             const wispUrl = localStorage.getItem("proxServer") ?? DEFAULT_WISP;
             const allServers = getAllWispServers();
             const autoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
-
+            
             const swConfig = {
                 type: "config",
                 wispurl: wispUrl,

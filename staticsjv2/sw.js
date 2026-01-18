@@ -59,7 +59,7 @@ function isAdBlocked(url) {
             .replace(/\*/g, '.*')
             .replace(/\./g, '\\.')
             .replace(/\?/g, '\\?');
-        const regex = new RegExp('^' + regexPattern + '$', 'i');
+        const regex = new RegExp(regexPattern, 'i');
         if (regex.test(urlStr)) {
             return true;
         }
@@ -256,7 +256,8 @@ self.addEventListener("fetch", (event) => {
 
 scramjet.addEventListener("request", async (e) => {
     e.response = (async () => {
-        await configReadyPromise;
+        try {
+            await configReadyPromise;
         
         if (!wispConfig.wispurl) {
             return new Response("Wisp URL not configured", { status: 500 });

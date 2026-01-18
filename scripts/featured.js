@@ -11,9 +11,7 @@ let featuredGames = [
     { name: 'Settings', icon: 'fa-solid fa-cog', url: 'pages/settings.html' },
     { name: 'Subway Surfers', img: 'i gotta simplify this code someday', gameName: 'Subway Surfers' },
     { name: 'Retro Bowl', img: 'i gotta simplify this code someday', gameName: 'Retro Bowl' },
-    { name: 'Retro Bowl', img: 'i gotta simplify this code someday', gameName: 'Retro Bowl' },
-    { name: 'Basket Random', img: 'i gotta simplify this code someday', gameName: 'Basket Random' },
-    { name: 'Geometry Dash', img: 'i gotta simplify this code someday', gameName: 'Geometry Dash Lite' },
+    { name: 'Basket Random', img: 'i gotta simplify this code someday', gameName: 'Basket Random' },,
     { name: 'Geometry Dash', img: 'i gotta simplify this code someday', gameName: 'Geometry Dash Lite' },
     { name: 'Code Runner', icon: 'fa-solid fa-code', url: 'pages/code.html' },
 
