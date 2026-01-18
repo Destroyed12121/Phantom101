@@ -11,5 +11,5 @@ window.QUOTES = [
     "change the tab title and favicon in settings",
     "TEACHERR!",
     "lebron lebron lebronn james",
-    "lebron OUR goat"
+    "lebron is OUR goat"
 ];
