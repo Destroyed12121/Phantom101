@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <meta name="referrer" content="origin">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../styles/card.css">
+    <link rel="stylesheet" href="../styles/movies.css">
+    <link rel="stylesheet" href="../styles/background.css">
+</head>
+
+<body>
+    <script src="../components/topbar.js"></script>
+
+    <div class="movies-page">
+        <header class="page-header">
+            <h1 class="page-title">Movies & TV</h1>
+            <p class="page-subtitle">Stream movies and TV shows</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search movies & TV...">
+                <div class="search-suggestions" id="suggestions"></div>
+            </div>
+            <div class="tab-toggle">
+                <button class="tab-btn active" id="movies-tab">Movies</button>
+                <button class="tab-btn" id="tv-tab">TV Shows</button>
+            </div>
+            <div class="search-box" style="flex:0; min-width: 150px;">
+                <select id="genre-select"
+                    style="width:100%; background:transparent; border:none; color:var(--text); outline:none;">
+                    <option value="">All Genres</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="category-pills" id="category-pills">
+                <button class="category-pill active" data-cat="featured">Featured</button>
+                <button class="category-pill" data-cat="popular">Popular</button>
+                <button class="category-pill" data-cat="top_rated">Top Rated</button>
+                <button class="category-pill" data-cat="now_playing">Now Playing</button>
+                <button class="category-pill" data-cat="upcoming">Upcoming</button>
+            </div>
+        </div>
+
+        <div class="media-grid" id="media-grid">
+            <div class="media-card">
+                <div class="skeleton" style="width:100%;height:100%;"></div>
+            </div>
+            <div class="media-card">
+                <div class="skeleton" style="width:100%;height:100%;"></div>
+            </div>
+            <div class="media-card">
+                <div class="skeleton" style="width:100%;height:100%;"></div>
+            </div>
+            <div class="media-card">
+                <div class="skeleton" style="width:100%;height:100%;"></div>
+            </div>
+            <div class="media-card">
+                <div class="skeleton" style="width:100%;height:100%;"></div>
+            </div>
+            <div class="media-card">
+                <div class="skeleton" style="width:100%;height:100%;"></div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Season Explorer -->
+    <div class="season-explorer" id="season-explorer">
+        <div class="season-explorer-header">
+            <span class="season-explorer-title" id="show-title">Select Episode</span>
+            <button class="season-explorer-close" onclick="closeSeasonExplorer()"><i
+                    class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="seasons-list" id="seasons-list"></div>
+        <div class="episodes-list" id="episodes-list"></div>
+    </div>
+
+
+    <script src="../scripts/notifications.js"></script>
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
+    <script src="../scripts/quotes.js"></script>
+    <script src="../scripts/movies.js"></script>
+
+    <script src="../components/footer.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,306 @@
+/* ============================================
+   EXTRA PAGE - LIGHTWEIGHT STYLES
+   ============================================ */
+
+.extra-page {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 100px 24px 60px;
+}
+
+/* Hero */
+.extra-hero {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.extra-hero-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    color: var(--text-muted);
+}
+
+.extra-hero h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.version-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+}
+
+.extra-hero p {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Quick Links */
+.quick-links {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.quick-link:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-light);
+    color: var(--text);
+    opacity: 1;
+}
+
+/* Section */
+.extra-section {
+    margin-bottom: 32px;
+}
+
+.extra-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    color: var(--text-muted);
+}
+
+.extra-section-header i {
+    font-size: 0.875rem;
+}
+
+.extra-section-header h2 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: lowercase;
+}
+
+/* Credit Card */
+.credit-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.credit-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--surface-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.credit-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.credit-info p {
+    font-size: 0.8125rem;
+    color: var(--text-dim);
+}
+
+/* Roadmap */
+.roadmap-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.roadmap-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: background 0.15s;
+}
+
+.roadmap-toggle:hover {
+    background: var(--surface-hover);
+}
+
+.roadmap-toggle i {
+    transition: transform 0.2s;
+}
+
+.roadmap-toggle.open i {
+    transform: rotate(180deg);
+}
+
+.roadmap-content {
+    display: none;
+    padding: 0 20px 20px;
+}
+
+.roadmap-content.show {
+    display: block;
+}
+
+.roadmap-list {
+    list-style: none;
+}
+
+.roadmap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.roadmap-item:last-child {
+    border-bottom: none;
+}
+
+.roadmap-item.done {
+    text-decoration: line-through;
+    opacity: 0.4;
+}
+
+.roadmap-item i {
+    margin-top: 2px;
+    font-size: 0.6875rem;
+    opacity: 0.6;
+}
+
+.roadmap-item.done i {
+    color: var(--success);
+}
+
+.roadmap-item.pending i {
+    color: var(--text-dim);
+}
+
+/* Credits List */
+.credits-list {
+    list-style: none;
+}
+
+.credit-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.credit-item:last-child {
+    border-bottom: none;
+}
+
+.credit-name {
+    font-size: 0.875rem;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.credit-role {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+/* License */
+.license-notice {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.license-notice>i {
+    font-size: 1.25rem;
+    color: var(--text-dim);
+}
+
+.license-notice-content h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.license-notice-content p {
+    font-size: 0.8125rem;
+    color: var(--text-dim);
+}
+
+/* Back Link */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.back-link:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    opacity: 1;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .extra-page {
+        padding: 80px 16px 40px;
+    }
+
+    .quick-links {
+        flex-direction: column;
+    }
+
+    .quick-link {
+        justify-content: center;
+    }
+}

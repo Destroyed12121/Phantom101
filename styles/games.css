@@ -1,0 +1,121 @@
+.games-page {
+    min-height: 100vh;
+    padding: 70px 20px 20px;
+}
+
+/* Page layout, controls, search-box, select-wrapper imported from layout.css */
+
+/* Grid */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.game-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-card:hover {
+    transform: translateY(-3px) scale(1.02);
+    border-color: var(--border-light);
+    background: var(--surface-hover);
+    z-index: 5;
+}
+
+.game-img-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #000;
+    overflow: hidden;
+}
+
+.game-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.game-card:hover img {
+    transform: scale(1.1);
+}
+
+.like-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+}
+
+.game-card:hover .like-btn {
+    opacity: 1;
+}
+
+.like-btn.active {
+    color: #ef4444;
+    opacity: 1;
+}
+
+.like-btn:hover {
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.game-info {
+    padding: 10px;
+    flex: 1;
+}
+
+.game-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.section-header {
+    max-width: 1200px;
+    margin: 0 auto 16px;
+    padding: 0 4px;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-header i {
+    color: var(--accent, #3b82f6);
+}
+
+#liked-section {
+    margin-bottom: 40px;
+    display: none;
+}

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+     
+        html {
+            -webkit-text-size-adjust: 100%;
+            font-size: 100%;
+        }
+
+        body {
+            --background-color: #fff;
+            --error-code-color: var(--google-gray-700);
+            --google-blue-100: rgb(210, 227, 252);
+            --google-blue-300: rgb(138, 180, 248);
+            --google-blue-600: rgb(26, 115, 232);
+            --google-blue-700: rgb(25, 103, 210);
+            --google-gray-100: rgb(241, 243, 244);
+            --google-gray-300: rgb(218, 220, 224);
+            --google-gray-500: rgb(154, 160, 166);
+            --google-gray-50: rgb(248, 249, 250);
+            --google-gray-600: rgb(128, 134, 139);
+            --google-gray-700: rgb(95, 99, 104);
+            --google-gray-800: rgb(60, 64, 67);
+            --google-gray-900: rgb(32, 33, 36);
+            --heading-color: var(--google-gray-900);
+            --link-color: rgb(88, 88, 88);
+            --primary-button-fill-color-active: var(--google-blue-700);
+            --primary-button-fill-color: var(--google-blue-600);
+            --primary-button-text-color: #fff;
+            --quiet-background-color: rgb(247, 247, 247);
+            --secondary-button-border-color: var(--google-gray-500);
+            --secondary-button-fill-color: #fff;
+            --secondary-button-hover-border-color: var(--google-gray-600);
+            --secondary-button-hover-fill-color: var(--google-gray-50);
+            --secondary-button-text-color: var(--google-gray-700);
+            --small-link-color: var(--google-gray-700);
+            --text-color: var(--google-gray-700);
+            background: var(--background-color);
+            color: var(--text-color);
+            word-wrap: break-word;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0;
+            font-size: 100%;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                --background-color: var(--google-gray-900);
+                --error-code-color: var(--google-gray-500);
+                --heading-color: var(--google-gray-500);
+                --link-color: var(--google-blue-300);
+                --primary-button-fill-color-active: rgb(129, 162, 208);
+                --primary-button-fill-color: var(--google-blue-300);
+                --primary-button-text-color: var(--google-gray-900);
+                --quiet-background-color: var(--background-color);
+                --secondary-button-border-color: var(--google-gray-700);
+                --secondary-button-fill-color: var(--google-gray-900);
+                --secondary-button-hover-fill-color: rgb(48, 51, 57);
+                --secondary-button-text-color: var(--google-blue-300);
+                --small-link-color: var(--google-blue-300);
+                --text-color: var(--google-gray-500);
+            }
+        }
+
+        /* Layout & Typography */
+        .interstitial-wrapper {
+            box-sizing: border-box;
+            font-size: 1.0em;
+            line-height: 1.6em;
+            margin: 14vh auto 0;
+            max-width: 600px;
+            width: 100%;
+            padding: 0 0px;
+        }
+
+        h1 {
+            color: var(--heading-color);
+            font-size: 1.6em;
+            font-weight: normal;
+            line-height: 1.25em;
+            margin-bottom: 16px;
+            margin-top: 0;
+            word-wrap: break-word;
+        }
+
+        h1 span {
+            font-weight: 500;
+        }
+
+        p {
+            margin: 0;
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        .icon {
+            height: 72px;
+            margin: 0 0 40px;
+            width: 72px;
+            background-repeat: no-repeat;
+            background-size: 100%;
+            display: inline-block;
+        }
+
+        .icon-generic {
+            content: image-set(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAACQAQMAAADdiHD7AAAABlBMVEUAAABTU1OoaSf/AAAAAXRSTlMAQObYZgAAAFJJREFUeF7t0cENgDAMQ9FwYgxG6WjpaIzCCAxQxVggFuDiCvlLOeRdHR9yzjncHVoq3npu+wQUrUuJHylSTmBaespJyJQoObUeyxDQb3bEm5Au81c0pSCD8HYAAAAASUVORK5CYII=) 2x);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .icon {
+                filter: invert(1);
+            }
+        }
+
+        .error-code {
+            color: var(--error-code-color);
+            font-size: .8em;
+            margin-top: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Navigation / Buttons */
+        .nav-wrapper {
+            margin-top: 51px;
+        }
+
+        .nav-wrapper::after {
+            clear: both;
+            content: '';
+            display: table;
+            width: 100%;
+        }
+
+        button {
+            appearance: auto;
+            background-attachment: scroll;
+            background-clip: border-box;
+            background-color: rgb(193, 196, 255);
+            background-image: none;
+            background-origin: padding-box;
+            background-position-x: 0%;
+            background-position-y: 0%;
+            background-repeat: repeat;
+            background-size: auto;
+            border-bottom-color: rgb(32, 33, 36);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            border-bottom-style: none;
+            border-bottom-width: 0px;
+            border-image-outset: 0;
+            border-image-repeat: stretch;
+            border-image-slice: 100%;
+            border-image-source: none;
+            border-image-width: 1;
+            border-left-color: rgb(32, 33, 36);
+            border-left-style: none;
+            border-left-width: 0px;
+            border-right-color: rgb(32, 33, 36);
+            border-right-style: none;
+            border-right-width: 0px;
+            border-top-color: rgb(32, 33, 36);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            border-top-style: none;
+            border-top-width: 0px;
+            box-sizing: border-box;
+            color: rgb(32, 33, 36);
+            cursor: pointer;
+            display: block;
+            float: right;
+            font-family: Arial;
+            font-feature-settings: normal;
+            font-kerning: auto;
+            font-language-override: normal;
+            font-optical-sizing: auto;
+            font-size: 13.125px;
+            font-size-adjust: none;
+            font-stretch: 100%;
+            font-style: normal;
+            font-variant-alternates: normal;
+            font-variant-caps: normal;
+            font-variant-east-asian: normal;
+            font-variant-emoji: normal;
+            font-variant-ligatures: normal;
+            font-variant-numeric: normal;
+            font-variant-position: normal;
+            font-variation-settings: normal;
+            font-weight: 400;
+            height: 33.3333px;
+            letter-spacing: normal;
+            line-height: normal;
+            margin-bottom: 0px;
+            margin-left: 0px;
+            margin-right: 0px;
+            margin-top: 0px;
+            overflow-wrap: break-word;
+            padding-block-end: 9px;
+            padding-block-start: 9px;
+            padding-bottom: 9px;
+            padding-inline-end: 9px;
+            padding-inline-start: 9px;
+            padding-left: 9px;
+            padding-right: 9px;
+            padding-top: 9px;
+            text-align: center;
+            text-indent: 0px;
+            text-rendering: auto;
+            text-shadow: none;
+            text-size-adjust: 100%;
+            text-transform: none;
+            transition-behavior: normal;
+            transition-delay: 0s;
+            transition-duration: 0.15s;
+            transition-property: box-shadow;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            width: 59.5833px;
+            word-spacing: 0px;
+            -webkit-border-image: none;
+        }
+
+        .suggested-left>#control-buttons {
+            float: left;
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 420px) {
+            .nav-wrapper .secondary-button {
+                float: none;
+                margin: 16px 0 0;
+                padding: 16px;
+                width: 100%;
+            }
+
+            button {
+                float: none;
+                width: 100%;
+            }
+
+            .suggested-left>#control-buttons {
+                float: none;
+            }
+        }
+
+        /* Fixed nav for strict heights/widths */
+        @media (min-width: 240px) and (max-width: 420px) and (min-height: 401px),
+        (min-width: 421px) and (min-height: 240px) and (max-height: 560px) {
+            .nav-wrapper {
+                background: var(--background-color);
+                bottom: 0;
+                box-shadow: 0 -12px 24px var(--background-color);
+                left: 0;
+                margin: 0 auto;
+                max-width: 1000px;
+                padding-inline-end: 24px;
+                padding-inline-start: 24px;
+                position: fixed;
+                right: 0;
+                width: 100%;
+                z-index: 2;
+                padding-bottom: 24px;
+                padding-top: 24px;
+            }
+
+            .interstitial-wrapper {
+                max-width: 736px;
+            }
+
+            #main-content {
+                padding-bottom: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body class="neterror">
+    <div id="main-frame-error" class="interstitial-wrapper">
+        <div id="main-content">
+            <div class="icon icon-generic"></div>
+            <div id="main-message">
+                <h1>
+                    <span>This site can’t be reached</span>
+                </h1>
+                <p>
+                    <strong id="origin-text"></strong>’s <abbr id="dnsDefinition">DNS address</abbr> could not be found.
+                    Diagnosing the problem.
+                </p>
+                <div class="error-code">DNS_PROBE_POSSIBLE</div>
+            </div>
+        </div>
+        <div id="buttons" class="nav-wrapper suggested-left">
+            <div id="control-buttons">
+                <button id="reload-button" class="text-button" onclick="location.reload()">Reload</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const origin = window.location.hostname || "This site";
+        document.getElementById("origin-text").textContent = origin;
+        document.title = origin;
+
+        // Remove favicon for fake error page
+        document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.href = 'data:,';
+        document.head.appendChild(link);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/code.css">
+    <link rel="stylesheet" href="../styles/background.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
+    <script src="../scripts/notifications.js"></script>
+    <script src="../components/topbar.js"></script>
+
+    <div class="editor-page">
+        <div class="editor-container">
+            <div class="file-sidebar">
+                <div class="sidebar-header">
+                    <span class="sidebar-title">Files</span>
+                    <div class="sidebar-actions">
+                        <button class="sidebar-btn" id="new-file-btn" title="New File">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="file-tree" id="file-tree"></div>
+            </div>
+
+            <div class="editor-main">
+                <div class="editor-toolbar">
+                    <div class="toolbar-left">
+                        <button class="toolbar-btn success" id="fix-code-btn" title="Auto-fix issues">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Fix</span>
+                        </button>
+                        <select class="language-select" id="language-select">
+                            <option value="javascript">JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="json">JSON</option>
+                            <option value="python">Python</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="plaintext">Plain Text</option>
+                        </select>
+                        <span class="error-badge" id="error-count" style="display:none">0</span>
+                        <span class="warning-badge" id="warning-count" style="display:none">0</span>
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="toolbar-btn" id="open-tab-btn" title="Open in cloaked tab">
+                            <i class="fa-solid fa-up-right-from-square"></i>
+                            <span>Open</span>
+                        </button>
+                        <button class="toolbar-btn" id="save-btn" title="Download file">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Save</span>
+                        </button>
+                        <button class="toolbar-btn primary" id="export-btn" title="Export as ZIP">
+                            <i class="fa-solid fa-file-zipper"></i>
+                            <span>Export</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="editor-tabs" id="editor-tabs"></div>
+
+                <div id="monaco-container"></div>
+
+                <div class="terminal-panel" id="terminal-panel">
+                    <div class="resize-handle" id="terminal-resize"></div>
+                    <div class="terminal-header" id="terminal-header">
+                        <div class="terminal-tabs">
+                            <span class="terminal-tab active" data-panel="terminal">Terminal</span>
+                            <span class="terminal-tab" data-panel="problems">Problems</span>
+                        </div>
+                        <button class="sidebar-btn" id="terminal-toggle">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="terminal-content" id="terminal-content">
+                        <div class="terminal-line info">> Phantom Code Editor</div>
+                    </div>
+                    <div class="problems-content" id="problems-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <script src="../scripts/code.js"></script>
+    <script src="../components/footer.js"></script>
+</body>
+
+</html>

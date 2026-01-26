@@ -1,0 +1,212 @@
+/* Base styles and variables derived from erorr.html */
+:root {
+    --background-color: #fff;
+    --error-code-color: #5f6368;
+    --google-blue-100: rgb(210, 227, 252);
+    --google-blue-300: rgb(138, 180, 248);
+    --google-blue-600: rgb(26, 115, 232);
+    --google-blue-700: rgb(25, 103, 210);
+    --google-gray-100: rgb(241, 243, 244);
+    --google-gray-300: rgb(218, 220, 224);
+    --google-gray-500: rgb(154, 160, 166);
+    --google-gray-50: rgb(248, 249, 250);
+    --google-gray-600: rgb(128, 134, 139);
+    --google-gray-700: rgb(95, 99, 104);
+    --google-gray-800: rgb(60, 64, 67);
+    --google-gray-900: rgb(32, 33, 36);
+    --heading-color: var(--google-gray-900);
+    --link-color: rgb(88, 88, 88);
+    --primary-button-fill-color-active: var(--google-blue-700);
+    --primary-button-fill-color: var(--google-blue-600);
+    --primary-button-text-color: #fff;
+    --quiet-background-color: rgb(247, 247, 247);
+    --secondary-button-border-color: var(--google-gray-500);
+    --secondary-button-fill-color: #fff;
+    --secondary-button-hover-border-color: var(--google-gray-600);
+    --secondary-button-hover-fill-color: var(--google-gray-50);
+    --secondary-button-text-color: var(--google-gray-700);
+    --small-link-color: var(--google-gray-700);
+    --text-color: var(--google-gray-700);
+}
+
+.neterror {
+    background: var(--background-color);
+    color: var(--text-color);
+    word-wrap: break-word;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    margin: 0;
+    font-size: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+
+    :root,
+    .neterror {
+        --background-color: var(--google-gray-900);
+        --error-code-color: var(--google-gray-500);
+        --heading-color: var(--google-gray-500);
+        --link-color: var(--google-blue-300);
+        --primary-button-fill-color-active: rgb(129, 162, 208);
+        --primary-button-fill-color: var(--google-blue-300);
+        --primary-button-text-color: var(--google-gray-900);
+        --quiet-background-color: var(--background-color);
+        --secondary-button-border-color: var(--google-gray-700);
+        --secondary-button-fill-color: var(--google-gray-900);
+        --secondary-button-hover-fill-color: rgb(48, 51, 57);
+        --secondary-button-text-color: var(--google-blue-300);
+        --small-link-color: var(--google-blue-300);
+        --text-color: var(--google-gray-500);
+    }
+}
+
+#fv-cloak.neterror {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: none;
+}
+
+/* Layout & Typography */
+.neterror .interstitial-wrapper {
+    box-sizing: border-box;
+    font-size: 1.0em;
+    line-height: 1.6em;
+    margin: 14vh auto 0;
+    max-width: 650px;
+    width: 100%;
+    padding: 0 24px;
+}
+
+.neterror h1 {
+    color: var(--heading-color);
+    font-size: 1.6em;
+    font-weight: normal;
+    line-height: 1.25em;
+    margin-bottom: 16px;
+    margin-top: 0;
+    word-wrap: break-word;
+}
+
+.neterror h1 span {
+    font-weight: 500;
+}
+
+.neterror p {
+    margin: 0;
+}
+
+.neterror a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+.neterror .icon {
+    height: 72px;
+    margin: 0 0 40px;
+    width: 72px;
+    background-repeat: no-repeat;
+    background-size: 100%;
+    display: inline-block;
+}
+
+.neterror .icon-generic {
+    content: image-set(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAACQAQMAAADdiHD7AAAABlBMVEUAAABTU1OoaSf/AAAAAXRSTlMAQObYZgAAAFJJREFUeF7t0cENgDAMQ9FwYgxG6WjpaIzCCAxQxVggFuDiCvlLOeRdHR9yzjncHVoq3npu+wQUrUuJHylSTmBaespJyJQoObUeyxDQb3bEm5Au81c0pSCD8HYAAAAASUVORK5CYII=) 2x);
+}
+
+@media (prefers-color-scheme: dark) {
+    .neterror .icon {
+        filter: invert(1);
+    }
+}
+
+.neterror .error-code {
+    color: var(--error-code-color);
+    font-size: .8em;
+    margin-top: 12px;
+    text-transform: uppercase;
+}
+
+/* Navigation / Buttons */
+.neterror .nav-wrapper {
+    margin-top: 51px;
+}
+
+.neterror .nav-wrapper::after {
+    clear: both;
+    content: '';
+    display: table;
+    width: 100%;
+}
+
+.neterror button {
+    appearance: auto;
+    background-color: rgb(193, 196, 255);
+    border: none;
+    border-radius: 20px;
+    box-sizing: border-box;
+    color: rgb(32, 33, 36);
+    cursor: pointer;
+    display: block;
+    float: right;
+    font-family: Arial;
+    font-size: 13.125px;
+    font-weight: 400;
+    height: 33.3333px;
+    padding: 9px;
+    text-align: center;
+    transition: background-color 0.15s;
+    user-select: none;
+    width: 59.5833px;
+}
+
+.neterror .suggested-left>#control-buttons {
+    float: left;
+}
+
+/* Mobile tweaks */
+@media (max-width: 420px) {
+    .neterror .nav-wrapper .secondary-button {
+        float: none;
+        margin: 16px 0 0;
+        padding: 16px;
+        width: 100%;
+    }
+
+    .neterror button {
+        float: none;
+        width: 100%;
+    }
+
+    .neterror .suggested-left>#control-buttons {
+        float: none;
+    }
+}
+
+/* Fixed nav for strict heights/widths */
+@media (min-width: 240px) and (max-width: 420px) and (min-height: 401px),
+(min-width: 421px) and (min-height: 240px) and (max-height: 560px) {
+    .neterror .nav-wrapper {
+        background: var(--background-color);
+        bottom: 0;
+        box-shadow: 0 -12px 24px var(--background-color);
+        left: 0;
+        margin: 0 auto;
+        max-width: 1000px;
+        padding-inline-end: 24px;
+        padding-inline-start: 24px;
+        position: fixed;
+        right: 0;
+        width: 100%;
+        z-index: 2;
+        padding-bottom: 24px;
+        padding-top: 24px;
+    }
+
+    .neterror .interstitial-wrapper {
+        max-width: 736px;
+    }
+
+    .neterror #main-content {
+        padding-bottom: 40px;
+    }
+}

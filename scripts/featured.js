@@ -1,0 +1,47 @@
+const FeaturedGames = {
+    games: [
+        { name: 'Fortnite', icon: 'fa-solid fa-crosshairs', url: 'pages/player.html?type=game&title=Fortnite&url=https://nowgg.fun/apps/aptoide/5874/aptoide.html?deep_link=aptoidesearch://com.epicgames.fortnite' },
+        { name: 'Games', icon: 'fa-solid fa-gamepad', url: 'pages/games.html' },
+        { name: 'Movies', icon: 'fa-solid fa-film', url: 'pages/movies.html' },
+        { name: 'PhantomAI', icon: 'fa-solid fa-robot', url: 'pages/chat.html' },
+        { name: 'Music', icon: 'fa-solid fa-music', url: 'pages/music.html' },
+        { name: 'Roblox', icon: 'fa-solid fa-cubes', url: 'pages/player.html?type=game&title=Roblox&url=https://nowgg.fun/apps/aptoide/5874/aptoide.html?deep_link=aptoidesearch://roblox.com.roblox' },
+        { name: 'Settings', icon: 'fa-solid fa-cog', url: 'pages/settings.html' },
+        { name: 'Subway Surfers', gameName: 'Subway Surfers' },
+        { name: 'Retro Bowl', gameName: 'Retro Bowl' },
+        { name: 'Basket Random', gameName: 'Basket Random' },
+        { name: 'Geometry Dash', gameName: 'Geometry Dash Lite' },
+        { name: 'Code Runner', icon: 'fa-solid fa-code', url: 'pages/code.html' }
+    ],
+
+    async load() {
+        try {
+            const data = await (await fetch("https://cdn.jsdelivr.net/gh/gn-math/assets@latest/zones.json")).json();
+            const map = new Map(data.map(g => [
+                (g.name || g.title).replace(/\.html$|-a\.html$/i, '').replace(/[-_]/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, l => l.toUpperCase()).trim(),
+                (g.url || g.file)?.replace('{HTML_URL}', "https://cdn.jsdelivr.net/gh/gn-math/html@main").replace('-a.html', '.html')
+            ]));
+
+            const preloads = this.games.map(async g => {
+                if (!g.gameName) return;
+                const url = map.get(g.gameName);
+                if (url) {
+                    g.url = `pages/player.html?type=game&title=${encodeURIComponent(g.name)}&url=${encodeURIComponent(url)}`;
+                    g.img = `https://cdn.jsdelivr.net/gh/gn-math/assets@latest/images/${g.gameName.toLowerCase().replace(/\s+/g, '-')}.png`;
+
+                    // Trigger preload without blocking the map
+                    const img = new Image();
+                    img.src = g.img;
+                } else {
+                    g.url = 'pages/games.html'; g.icon = 'fa-solid fa-gamepad';
+                }
+            });
+            await Promise.all(preloads);
+        } catch (e) {
+            console.error(e);
+            this.games.forEach(g => g.gameName && (g.url = 'pages/games.html', g.icon = 'fa-solid fa-gamepad'));
+        }
+    }
+};
+
+window.FeaturedGames = FeaturedGames;

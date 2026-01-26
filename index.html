@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Unblocked</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-5LMBC27Z');</script>
+    <!-- End Google Tag Manager -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg, #0a0a0a);
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s;
+        }
+
+        .loading-logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .loading-logo i {
+            color: var(--text-muted, #a1a1aa);
+        }
+
+        .loading-logo span {
+            background: linear-gradient(90deg, var(--text, #e4e4e7) 0%, var(--text-muted, #a1a1aa) 40%, var(--text-dim, #52525b) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border, #1f1f1f);
+            border-top-color: var(--text-muted, #71717a);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: var(--text-dim, #52525b);
+            font-size: 0.875rem;
+        }
+
+
+        .launch-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .launch-screen.hidden {
+            display: none;
+        }
+
+        .launch-button {
+            background: var(--surface);
+            color: var(--text-muted);
+            border: none;
+            padding: 24px 48px;
+            border-radius: var(--radius-lg);
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 16px;
+            width: 100%;
+            max-width: 300px;
+            opacity: 0.75;
+        }
+
+        .launch-button:hover {
+            opacity: 0.5;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Panic white screen */
+        #panic-overlay {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 99999;
+            display: none;
+        }
+    </style>
+    <script src="config.js"></script>
+    <script src="scripts/settings.js"></script>
+    <script src="scripts/background.js"></script>
+    <script src="scripts/cloaking.js"></script>
+    <script src="scripts/quotes.js"></script>
+    <script>Settings.apply();</script>
+    <link rel="stylesheet" href="styles/error.css">
+    <link rel="stylesheet" href="styles/background.css">
+
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LMBC27Z" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <!-- First Visit Cloak Layer -->
+    <div id="fv-cloak" class="neterror">
+        <div id="main-frame-error" class="interstitial-wrapper">
+            <div id="main-content">
+                <div class="icon icon-generic"></div>
+                <div id="main-message">
+                    <h1>
+                        <span>This site can’t be reached</span>
+                    </h1>
+                    <p>
+                        <strong id="origin-text"></strong>’s <abbr id="dnsDefinition">DNS address</abbr> could not be
+                        found.
+                        Diagnosing the problem.
+                    </p>
+                    <div class="error-code">DNS_PROBE_POSSIBLE</div>
+                </div>
+            </div>
+            <div id="buttons" class="nav-wrapper suggested-left">
+                <div id="control-buttons">
+                    <button id="reload-button" class="text-button" onclick="location.reload()">Reload</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            {
+                const origin = window.location.hostname || "This site";
+                document.getElementById("origin-text").textContent = origin;
+
+                // Immediate cloak check to prevent flash
+                try {
+                    const STORAGE_KEY = 'phantom_fv';
+                    const hasBypassed = localStorage.getItem(STORAGE_KEY);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const isFakeMode = urlParams.has('fake');
+
+                    if (window.SITE_CONFIG.firstVisitCloak && !hasBypassed && !isFakeMode) {
+                        const overlay = document.getElementById('fv-cloak');
+                        if (overlay) overlay.style.display = 'block';
+                        document.title = origin;
+
+                        // Remove favicon for fake error page
+                        document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
+                        const link = document.createElement('link');
+                        link.rel = 'icon';
+                        link.href = 'data:,';
+                        document.head.appendChild(link);
+
+                        // Hide loading screen immediately if possible
+                        const style = document.createElement('style');
+                        style.innerHTML = '#loading-screen { display: none !important; }';
+                        document.head.appendChild(style);
+
+                        // Set up bypass on reload button
+                        document.getElementById('reload-button').onclick = function () {
+                            localStorage.setItem(STORAGE_KEY, 'true');
+                            overlay.style.display = 'none';
+                            document.getElementById('main-frame').src = 'index2.html';
+                            document.title = 'Phantom Unblocked'; // Reset title
+
+                            // Restore favicon
+                            document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
+                            const link = document.createElement('link');
+                            link.rel = 'icon';
+                            link.href = 'favicon.svg';
+                            document.head.appendChild(link);
+                        };
+                    } else {
+                        // If no cloak, load main content immediately
+                        document.getElementById('main-frame').src = 'index2.html';
+                    }
+                } catch (e) { }
+            }
+        </script>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-logo">
+            <i class="fa-solid fa-ghost"></i>
+            <span>Phantom</span>
+        </div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <!-- Launch Screen -->
+    <div id="launch-screen" class="launch-screen hidden">
+        <div class="loading-logo">
+            <i class="fa-solid fa-ghost"></i>
+            <span>Phantom</span>
+        </div>
+        <button id="launch-button" class="launch-button"> Launch Phantom</button>
+    </div>
+
+    <!-- Panic White Screen Overlay -->
+    <div id="panic-overlay"></div>
+
+    <iframe id="main-frame"></iframe>
+
+    <script src="scripts/rotation.js"></script>
+
+    <script>
+        const loadingScreen = document.getElementById('loading-screen');
+        const iframe = document.getElementById('main-frame');
+        let loadStartTime = Date.now();
+        let fallbackTimer = setTimeout(hideLoading, 3500);
+
+        function showLoading() {
+            loadingScreen.classList.remove('hidden');
+            if (window.Quotes) window.Quotes.init(true);
+            loadStartTime = Date.now();
+
+            clearTimeout(fallbackTimer);
+            fallbackTimer = setTimeout(hideLoading, 3500);
+        }
+
+        function hideLoading() {
+            clearTimeout(fallbackTimer);
+
+            // Min time 0.5s (500ms)
+            const minTime = 500;
+            const elapsed = Date.now() - loadStartTime;
+            const remaining = Math.max(0, minTime - elapsed);
+
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+            }, remaining);
+
+            // Re-attach listener to the new window for next navigation
+            try {
+                if (iframe.contentWindow) {
+                    iframe.contentWindow.removeEventListener('unload', showLoading);
+                    iframe.contentWindow.addEventListener('unload', () => {
+                        requestAnimationFrame(showLoading);
+                    });
+                }
+            } catch (e) { }
+        }
+
+        // Listen for iframe load events
+        iframe.addEventListener('load', hideLoading);
+
+        // Expose to children if needed
+        window.showLoading = showLoading;
+        window.hideLoading = hideLoading;
+
+        console.log('press c to enter');
+    </script>
+</body>
+
+</html>

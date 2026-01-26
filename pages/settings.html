@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/settings.css">
+    <link rel="stylesheet" href="../styles/background.css">
+    <script src="../config.js"></script>
+    <script src="../scripts/notifications.js"></script>
+    <script src="../scripts/cloaking.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
+    <script src="../components/topbar.js"></script>
+</head>
+
+<body>
+    <div class="settings-page">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h1><i class="fa-solid fa-gear"></i> Settings</h1>
+                <p>Customize your Phantom experience</p>
+            </div>
+
+            <div class="settings-nav">
+                <button class="settings-tab active" data-tab="cloak">Tab Cloak</button>
+                <button class="settings-tab" data-tab="appearance">Appearance</button>
+                <button class="settings-tab" data-tab="content">Content</button>
+                <button class="settings-tab" data-tab="widgets">Widgets</button>
+                <button class="settings-tab" data-tab="data">Data</button>
+            </div>
+
+            <div class="settings-panel active" id="panel-cloak">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-mask"></i> Cloaking Mode</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Cloak Mode</div>
+                            <div class="setting-desc">How the page should be opened</div>
+                        </div>
+                        <select class="setting-select" id="cloak-mode">
+                            <option value="none">None (Normal)</option>
+                            <option value="about:blank">about:blank (Default)</option>
+                            <option value="blob">Blob URL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Tab Cloaks</h2>
+                    <p style="color: var(--text-muted); font-size: 0.8125rem;">Choose a preset or add your own:</p>
+                    <div class="cloaks-grid" id="cloaks-grid"></div>
+
+                    <div class="setting-row"
+                        style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                        <div class="setting-info">
+                            <div class="setting-label">Rotating Cloaks</div>
+                            <div class="setting-desc">Automatically rotate tab title/icon</div>
+                        </div>
+                        <div class="toggle" id="rotate-toggle"></div>
+                    </div>
+
+                    <div class="setting-row" id="rotate-interval-row" style="display:none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Rotation Interval (s)</div>
+                            <div class="setting-desc">0.1s - 30s</div>
+                        </div>
+                        <input type="number" class="setting-input" id="rotate-interval" value="5" min="0.1" max="30"
+                            step="0.1" style="width: 80px;">
+                    </div>
+
+                    <button class="btn btn-secondary" id="add-cloak-btn" style="margin-top: 16px; width: 100%;"><i
+                            class="fa-solid fa-plus"></i> Add Custom Cloak</button>
+                    <div class="add-cloak-form" id="add-cloak-form">
+                        <input type="text" class="setting-input" id="new-cloak-name" placeholder="Name (e.g. Google)"
+                            style="width: 100%;">
+                        <input type="text" class="setting-input" id="new-cloak-title" placeholder="Tab title"
+                            style="width: 100%;">
+                        <input type="text" class="setting-input" id="new-cloak-icon"
+                            placeholder="Favicon URL (https://...)" style="width: 100%;">
+                        <div class="add-cloak-actions">
+                            <button class="btn btn-secondary" id="cancel-cloak">Cancel</button>
+                            <button class="btn btn-primary" id="save-cloak">Save Cloak</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Leave Confirmation</div>
+                            <div class="setting-desc">Ask before closing the tab</div>
+                        </div>
+                        <div class="toggle" id="leave-confirm-toggle"></div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-bolt"></i> Panic Key</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Keyboard Shortcut</div>
+                            <div class="setting-desc">Press to quickly exit</div>
+                        </div>
+                        <button class="key-capture" id="panic-key">Ctrl + Shift + Esc</button>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Redirect URL</div>
+                        </div>
+                        <input type="text" class="setting-input" id="panic-url"
+                            placeholder="https://classroom.google.com">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-appearance">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-image"></i> Backgrounds</h2>
+                    <p style="color: var(--text-muted); font-size: 0.8125rem; margin-bottom: 12px;">Choose a
+                        high-quality image or video background:</p>
+                    <div class="presets-grid" id="backgrounds-grid">
+                        <!-- Backgrounds injected by JS -->
+                    </div>
+
+                    <div class="custom-bg-form"
+                        style="margin-top: 16px; padding: 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-sm);">
+                        <h3
+                            style="font-size: 0.875rem; font-weight: 600; margin-bottom: 16px; color: var(--text); display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-link" style="color: var(--accent);"></i> Custom Background
+                        </h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" class="setting-input" id="custom-bg-url"
+                                placeholder="Paste image, video, or YouTube URL..." style="flex: 1; min-width: 250px;">
+                            <button class="btn btn-primary" id="apply-custom-bg" style="min-width: 100px;">
+                                <i class="fa-solid fa-check"></i> Apply
+                            </button>
+                        </div>
+                        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" class="setting-input" id="custom-bg-position"
+                                placeholder="Image position (e.g., top left, center, bottom right)" style="flex: 1; min-width: 250px;">
+                        </div>
+                        <div style="margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap;">
+                            <span
+                                style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-image"></i> Images (JPG, PNG, GIF)
+                            </span>
+                            <span
+                                style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-clapperboard"></i> Direct Video (MP4, WebM)
+                            </span>
+                            <span
+                                style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                                <i class="fa-brands fa-youtube"></i> YouTube Links
+                            </span>
+                        </div>
+                        <div class="setting-row"
+                            style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                            <div class="setting-info">
+                                <div class="setting-label">Rotate Background</div>
+                                <div class="setting-desc">Automatically rotate background every 2 days</div>
+                            </div>
+                            <div class="toggle" id="background-rotation-toggle"></div>
+                        </div>
+
+                        <h2 class="section-title" style="margin-top: 24px;"><i class="fa-solid fa-swatchbook"></i> Theme
+                            Presets</h2>
+                        <div class="presets-grid" id="themes-grid">
+                            <!-- Themes injected by JS -->
+                        </div>
+
+                        <div class="setting-row"
+                            style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                            <div class="setting-info">
+                                <div class="setting-label">Rotate Theme</div>
+                                <div class="setting-desc">Automatically rotate theme every 2 days</div>
+                            </div>
+                            <div class="toggle" id="theme-rotation-toggle"></div>
+                        </div>
+
+                        <h2 class="section-title"><i class="fa-solid fa-palette"></i> Custom Theme</h2>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Background Color</div>
+                                <div class="setting-desc">Primary background color</div>
+                            </div>
+                            <input type="color" id="bg-color" value="#0a0a0a"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Accent Color</div>
+                                <div class="setting-desc">Primary highlight color</div>
+                            </div>
+                            <input type="color" id="accent-color" value="#ffffff"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Surface Color</div>
+                                <div class="setting-desc">Card/Sidebar background</div>
+                            </div>
+                            <input type="color" id="surface-color" value="#0f0f0f"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Secondary Color</div>
+                                <div class="setting-desc">Secondary elements</div>
+                            </div>
+                            <input type="color" id="secondary-color" value="#2e2e33"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Text Color</div>
+                                <div class="setting-desc">Primary text color</div>
+                            </div>
+                            <input type="color" id="text-color" value="#e4e4e7"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Secondary Text Color</div>
+                                <div class="setting-desc">Muted/Description text color</div>
+                            </div>
+                            <input type="color" id="text-secondary-color" value="#71717a"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Dim Text</div>
+                                <div class="setting-desc">Low priority text</div>
+                            </div>
+                            <input type="color" id="text-dim-color" value="#52525b"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+
+                        <h2 class="section-title" style="margin-top: 24px;"><i class="fa-solid fa-sliders"></i> Advanced
+                            Colors</h2>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Surface Hover</div>
+                            </div>
+                            <input type="color" id="surface-hover-color" value="#1a1a1a"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Surface Active</div>
+                            </div>
+                            <input type="color" id="surface-active-color" value="#252525"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Border</div>
+                            </div>
+                            <input type="color" id="border-color" value="#1f1f1f"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <div class="setting-label">Border Light</div>
+                            </div>
+                            <input type="color" id="border-light-color" value="#2a2a2a"
+                                style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-content">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-film"></i> Movies</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Maximum Rating</div>
+                            <div class="setting-desc">Filter movies by rating</div>
+                        </div>
+                        <select class="setting-select" id="max-rating">
+                            <option value="G">G</option>
+                            <option value="PG">PG</option>
+                            <option value="PG-13">PG-13</option>
+                            <option value="R">R</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Auto-Switch Providers</div>
+                            <div class="setting-desc">Automatically switch if a movie source fails to load</div>
+                        </div>
+                        <div class="toggle" id="autoswitch-toggle"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-gamepad"></i> Games</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Default Library</div>
+                        </div>
+                        <select class="setting-select" id="game-library">
+                            <option value="multi">Multi (Default)</option>
+                            <option value="gnmath">Gnmath (With covers)</option>
+                            <option value="ugs">UGS (More games)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-widgets">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-brands fa-discord"></i> Discord</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Show Discord Widget</div>
+                        </div>
+                        <div class="toggle active" id="discord-toggle"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-music"></i> Music</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Show Mini Player (SOON) <span style="font-size: 0.75rem; color: var(--text-muted);">cough  never happening lowk cough</span></div>
+                        </div>
+                        <div class="toggle active" id="miniplayer-toggle"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Updates</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Show Changelog on Update</div>
+                            <div class="setting-desc">Automatically show changelog when Phantom is updated</div>
+                        </div>
+                        <div class="toggle active" id="changelog-toggle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-data">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-database"></i> Storage</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Clear Cache</div>
+                        </div>
+                        <button class="btn btn-danger" id="clear-cache"><i class="fa-solid fa-trash"></i>
+                            Clear</button>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Reset All Settings</div>
+                        </div>
+                        <button class="btn btn-danger" id="reset-settings"><i class="fa-solid fa-rotate-left"></i>
+                            Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="../components/footer.js"></script>
+    <script src="../scripts/settingspage.js"></script>
+</body>
+
+</html>

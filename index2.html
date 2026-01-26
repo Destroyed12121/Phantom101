@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Unblocked</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/search.css">
+    <link rel="stylesheet" href="components/topbar.css">
+    <link rel="stylesheet" href="styles/background.css">
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        .home-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px 40px;
+            text-align: center;
+        }
+
+        .site-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #e4e4e7 0%, #a1a1aa 40%, #52525b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .site-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            min-height: 24px;
+        }
+
+        /* Search Bar */
+        .search-container {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 48px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .search-bar:hover {
+            background: var(--surface-hover);
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--text-muted);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-bar i {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Featured Section */
+        .featured-section {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .star-icon {
+            color: #fbbf24;
+            font-size: 0.875rem;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .featured-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .featured-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+        }
+
+        .featured-card-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            overflow: hidden;
+        }
+
+        .featured-card-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .featured-card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+
+
+
+
+        @media (max-width: 640px) {
+            .site-title {
+                font-size: 1.75rem;
+            }
+
+            .featured-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+
+        }
+    </style>
+    <script src="config.js"></script>
+    <script src="scripts/settings.js"></script>
+    <script src="scripts/background.js"></script>
+    <script src="scripts/cloaking.js"></script>
+    <script src="scripts/quotes.js"></script>
+    <script src="scripts/notifications.js"></script>
+    <script src="scripts/rotation.js"></script>
+    <script src="scripts/featured.js"></script>
+    <script src="components/UGSfiles.js"></script>
+    <script src="scripts/gloader.js"></script>
+    <script src="scripts/search.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
+    <script type="module">
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+        window.BareMux = BareMux;
+    </script>
+</head>
+
+<body>
+    <div class="offline-banner" id="offline-banner">
+        <i class="fa-solid fa-wifi-slash"></i>
+        <span>You're offline</span>
+    </div>
+
+    <div class="home-page">
+        <script src="components/topbar.js"></script>
+
+        <main class="main-content">
+            <h1 class="site-title">Phantom Unblocked</h1>
+            <p class="site-subtitle" id="subtitle"></p>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <form class="search-bar" onsubmit="handleSearch(event)">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search the web and games..." autocomplete="off">
+                </form>
+            </div>
+
+            <!-- Featured -->
+            <section class="featured-section">
+                <div class="section-header">
+                    <i class="fa-solid fa-star star-icon"></i>
+                    <span class="section-title">Featured</span>
+                </div>
+                <div class="featured-grid" id="featured-grid"></div>
+            </section>
+        </main>
+
+    </div>
+
+
+    <script>
+
+
+        // Featured games
+        (async () => {
+            await window.FeaturedGames.load();
+            const featuredGames = window.FeaturedGames.games || [];
+
+            const grid = document.getElementById('featured-grid');
+            if (!grid) return;
+
+            const fragment = document.createDocumentFragment();
+            featuredGames.forEach(g => {
+                const card = document.createElement('a');
+                card.href = g.url;
+                card.className = 'featured-card';
+                card.innerHTML = `
+                    <div class="featured-card-icon" style="background: ${g.gameName ? 'transparent' : 'var(--surface-hover)'}; color: var(--text-muted);">
+                        ${g.img ? `<img src="${g.img}" loading="eager" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-gamepad\\'></i>'">` : `<i class="${g.icon}"></i>`}
+                    </div>
+                    <div class="featured-card-title">${g.name}</div>
+                `;
+                fragment.appendChild(card);
+            });
+            grid.appendChild(fragment);
+        })();
+
+
+
+        // Theme notification
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.Notify) {
+                    window.Notify.info("Appearance", "Don't like your theme? Change it in settings!", 6000);
+                }
+            }, 1500);
+        });
+    </script>
+
+    <script src="components/footer.js"></script>
+    <script src="scripts/init.js"></script>
+</body>
+
+</html>

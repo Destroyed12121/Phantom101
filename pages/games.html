@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <meta name="referrer" content="origin">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/background.css">
+    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../styles/games.css">
+</head>
+
+<body>
+    <script src="../components/topbar.js"></script>
+
+    <div class="games-page">
+        <header class="page-header">
+            <h1 class="page-title">Games libarry</h1>
+            <p class="page-subtitle" id="quote-display">Loading...</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search games...">
+            </div>
+
+            <div class="select-wrapper">
+                <select id="lib-select">
+                    <option value="multi">Multi (Default)</option>
+                    <option value="gnmath">Gnmath</option>
+                    <option value="ugs">UGS</option>
+                </select>
+            </div>
+
+            <div class="select-wrapper">
+                <select id="sort-select">
+                    <option value="popularity">Popularity</option>
+                    <option value="name">Name</option>
+                    <option value="newest">Newest</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="liked-section">
+            <div class="section-header">
+                <i class="fa-solid fa-heart"></i> Liked Games
+            </div>
+            <div class="game-grid" id="liked-grid"></div>
+        </div>
+
+        <div class="section-header">
+            <i class="fa-solid fa-gamepad"></i> <span id="game-count">All Games</span>
+        </div>
+        <div class="game-grid" id="games-grid">
+            <!-- Loading Skeletons -->
+            <div class="game-card">
+                <div style="aspect-ratio:4/3;background:var(--surface);"></div>
+            </div>
+            <div class="game-card">
+                <div style="aspect-ratio:4/3;background:var(--surface);"></div>
+            </div>
+            <div class="game-card">
+                <div style="aspect-ratio:4/3;background:var(--surface);"></div>
+            </div>
+            <div class="game-card">
+                <div style="aspect-ratio:4/3;background:var(--surface);"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
+    <script src="../scripts/quotes.js"></script>
+    <script src="../scripts/notifications.js"></script>
+    <script src="../components/footer.js"></script>
+    <script src="../components/UGSfiles.js"></script>
+    <script src="../scripts/gloader.js"></script>
+    <script src="../scripts/games.js"></script>
+    <script>
+
+
+    </script>
+</body>
+
+</html>

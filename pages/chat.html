@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Phantom AI">
+  <title>Phantom AI</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../components/topbar.css">
+  <link rel="stylesheet" href="../styles/chat.css">
+  <link rel="stylesheet" href="../styles/background.css">
+</head>
+
+<body>
+  <script src="../config.js"></script>
+  <script src="../scripts/settings.js"></script>
+  <script src="../scripts/background.js"></script>
+  <script src="../scripts/notifications.js"></script>
+
+  <div class="app-container" id="chatApp">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="chatSidebar">
+      <div class="sidebar-header">
+        <div class="brand-section">
+          <i data-lucide="ghost"></i>
+          <span>Phantom AI</span>
+        </div>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn">
+        <i class="fas fa-plus"></i>
+        <span>New Chat</span>
+      </button>
+
+      <div class="conversations" id="conversationsList">
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="chat-header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+          </button>
+          <span class="chat-title" id="chatTitle">Phantom AI</span>
+        </div>
+        <div class="header-right">
+          <select id="modelSelector" class="select input" aria-label="Select AI model">
+            <option value="loading">Loading...</option>
+          </select>
+        </div>
+      </header>
+
+      <div class="chat-body" id="chatBody">
+       
+      </div>
+
+      <div class="hero-section" id="heroSection">
+        <h1 class="hero-title">Phantom AI</h1>
+        <p class="hero-subtitle">Ethereal intelligence at your fingertips</p>
+      </div>
+
+      <div class="chat-footer">
+        <div class="input-container">
+
+          <div class="input-actions">
+            <button class="mode-pill mode-btn active" data-mode="text" title="Text generation">
+              <i class="fas fa-comment-alt"></i>
+              <span>Text</span>
+            </button>
+            <button class="mode-pill mode-btn" data-mode="image" title="Image generation">
+              <i class="fas fa-image"></i>
+              <span>Image</span>
+            </button>
+          </div>
+
+    
+          <textarea id="chatInput" class="chat-input" placeholder="Message Phantom AI..." rows="1"
+            aria-label="Chat message input"></textarea>
+
+   
+          <div class="input-actions">
+            <button id="sendBtn" class="send-btn" disabled aria-label="Send message">
+              <i class="fas fa-arrow-up"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  
+  <script src="../components/topbar.js"></script>
+  <script src="../components/footer.js"></script>
+  <script src="../scripts/chat.js"></script>
+
+</body>
+
+</html>

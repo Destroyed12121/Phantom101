@@ -1,0 +1,136 @@
+/* PhantomSearch - Autocomplete Dropdown Styles */
+
+.search-autocomplete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.5));
+    overflow: hidden;
+    z-index: var(--z-dropdown, 100);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+
+.search-autocomplete.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.search-autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.1s ease, box-shadow 0.1s ease;
+    position: relative;
+}
+
+.search-autocomplete-item:hover {
+    background: var(--surface-hover);
+}
+
+/* Selected item with soft accent glow */
+.search-autocomplete-item.selected {
+    background: var(--surface-hover);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+}
+
+/* Small enter icon on the right for the selected item */
+.search-autocomplete-item.selected::after {
+    content: '↵';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.search-autocomplete-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.search-autocomplete-item.selected .search-autocomplete-icon,
+.search-autocomplete-item:hover .search-autocomplete-icon {
+    color: var(--accent, #fff);
+}
+
+/* Thumbnail/poster support */
+.search-autocomplete-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.search-autocomplete-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 20px;
+}
+
+.search-autocomplete-type {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    padding: 2px 6px;
+    background: var(--surface-active, rgba(255, 255, 255, 0.05));
+    border-radius: 4px;
+    margin-right: 16px;
+}
+
+/* Separator before web search (last item) */
+.search-autocomplete-item[data-index]:last-child {
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    padding-top: 12px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .search-autocomplete-item {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+    .search-autocomplete-text {
+        font-size: 13px;
+        padding-right: 0;
+    }
+
+    .search-autocomplete-type {
+        font-size: 10px;
+        margin-right: 0;
+    }
+
+    .search-autocomplete-item.selected::after {
+        display: none;
+    }
+}

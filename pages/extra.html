@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/extra.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/background.css">
+</head>
+
+<body>
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
+    <script src="../scripts/notifications.js"></script>
+    <script src="../components/topbar.js"></script>
+
+    <div class="extra-page">
+        <!-- Header -->
+        <section class="extra-hero">
+            <div class="extra-hero-icon">
+                <i class="fa-solid fa-ghost"></i>
+            </div>
+            <h1>Phantom</h1>
+            <div class="version-badge" id="version-text">v1.0.0</div>
+            <p>the goat unblocked website</p>
+
+            <div class="quick-links">
+                <a href="https://github.com/Destroyed12121/Phantom101" target="_blank" rel="noopener"
+                    class="quick-link">
+                    <i class="fa-brands fa-github"></i>
+                    Source
+                </a>
+                <a id="discord-link" href="#" target="_blank" rel="noopener" class="quick-link">
+                    <i class="fa-brands fa-discord"></i>
+                    Discord
+                </a>
+            </div>
+        </section>
+
+        <!-- Made by -->
+        <section class="extra-section">
+            <div class="extra-section-header">
+                <i class="fa-solid fa-user"></i>
+                <h2>Owner</h2>
+            </div>
+            <div class="credit-card">
+                <div class="credit-avatar">D</div>
+                <div class="credit-info">
+                    <h3>Destroyed12121</h3>
+                    <p>the guy who made this</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Credits -->
+        <section class="extra-section">
+            <div class="extra-section-header">
+                <i class="fa-solid fa-heart"></i>
+                <h2>Credits</h2>
+            </div>
+            <div class="roadmap-container">
+                <button class="roadmap-toggle" id="credits-toggle">
+                    <span>credits</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="roadmap-content" id="credits-content">
+                    <ul class="credits-list">
+                        <li class="credit-item">
+                            <span class="credit-name">Titanium Network</span>
+                            <span class="credit-role">Scramjet Proxy</span>
+                        </li>
+                        <li class="credit-item">
+                            <span class="credit-name">gn-math</span>
+                            <span class="credit-role">Games</span>
+                        </li>
+                        <li class="credit-item">
+                            <span class="credit-name">Ultimate Game Stash</span>
+                            <span class="credit-role">Games</span>
+                        </li>
+                        <li class="credit-item">
+                            <span class="credit-name">technonyte00</span>
+                            <span class="credit-role">Music</span>
+                        </li>
+                        <li class="credit-item">
+                            <span class="credit-name">Pollinations.ai</span>
+                            <span class="credit-role">AI API</span>
+                        </li>
+                        <li class="credit-item">
+                            <span class="credit-name">glseries.net</span>
+                            <span class="credit-role">Wisp</span>
+                        </li>
+                        <li class="credit-item">
+                            <span class="credit-name">rhw.one</span>
+                            <span class="credit-role">Wisp</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="extra-section">
+            <div class="extra-section-header">
+                <i class="fa-solid fa-list-check"></i>
+                <h2>Todo list</h2>
+            </div>
+            <div class="roadmap-container">
+                <button class="roadmap-toggle" id="roadmap-toggle">
+                    <span>todo list & more notes</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="roadmap-content" id="roadmap-content">
+                    <ul class="roadmap-list" id="roadmap-list">
+                        <li class="roadmap-item pending"><i
+                                class="fa-solid fa-spinner fa-spin"></i><span>Loading...</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- License -->
+        <section class="extra-section">
+            <div class="license-notice">
+                <i class="fa-solid fa-scale-balanced"></i>
+                <div class="license-notice-content">
+                    <h3>GNU GPL v3.0</h3>
+                    <p>This project is open source. You may use, modify, and distribute it under the GNU GPL v3.0
+                        license.</p>
+                </div>
+            </div>
+        </section>
+
+        <a href="../index.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i>
+            Back
+        </a>
+    </div>
+
+    <script src="../scripts/quotes.js"></script>
+    <script src="../components/footer.js"></script>
+    <script>
+        if (window.Settings) Settings.apply();
+
+        // Set version & discord from config
+        if (window.SITE_CONFIG) {
+            document.getElementById('version-text').textContent = `v${SITE_CONFIG.version}`;
+            document.getElementById('discord-link').href = SITE_CONFIG.discord?.inviteUrl || '#';
+        }
+
+        // Credits toggle
+        const creditsToggle = document.getElementById('credits-toggle');
+        const creditsContent = document.getElementById('credits-content');
+        creditsToggle.addEventListener('click', () => {
+            creditsToggle.classList.toggle('open');
+            creditsContent.classList.toggle('show');
+        });
+
+        // Roadmap toggle
+        const toggle = document.getElementById('roadmap-toggle');
+        const content = document.getElementById('roadmap-content');
+        toggle.addEventListener('click', () => {
+            toggle.classList.toggle('open');
+            content.classList.toggle('show');
+        });
+
+        // Load TODO from config.js
+        function loadRoadmap() {
+            const list = document.getElementById('roadmap-list');
+            const todos = (window.SITE_CONFIG && window.SITE_CONFIG.todos) || [];
+            if (!todos.length) {
+                list.innerHTML = '<li class="roadmap-item">nothing here yet</li>';
+                return;
+            }
+
+            const items = todos.map(t => {
+                const isDone = t.startsWith('***');
+                const content = t.replace(/\*\*\*/g, '').replace(/\*\*/g, '').trim();
+                return { content, isDone };
+            });
+
+            const sorted = [...items.filter(i => !i.isDone), ...items.filter(i => i.isDone)];
+            list.innerHTML = sorted.map(i => `
+                <li class="roadmap-item ${i.isDone ? 'done' : 'pending'}">
+                    <i class="fa-solid ${i.isDone ? 'fa-check' : 'fa-clock'}"></i>
+                    <span>${i.content.replace(/</g, '&lt;')}</span>
+                </li>
+            `).join('');
+        }
+        loadRoadmap();
+    </script>
+</body>
+
+</html>

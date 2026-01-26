@@ -1,0 +1,273 @@
+    .movies-page {
+        min-height: 100vh;
+        padding: 70px 20px 20px;
+    }
+
+    /* Page layout, controls, search-box imported from layout.css */
+
+    .tab-toggle {
+        display: flex;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+
+    .tab-btn {
+        padding: 10px 16px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .tab-btn:hover {
+        color: var(--text);
+        background: var(--surface-hover);
+    }
+
+    .tab-btn.active {
+        background: var(--text);
+        color: var(--bg);
+    }
+
+    .category-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .category-pill {
+        padding: 8px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .category-pill:hover {
+        color: var(--text);
+        background: var(--surface-hover);
+    }
+
+    .category-pill.active {
+        background: var(--text);
+        color: var(--bg);
+        border-color: var(--text);
+    }
+
+    /* Grid */
+    .media-grid {
+        display: grid;
+        /* Grid: Change '140px' to a smaller number (e.g. 100px) for more movies per row */
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 14px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+
+
+    /* Search Suggestions */
+    .search-suggestions {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 100;
+    }
+
+    .search-suggestions.show {
+        display: block;
+    }
+
+    .suggestion-item {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .suggestion-item:hover {
+        background: var(--surface-hover);
+    }
+
+    .suggestion-item img {
+        width: 40px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .suggestion-info {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .suggestion-title {
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+
+    .suggestion-meta {
+        font-size: 0.6875rem;
+        color: var(--text-muted);
+    }
+
+    /* Season Explorer */
+    .season-explorer {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 10000;
+        padding: 80px 20px 20px;
+        overflow-y: auto;
+    }
+
+    .season-explorer.show {
+        display: block;
+    }
+
+    .season-explorer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .season-explorer-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .season-explorer-close {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        color: var(--text);
+        cursor: pointer;
+    }
+
+    .seasons-list,
+    .episodes-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        max-width: 800px;
+        margin: 0 auto 20px;
+    }
+
+    .season-btn,
+    .episode-btn {
+        padding: 10px 18px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-size: 0.8125rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .season-btn:hover,
+    .episode-btn:hover {
+        background: var(--surface-hover);
+    }
+
+    .season-btn.active {
+        background: var(--text);
+        color: var(--bg);
+    }
+
+
+
+
+
+    /* Loading */
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+    }
+
+    /* .skeleton handled by main.css */
+
+    @keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    .load-more-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface);
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 220px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        opacity: 0.9;
+        overflow: hidden;
+    }
+
+    .load-more-card:hover {
+        background: var(--surface-hover);
+        transform: scale(1.05);
+        /* Slight growth */
+        opacity: 0.6;
+        /* Fade out effect */
+        z-index: 50;
+    }
+
+    .load-more-content {
+        text-align: center;
+        color: var(--text-muted);
+        transition: color 0.3s;
+    }
+
+    .load-more-card:hover .load-more-content {
+        color: var(--text);
+    }
+
+    .load-more-content i {
+        display: block;
+        font-size: 3.5rem;
+        /* Much bigger icon */
+        margin-bottom: 12px;
+    }
+
+    /* Improved Card Typography & Rating moved to card.css */
+
+    /* Dropdown Styling */
+    #genre-select option {
+        background: var(--bg);
+        color: var(--text);
+    }

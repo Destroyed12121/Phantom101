@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/music.css">
+    <link rel="stylesheet" href="../styles/background.css">
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
+    <script src="../scripts/notifications.js"></script>
+
+
+</head>
+
+<body>
+    <div class="app">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></button>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Library</h2>
+                <button id="closeSidebar"
+                    style="background:none; border:none; color:var(--text-muted); cursor:pointer; display:none;"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="playlist-section">
+                <div class="playlist-item" data-playlist="liked" id="likedPlaylist">
+                    <div class="playlist-icon"><i class="fa-solid fa-heart"></i></div>
+                    <div class="playlist-info">
+                        <div class="playlist-name">Liked Songs <i class="fa-solid fa-chevron-down playlist-expand"></i>
+                        </div>
+                        <div class="playlist-count" id="likedCount">0 songs</div>
+                    </div>
+                </div>
+                <div class="playlist-songs" id="likedSongs"></div>
+                <div class="playlist-item" data-playlist="recent" id="recentPlaylist">
+                    <div class="playlist-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="playlist-info">
+                        <div class="playlist-name">Recently Played <i
+                                class="fa-solid fa-chevron-down playlist-expand"></i></div>
+                        <div class="playlist-count" id="recentCount">0 songs</div>
+                    </div>
+                </div>
+                <div class="playlist-songs" id="recentSongs"></div>
+                <div class="playlist-divider"></div>
+                <div id="customPlaylists"></div>
+                <button class="add-playlist-btn" id="addPlaylistBtn"><i class="fa-solid fa-plus"></i><span>New
+                        Playlist</span></button>
+            </div>
+        </aside>
+        <main class="main">
+            <!-- Source Tabs - Controls both SEARCH and PLAYBACK -->
+            <div class="source-tabs">
+                <button class="source-tab" data-source="itunes">iTunes (30s Preview)</button>
+                <button class="source-tab active" data-source="youtube">YouTube</button>
+            </div>
+
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Search or paste YouTube/Itunes URL...">
+                    </div>
+                    <div class="results" id="searchResults"></div>
+                </div>
+            </div>
+
+            <div class="add-menu" id="addMenu"></div>
+
+            <!-- Player -->
+            <section class="player-section">
+                <div class="album-art" id="albumArt">
+                    <i class="fa-solid fa-music placeholder" id="albumPlaceholder"></i>
+                    <img id="albumCover" src="" alt="" style="display:none;">
+                </div>
+                <div class="player-info">
+                    <div class="mode-badges">
+                        <div class="mode-badge" id="radioBadge"><i class="fa-solid fa-radio"></i> Radio</div>
+                        <button class="mode-badge" id="proxyBtn" title="Use Proxy for embedded content"><i
+                                class="fa-solid fa-shield-halved"></i> Proxy</button>
+                    </div>
+                    <div class="track-title" id="trackTitle">No track selected</div>
+                    <div class="track-artist" id="trackArtist">Select a source and search</div>
+                    <div class="controls">
+                        <button class="control-btn" id="shuffleBtn" title="Shuffle"><i
+                                class="fa-solid fa-shuffle"></i></button>
+                        <button class="control-btn" id="prevBtn" title="Previous"><i
+                                class="fa-solid fa-backward-step"></i></button>
+                        <button class="control-btn play-btn" id="playPauseBtn" title="Play"><i
+                                class="fa-solid fa-play"></i></button>
+                        <button class="control-btn" id="nextBtn" title="Next"><i
+                                class="fa-solid fa-forward-step"></i></button>
+                        <button class="control-btn" id="repeatBtn" title="Repeat"><i
+                                class="fa-solid fa-repeat"></i></button>
+                        <div class="control-divider"></div>
+                        <button class="control-btn" id="likeBtn" title="Like"><i
+                                class="fa-regular fa-heart"></i></button>
+                        <button class="control-btn" id="radioBtn" title="Radio Mode"><i
+                                class="fa-solid fa-radio"></i></button>
+                        <button class="control-btn" id="addToPlaylistBtn" title="Add to Playlist"><i
+                                class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="progress-container">
+                        <span class="time" id="currentTime">0:00</span>
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="time" id="totalTime">0:00</span>
+                    </div>
+                    <div class="volume-container">
+                        <button class="control-btn" id="volumeBtn" style="padding:6px;"><i
+                                class="fa-solid fa-volume-high"></i></button>
+                        <div class="volume-bar" id="volumeBar">
+                            <div class="volume-fill" id="volumeFill"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="lyrics-section">
+                <div class="lyrics-header">Lyrics</div>
+                <div class="lyrics-content" id="lyricsContent">
+                    <div class="lyrics-line">Play a song to see lyrics</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="fallback-container" id="fallbackContainer">
+        <button class="fallback-close" id="fallbackClose"><i class="fa-solid fa-xmark"></i></button>
+        <iframe id="fallbackFrame" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+    </div>
+
+    <div class="modal-overlay" id="playlistModal">
+        <div class="modal">
+            <div class="modal-title">New Playlist</div>
+            <input type="text" class="modal-input" id="playlistNameInput" placeholder="Playlist name">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancelPlaylist">Cancel</button>
+                <button class="modal-btn confirm" id="confirmPlaylist">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio elements for crossfading -->
+    <audio id="audio1" crossorigin="anonymous"></audio>
+    <audio id="audio2" crossorigin="anonymous"></audio>
+
+    <script src="../components/topbar.js"></script>
+    <script src="../scripts/music.js"></script>
+    <script src="../components/footer.js"></script>
+</body>
+
+</html>
