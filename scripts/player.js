@@ -65,15 +65,30 @@ function loadProvider(pid, silent = false) {
     currentUrl = u; frame.src = u;
 }
 
-document.getElementById('btn-reload').onclick = () => (switcher.retry = 0, type === 'game' ? loadGame(currentUrl) : loadProvider(PROVIDERS[curProvIdx].id));
+document.getElementById('btn-reload').onclick = () => {
+    window.Notify?.info('Reloading', 'Refreshing content...');
+    switcher.retry = 0;
+    type === 'game' ? loadGame(currentUrl) : loadProvider(PROVIDERS[curProvIdx].id);
+};
 document.getElementById('btn-theater').onclick = () => {
     const b = document.body;
-    b.classList.toggle('theater-active');
+    const isTheater = b.classList.toggle('theater-active');
     const btn = document.getElementById('btn-theater');
-    btn.innerHTML = b.classList.contains('theater-active') ? '<i class="fa-solid fa-compress"></i> Exit Theater' : '<i class="fa-solid fa-masks-theater"></i> Theater Mode';
+    btn.innerHTML = isTheater ? '<i class="fa-solid fa-compress"></i> Exit Theater' : '<i class="fa-solid fa-masks-theater"></i> Theater Mode';
+    
+    // Scroll to top to prevent footer from showing
+    window.scrollTo(0, 0);
+    
+    if (isTheater) {
+        window.Notify?.success('Theater Mode', 'Enjoy your movie!');
+    }
 };
-document.getElementById('btn-fullscreen').onclick = () => frame.requestFullscreen?.() || frame.webkitRequestFullscreen?.() || document.getElementById('frame-wrapper').requestFullscreen();
+document.getElementById('btn-fullscreen').onclick = () => {
+    window.Notify?.info('Fullscreen', 'Entering fullscreen mode lil bro');
+    frame.requestFullscreen?.() || frame.webkitRequestFullscreen?.() || document.getElementById('frame-wrapper').requestFullscreen();
+};
 document.getElementById('btn-newtab').onclick = async () => {
+    window.Notify?.info('Opening', 'Opening in new tab...');
     const win = window.open('about:blank', '_blank');
     if (!win) return;
     let html = type === 'game' && !currentUrl.includes('staticsjv2/') ? await (await fetch(currentUrl)).text() : `<!DOCTYPE html><html><head><title>${title || 'Phantom'}</title><style>body{margin:0;background:#000;}</style></head><body><iframe src="${currentUrl}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></body></html>`;
@@ -81,10 +96,12 @@ document.getElementById('btn-newtab').onclick = async () => {
     else { win.document.write(html); win.document.close(); }
 };
 document.getElementById('btn-download').onclick = async () => {
+    window.Notify?.info('Downloading', 'Preparing download...');
     const b = new Blob([await (await fetch(currentUrl)).text()], { type: 'text/html' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(b); a.download = `${title || 'game'}.html`.replace(/\s+/g, '_');
     a.click();
+    window.Notify?.success('Download Started', `${title || 'game'}.html`);
 };
 
 init();

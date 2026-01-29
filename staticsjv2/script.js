@@ -163,6 +163,15 @@ async function registerServiceWorker() {
             notify('info', 'Proxy Auto-switched', `Now using ${e.data.name}`);
         } else if (e.data.type === 'wispError') {
             notify('error', 'Proxy Error', e.data.message);
+        } else if (e.data.type === 'navigate') {
+            // Handle navigation requests from NT.html (new tab page)
+            const tab = getActiveTab();
+            if (tab && e.data.url) {
+                tab.loading = true;
+                showIframeLoading(true, e.data.url);
+                updateLoadingBar(tab, 10);
+                tab.frame.go(e.data.url);
+            }
         }
     });
 
@@ -413,7 +422,7 @@ function openSettings() {
     modal.classList.remove('hidden');
     document.getElementById('close-wisp-modal').onclick = () => modal.classList.add('hidden');
     document.getElementById('save-custom-wisp').onclick = saveCustomWisp;
-    document.getElementById('apply-custom-bg').onclick = applyCustomBackground;
+
 
     // Tab switching
     const tabs = modal.querySelectorAll('.nav-tab');
@@ -423,6 +432,13 @@ function openSettings() {
 
     tabs.forEach(tab => {
         tab.onclick = () => {
+            // Only Proxy tab remains relevant for now (or if we keep tabs but remove Appearance content)
+            // If the user wants to remove the selector, we assume checking if "Appearance" tab should be hidden or removed
+            // But the HTML might still have the tab button. 
+            // Let's just hide the appearance tab functionality or keep it as a stub if needed?
+            // The prompt said "delete the backgrounds selector".
+            // I will remove the logic that switches to it if I can, or just empty the appearance panel logic.
+
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
@@ -432,15 +448,15 @@ function openSettings() {
             if (target === 'proxy') {
                 title.innerHTML = '<i class="fa-solid fa-server"></i> Proxy Settings';
                 footer.textContent = 'Lower ping = faster browsing';
-            } else {
-                title.innerHTML = '<i class="fa-solid fa-palette"></i> Appearance';
-                footer.textContent = 'Changes apply globally';
             }
         };
     });
 
+    // Force switch to proxy tab and hide appearance tab if possible (via CSS or removal)
+    // For now, removing the logic that sets Appearance title/footer.
+
     renderServerList();
-    renderBackgroundPresets();
+    renderServerList();
 }
 
 function renderServerList() {
@@ -480,51 +496,7 @@ function renderServerList() {
     list.appendChild(toggle);
 }
 
-function renderBackgroundPresets() {
-    const grid = document.getElementById('bg-presets-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
 
-    const presets = SITE_CONFIG.backgroundPresets || [];
-    const settings = window.Settings?.getAll() || {};
-    const currentBg = settings.customBackground || { id: 'none' };
-
-    presets.forEach(bg => {
-        const card = document.createElement('div');
-        card.className = `preset-card ${currentBg.id === bg.id ? 'active' : ''}`;
-
-        let previewHtml = '';
-        if (bg.type === 'none') {
-            previewHtml = `<div style="width:100%;height:100%;background:var(--bg);display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-ban"></i></div>`;
-        } else if (bg.type === 'image') {
-            previewHtml = `<img src="${bg.url}" loading="lazy">`;
-        } else {
-            previewHtml = `<div style="width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-video"></i></div>`;
-        }
-
-        card.innerHTML = `
-            ${previewHtml}
-            <div class="preset-info">${bg.name}</div>
-        `;
-
-        card.onclick = () => {
-            window.Settings?.set('customBackground', bg);
-            // background.js listens for storage/settings-changed events
-            renderBackgroundPresets();
-        };
-
-        grid.appendChild(card);
-    });
-}
-
-function applyCustomBackground() {
-    const url = document.getElementById('custom-bg-input').value.trim();
-    if (!url) return;
-
-    window.Settings?.set('customBackground', { id: 'custom', type: 'image', url: url, overlay: 0.4 });
-    notify('success', 'Background Applied', 'Custom background set');
-    renderBackgroundPresets();
-}
 
 
 function saveCustomWisp() {

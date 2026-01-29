@@ -4,7 +4,7 @@
 
 .player-page {
     min-height: 100vh;
-    padding: 80px 20px 40px;
+    padding: 70px 20px 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -32,22 +32,21 @@
     position: relative;
     width: 100%;
     padding-top: 56.25%;
-    /* 16:9 Aspect Ratio */
+    /* 16:9  */
     background: var(--bg);
     z-index: 5;
     overflow: hidden;
 }
 
-/* ============================================
-   THEATER MODE
-   ============================================ */
-/* ============================================
-   THEATER MODE
-   ============================================ */
+/* Theater Mode */
 body.theater-active {
     background: var(--bg) !important;
     overflow: hidden;
     /* Prevent scrolling */
+}
+
+body.theater-active #site-footer {
+    display: none !important;
 }
 
 body.theater-active .topbar {
@@ -80,7 +79,7 @@ body.theater-active .player-frame-wrapper {
     justify-content: center;
 }
 
-/* Theater Mode Overlays - Bottom Aligned */
+/* Theater Mode Overlays */
 body.theater-active .player-controls,
 body.theater-active .player-info {
     position: absolute;

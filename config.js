@@ -3,15 +3,17 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.11",
+    version: "1.0.12",
 
     changelog: [
+        "1.0.12: tiny fixxes and changes",
         "some code consolidation and fixxes",
         "suggest features in the discord server"
     ],
 
     // quotes
     quotes: [
+        "lebron lebron lebronn james",
         "so tuff",
         "it is what it is",
         "do ur work",
@@ -23,7 +25,10 @@ window.SITE_CONFIG = {
         "press ctrl+x to hide your screen",
         "change the tab title and favicon in settings",
         "TEACHERR!",
-        "lebron lebron lebronn james",
+        "1 pump",
+        "303 headshot",
+        "bros prolly a 60 ovr",
+        "take the L lil bro",  
         "lebron is OUR goat",
         "stop looking at my screen",
     ],
@@ -70,7 +75,7 @@ window.SITE_CONFIG = {
     defaultWisp: "wss://glseries.net/wisp/",
     wispServers: [
         { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
-        { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" },
+        { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/" },
     ],
 
     discord: {

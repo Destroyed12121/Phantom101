@@ -9,7 +9,7 @@ const Games = {
 
     async init() {
         this.lib = window.Settings?.get('gameLibrary') || 'multi';
-        // Normalize lib preference if needed (legacy)
+        // legacy
         if (this.lib === 'lib1') this.lib = 'gnmath';
         if (this.lib === 'lib2') this.lib = 'ugs';
 
@@ -20,7 +20,7 @@ const Games = {
         });
 
         await this.loadGames();
-        this.checkRedirect(); // Check for ?gamename=
+        this.checkRedirect(); //  ?gamename=
         this.setupListeners();
     },
 

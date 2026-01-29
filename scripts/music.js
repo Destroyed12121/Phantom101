@@ -1,8 +1,5 @@
-// ============================================
-// MUSIC BACKEND (Ported from Arcora)
-// ============================================
 
-// --- Configuration & Endpoints ---
+
 const YT_KEYS = [
     "AIzaSyBMhadsGk2S2B9bP46EycgI2y8yCWLLdAs",
     "AIzaSyCOeLUcSlLDWAbKDUc-LUx8hdsenY-97rU",
@@ -12,9 +9,9 @@ const YT_KEYS = [
 const LRC_LYRIC_EP = "https://lrclib.net/api/get";
 const PLAIN_LYRIC_EP = "https://api.lyrics.ovh/v1/";
 const SEARCH_EP = "https://itunes.apple.com/search?term=";
-const PROXY_BASE = "../staticsjv2/embed.html?skip#"; // Local fallback path
+const PROXY_BASE = "../staticsjv2/embed.html?skip#"; // proxy fsallback
 
-// --- State Management ---
+//  state Management 
 let player;
 let playerReady = false;
 let commandQueue = [];
@@ -127,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mobileMenuBtn.addEventListener('click', () => sidebar.classList.add('mobile-open'));
     closeSidebar.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
 
-    // Init Volume UI
+
     setVolumeUI(lastVolume);
 
     // Add Playlist
