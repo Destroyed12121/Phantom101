@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <meta name="referrer" content="origin">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../components/topbar.css">
+    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../styles/card.css">
+    <link rel="stylesheet" href="../styles/watch.css">
+    <link rel="stylesheet" href="../styles/background.css">
+</head>
+
+<body>
+    <script src="../components/topbar.js"></script>
+
+    <div class="watch-page">
+        <header class="page-header">
+            <h1 class="page-title">Watch</h1>
+            <p class="page-subtitle">Stream movies and TV shows</p>
+            <div id="status"
+                style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; opacity: 0.6; height: 1em;"></div>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search YouTube...">
+            </div>
+            <div class="tab-toggle">
+                <button class="tab-btn active" id="youtube-tab" onclick="setPlatform('youtube')">YouTube</button>
+                <button class="tab-btn" id="twitch-tab" onclick="setPlatform('twitch')">Twitch</button>
+            </div>
+        </div>
+
+        <div class="media-grid" id="media-grid">
+            <!-- Search results will appear here -->
+        </div>
+    </div>
+
+    <script src="../scripts/notifications.js"></script>
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script src="../scripts/background.js"></script>
+    <script src="../scripts/quotes.js"></script>
+    <script src="../scripts/watch.js"></script>
+
+    <script src="../components/footer.js"></script>
+</body>
+
+</html>

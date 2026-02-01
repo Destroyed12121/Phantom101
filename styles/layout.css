@@ -29,7 +29,7 @@
     margin-right: auto;
 }
 
-/* Shared search box styling for pages (NOT index2.html which has its own) */
+/* Shared search box */
 .search-box {
     flex: 1;
     min-width: 300px;
@@ -65,7 +65,7 @@
     color: var(--text-muted);
 }
 
-/* Control Buttons (restored) */
+/* Control Buttons */
 .ctrl-btn {
     padding: 10px 16px;
     background: var(--surface);

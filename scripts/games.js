@@ -6,6 +6,7 @@ const Games = {
     BATCH_SIZE: 50,
     liked: JSON.parse(localStorage.getItem('liked_games') || '[]'),
     isLoading: false,
+    firstLoad: true,
 
     async init() {
         this.lib = window.Settings?.get('gameLibrary') || 'multi';
@@ -27,7 +28,10 @@ const Games = {
     async loadGames() {
         if (this.isLoading) return;
         this.isLoading = true;
-        if (window.Notify) window.Notify.info('Games', 'Loading game library...');
+
+        if (this.firstLoad && window.Notify) {
+            window.Notify.info('Games', 'Loading game library...');
+        }
 
         try {
             if (!window.Gloader) {
@@ -45,6 +49,7 @@ const Games = {
             if (window.Notify) window.Notify.error('Error', 'Failed to load games');
         } finally {
             this.isLoading = false;
+            this.firstLoad = false;
         }
     },
 
@@ -170,9 +175,11 @@ const Games = {
         if (libSelect) {
             libSelect.value = this.lib;
             libSelect.onchange = (e) => {
-                this.lib = e.target.value;
-                window.Settings?.set('gameLibrary', this.lib);
-                this.loadGames();
+                const newLib = e.target.value;
+                if (newLib === this.lib) return;
+
+                // Just set the setting; the 'settings-changed' listener below handles the loadGames call
+                window.Settings?.set('gameLibrary', newLib);
             };
         }
         window.addEventListener('settings-changed', (e) => {

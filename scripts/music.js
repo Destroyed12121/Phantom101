@@ -462,11 +462,16 @@ function hideFallback() {
 function togglePlayback() {
     if (!currentTrack) return;
 
+    if (isProxyMode) {
+        notify('info', 'Proxy Mode', 'Use player controls');
+        return;
+    }
+
     if (activeSource === 'itunes' && audioPlayer) {
         if (isPlaying) audioPlayer.pause();
         else audioPlayer.play();
         isPlaying = !isPlaying;
-    } else if (player) {
+    } else if (player && typeof player.pauseVideo === 'function') {
         if (isPlaying) player.pauseVideo();
         else player.playVideo();
         // we don't set isPlaying here, we wait for onPlayerStateChange
@@ -477,7 +482,17 @@ function togglePlayback() {
 function playNext() {
     if (currentPlaylist.length === 0) return;
 
-    if (currentIndex >= currentPlaylist.length - 1) {
+    // Handle single track
+    if (currentPlaylist.length === 1) {
+        if (isRepeat || isShuffled) {
+            const next = currentPlaylist[0];
+            playSong(next.trackName, next.artistName, next.artworkUrl100, next.genre || '', next.previewUrl || '', 0);
+        }
+        return;
+    }
+
+    // End of playlist logic (ignored if shuffled)
+    if (!isShuffled && currentIndex >= currentPlaylist.length - 1) {
         if (isRadioMode) {
             startRadio();
         } else if (isRepeat) {
@@ -489,7 +504,7 @@ function playNext() {
     }
 
     let nextIndex;
-    if (isShuffled && currentPlaylist.length > 1) {
+    if (isShuffled) {
         do { nextIndex = Math.floor(Math.random() * currentPlaylist.length); }
         while (nextIndex === currentIndex);
     } else {

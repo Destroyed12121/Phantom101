@@ -179,7 +179,7 @@ function updateServerHealth(url, success) {
     return health;
 }
 
-function switchToServer(url, latency = null) {
+function switchToServer(url, latency = null, reason = 'Connection unstable') {
     if (url === wispConfig.wispurl) return;
 
     console.log(`SW: Switching from ${wispConfig.wispurl} to ${url}`);
@@ -192,7 +192,8 @@ function switchToServer(url, latency = null) {
                 type: 'wispChanged',
                 url: url,
                 name: wispConfig.servers.find(s => s.url === url)?.name || 'Unknown Server',
-                latency: latency
+                latency: latency,
+                reason: reason
             });
         });
     });
@@ -220,7 +221,7 @@ async function proactiveServerCheck() {
             .sort((a, b) => a.latency - b.latency)[0];
 
         if (bestWorking) {
-            switchToServer(bestWorking.url, bestWorking.latency);
+            switchToServer(bestWorking.url, bestWorking.latency, "Previous server was unresponsive");
         }
     }
 }

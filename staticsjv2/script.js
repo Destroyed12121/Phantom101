@@ -81,7 +81,12 @@ async function initWispAutoswitch() {
     if (bestUrl && bestUrl !== currentUrl) {
         console.log("Wisp: Auto-switched to", bestUrl);
         localStorage.setItem("proxServer", bestUrl);
-        notify('info', 'Auto-switched', `Switched to a faster server`);
+
+        const servers = getAllWispServers();
+        const serverObj = servers.find(s => s.url === bestUrl);
+        const name = serverObj ? serverObj.name : "New Server";
+
+        notify('info', 'Auto-switched', `Switched to ${name} because the previous server was offline/slow.`);
     }
 }
 
@@ -160,7 +165,7 @@ async function registerServiceWorker() {
     navigator.serviceWorker.addEventListener('message', (e) => {
         if (e.data.type === 'wispChanged') {
             localStorage.setItem("proxServer", e.data.url);
-            notify('info', 'Proxy Auto-switched', `Now using ${e.data.name}`);
+            notify('info', 'Proxy Auto-switched', `Switched to ${e.data.name}. ${e.data.reason || 'Connection unstable.'}`);
         } else if (e.data.type === 'wispError') {
             notify('error', 'Proxy Error', e.data.message);
         } else if (e.data.type === 'navigate') {
@@ -542,5 +547,12 @@ function setWisp(url) {
 // =====================================================
 // MAIN
 // =====================================================
+
+
+window.addEventListener('message', (e) => {
+    if (e.data?.type === 'navigate' && e.data.url) {
+        handleSubmit(e.data.url);
+    }
+});
 
 document.addEventListener('DOMContentLoaded', init);

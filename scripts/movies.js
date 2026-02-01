@@ -519,6 +519,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!searchInput.parentElement.contains(e.target)) suggestions?.classList.remove('show');
         };
     }
+
+    // Help notification
+    setTimeout(() => {
+        if (window.Notify) {
+            Notify.info("Can't find a movie?", "Try using genres to browse the collection!", 6000);
+        }
+    }, 15000);
 });
 
 function switchTab(tab) {

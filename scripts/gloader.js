@@ -8,7 +8,8 @@ const Gloader = {
     EXPIRY_MS: 7 * 24 * 60 * 60 * 1000, // 7 Days
 
     async load(lib = 'multi') {
-        const cached = localStorage.getItem(this.CACHE_KEY);
+        const cacheKey = `${this.CACHE_KEY}_${lib}`;
+        const cached = localStorage.getItem(cacheKey);
         if (cached) {
             try {
                 const { timestamp, data } = JSON.parse(cached);
@@ -22,7 +23,7 @@ const Gloader = {
 
         const games = await this.fetchGames(lib);
         try {
-            localStorage.setItem(this.CACHE_KEY, JSON.stringify({
+            localStorage.setItem(cacheKey, JSON.stringify({
                 timestamp: Date.now(),
                 data: games
             }));
@@ -58,6 +59,9 @@ const Gloader = {
     },
 
     async loadUGS() {
+        if (!window.UGS_FILES && window.UGS_FILES_PROMISE) {
+            await window.UGS_FILES_PROMISE;
+        }
         if (!window.UGS_FILES) return [];
         return window.UGS_FILES.map(file => {
             const name = file.replace(/^cl/i, '');

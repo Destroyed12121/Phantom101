@@ -184,6 +184,15 @@ body.theater-active .player-info>* {
     font-size: 0.875rem;
 }
 
+.player-quote {
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-size: 0.875rem;
+    margin-top: 16px;
+    font-style: italic;
+    opacity: 0.8;
+}
+
 /* Movie Controls */
 .player-movie-controls {
     display: none;

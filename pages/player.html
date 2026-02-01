@@ -14,6 +14,7 @@
     <script src="../config.js"></script>
     <script src="../scripts/settings.js"></script>
     <script>Settings.apply();</script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 
 <body>
@@ -25,6 +26,8 @@
         <div class="player-container">
             <div class="player-frame-wrapper" id="frame-wrapper">
                 <iframe class="player-frame" id="game-frame" allowfullscreen></iframe>
+                <video class="player-frame" id="video-frame" style="display:none;" controls autoplay
+                    playsinline></video>
             </div>
 
             <div class="player-controls" id="controls">
@@ -65,7 +68,10 @@
             <div class="player-info">
                 <h1 class="player-title" id="player-title">Loading...</h1>
                 <p class="player-desc" id="player-desc"></p>
-                <p class="theater-message" id="theater-message" style="display:none; text-align: center; color: var(--text-muted); font-size: 1.125rem; margin-top: 16px;">Enjoy your movie!</p>
+                <p class="player-quote" id="player-quote"></p>
+                <p class="theater-message" id="theater-message"
+                    style="display:none; text-align: center; color: var(--text-muted); font-size: 1.125rem; margin-top: 16px;">
+                    Enjoy your movie!</p>
             </div>
         </div>
     </div>

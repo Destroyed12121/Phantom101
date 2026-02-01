@@ -3,12 +3,14 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.0.12",
+    version: "1.1.0",
 
     changelog: [
-        "1.0.12: tiny fixxes and changes",
-        "some code consolidation and fixxes",
-        "suggest features in the discord server"
+        "Youtube and Twitch added in Watch page",
+        "fixxed aboutblank opening - should now always open correctly when securly is on",
+        "minor fixxes and changes"
+
+
     ],
 
     // quotes
@@ -37,6 +39,7 @@ window.SITE_CONFIG = {
     // *** for strikethrough
     // ** for bold
     todos: [
+        "***fixxed aboutblank opening while securly is on (previously if popups were off it would load intab instead of clickto launch now it will use clicktolaunch unless popups are blocked)***",
         "***fix the proxy***",
         "***fix panic panickey, add quote talking about it***",
         "***fix theatermode, make it hide buttons after a few seconds and ensure all content is being displayed and move the description to the bottom***",
@@ -47,29 +50,30 @@ window.SITE_CONFIG = {
         "***add a default cloak and fix it so icons work in aboutblank for whatever reason they only work when you go to settings in aboutblank where it correctly applies***",
         "***for search suggestions add highlighting for whatever will happen when you click enter, in search suggestions fix all games not sending you to the games page***",
         "***fix games to make multi library the default, put it in config.js***",
-        "**rename movies shortcut in index2.html to primeshows, add shortcuts to main pages in the topbar and change the current shortcuts to more popular games**",
+        "***rename movies shortcut in index2.html to primeshows, add shortcuts to main pages in the topbar and change the current shortcuts to more popular games***",
         "***make announcements show even on first visit unlike changelog and allow disabling it via settings***",
         "***fix leave comformation asking u to leave each time you click something***",
         "***change the shortcuts on the main page to include pages***",
         "***add movies to the search bar in main page***",
         "***fix background not turning off soon***",
-        "**fix music page to hide youtube player unless toggled via 3 dot small button, and always shown on proxy mode, fix all the controls for video time, volume**",
-        "**add singlefile using cdns for each page so it autoupdates and is easy enough to make**",
+        "***fix music page to hide youtube player unless toggled via 3 dot small button, and always shown on proxy mode, fix all the controls for video time, volume***",
+        "**add singlefile this is lowk so hard i dont really understand it**",
         "**advertise phantom (too much work tbh)**",
         "**add a watch page for youtube and twitch**",
         "**add a miniplayer for music**",
         "***shorten some page's code***",
-        "**fix paths in search autocomplete**",
-        "**fix markdown in ai not using correct text colors**",
-        "**make backgrounds show in the loading screen**",
-        "**fix icons for topbar in code.html**",
+        "***fix paths in search autocomplete***",
+        "***fix markdown in ai not using correct text colors***",
+        "***make backgrounds show in the loading screen***",
+        "***fix icons for topbar in code.html***",
         "**fix wisp server not notifying or autoswitiching when offline in proxy**",
-        "**fix code runner open not working at all**",
-        "**make backgrounds show in player.html**",
-        "**make backgrounds show in staticsjv2**",
+        "***fix code runner open not working at all***",
+        "***make backgrounds show in player.html***",
+        "***make backgrounds show in staticsjv2***",
         "***make player.html player controls use theme colros not hardcoded***",
         "***make ai chat and music sidebar go all the way down and up with borders***",
         "**make the only song in music be lebron lebron lebron james**",
+        "**fix music controls**",
         "***finish extra page into credits and make this todo be tucked away somewhere and not the main part of it***"
     ],
     defaultWisp: "wss://glseries.net/wisp/",

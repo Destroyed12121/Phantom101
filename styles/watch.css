@@ -1,0 +1,78 @@
+.watch-page {
+    min-height: 100vh;
+    padding: 70px 20px 20px;
+}
+
+.tab-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.tab-btn {
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+}
+
+.tab-btn.active {
+    background: var(--text);
+    color: var(--bg);
+}
+
+#youtube-tab.active {
+    background: #FF0000;
+    color: white;
+    border-color: #FF0000;
+}
+
+#twitch-tab.active {
+    background: #9146FF;
+    color: white;
+    border-color: #9146FF;
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 100px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    opacity: 0.2;
+}
+
+.media-card {
+    aspect-ratio: 16 / 9;
+}
+
+.error-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--error);
+}

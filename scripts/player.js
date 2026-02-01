@@ -1,6 +1,6 @@
 const params = new URLSearchParams(window.location.search);
 const type = params.get('type'), id = params.get('id'), title = params.get('title'), urlParam = params.get('url'), season = params.get('season'), episode = params.get('episode');
-const frame = document.getElementById('game-frame'), titleEl = document.getElementById('player-title'), descEl = document.getElementById('player-desc'), proxyToggle = document.getElementById('proxy-toggle');
+const frame = document.getElementById('game-frame'), titleEl = document.getElementById('player-title'), descEl = document.getElementById('player-desc'), quoteEl = document.getElementById('player-quote'), proxyToggle = document.getElementById('proxy-toggle');
 
 const PROVIDERS = [
     { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}', tv: 'https://player.vidify.top/embed/tv/{id}&s={season}&e={episode}' } },
@@ -38,15 +38,41 @@ function init() {
         loadProvider(PROVIDERS[0].id);
     }
     const q = window.Quotes ? window.Quotes.getRandom() : '';
-    descEl.textContent = (type !== 'game' ? (JSON.parse(sessionStorage.getItem('currentMovie') || '{}').overview || 'No description') + '\n\n' : '') + q;
+    descEl.textContent = (type !== 'game' ? (JSON.parse(sessionStorage.getItem('currentMovie') || '{}').overview || 'No description') : '');
+    if (quoteEl) quoteEl.textContent = q;
 }
+
+const videoFrame = document.getElementById('video-frame');
+let hlsPlayer = null;
 
 async function loadGame(url, silent = false) {
     currentUrl = url;
     if (!silent) switcher.retry = 0;
     switcher.start();
-    if (url.includes('#') || url.includes('staticsjv2/')) frame.src = url;
-    else {
+
+    // Reset visibility
+    frame.style.display = 'block';
+    videoFrame.style.display = 'none';
+    if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
+
+    // Check if it's an HLS stream (m3u8 or Twitch proxy)
+    const isHLS = url.includes('.m3u8') || url.includes('twitch.leelive2021.workers.dev');
+
+    if (isHLS) {
+        frame.style.display = 'none';
+        videoFrame.style.display = 'block';
+        if (Hls.isSupported()) {
+            hlsPlayer = new Hls();
+            hlsPlayer.loadSource(url);
+            hlsPlayer.attachMedia(videoFrame);
+            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => videoFrame.play());
+        } else if (videoFrame.canPlayType('application/vnd.apple.mpegurl')) {
+            videoFrame.src = url;
+            videoFrame.addEventListener('loadedmetadata', () => videoFrame.play());
+        }
+    } else if (url.includes('#') || url.includes('staticsjv2/') || url.includes('youtube.com') || url.includes('youtube-nocookie.com')) {
+        frame.src = url;
+    } else {
         try {
             const h = await (await fetch(url)).text();
             const d = frame.contentDocument || frame.contentWindow.document;
@@ -75,17 +101,18 @@ document.getElementById('btn-theater').onclick = () => {
     const isTheater = b.classList.toggle('theater-active');
     const btn = document.getElementById('btn-theater');
     btn.innerHTML = isTheater ? '<i class="fa-solid fa-compress"></i> Exit Theater' : '<i class="fa-solid fa-masks-theater"></i> Theater Mode';
-    
+
     // Scroll to top to prevent footer from showing
     window.scrollTo(0, 0);
-    
+
     if (isTheater) {
         window.Notify?.success('Theater Mode', 'Enjoy your movie!');
     }
 };
 document.getElementById('btn-fullscreen').onclick = () => {
-    window.Notify?.info('Fullscreen', 'Entering fullscreen mode lil bro');
-    frame.requestFullscreen?.() || frame.webkitRequestFullscreen?.() || document.getElementById('frame-wrapper').requestFullscreen();
+    window.Notify?.info('Fullscreen', 'Entering fullscreen mode...');
+    const target = (videoFrame.style.display === 'block') ? videoFrame : frame;
+    target.requestFullscreen?.() || target.webkitRequestFullscreen?.() || document.getElementById('frame-wrapper').requestFullscreen();
 };
 document.getElementById('btn-newtab').onclick = async () => {
     window.Notify?.info('Opening', 'Opening in new tab...');

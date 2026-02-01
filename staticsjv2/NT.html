@@ -10,6 +10,21 @@
   <script src="../scripts/settings.js"></script>
   <script src="../scripts/background.js"></script>
   <script src="../scripts/quotes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs" type="module"></script>
+  <script type="module">
+    import { BareMuxConnection } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+
+    if (!window.BareMuxConnection) {
+      window.BareMuxConnection = BareMuxConnection;
+      // Init connection for background proxying
+      (async () => {
+        const connection = new BareMuxConnection("./bareworker.js");
+        const wispUrl = (window.SITE_CONFIG && window.SITE_CONFIG.defaultWisp) || "wss://glseries.net/wisp/";
+        await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
+        console.log("NT.html: Proxy connection initialized for backgrounds.");
+      })();
+    }
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -188,71 +203,11 @@
       max-width: 400px;
       text-align: center;
     }
-
-    .loader {
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 10, 10, 0.6);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-    }
-
-    .loader.show {
-      display: flex;
-    }
-
-    .loader-logo {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .loader-logo i {
-      color: var(--text-muted);
-    }
-
-    .loader-logo span {
-      background: linear-gradient(90deg, var(--text) 0%, var(--text-muted) 40%, var(--text-dim) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .loader-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--text-muted);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    .loader-text {
-      margin-top: 16px;
-      color: var(--text-dim);
-      font-size: 0.875rem;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
   </style>
 </head>
 
 <body>
-  <div class="loader" id="loader">
-    <div class="spinner"></div>
-  </div>
+
 
   <div class="clock" id="clock">00:00</div>
   <div class="date" id="date"></div>
@@ -322,7 +277,6 @@
   <script>
     const $ = s => document.querySelector(s);
     const nav = url => {
-      $('#loader').classList.add('show');
       window.parent?.postMessage({ type: 'navigate', url }, '*');
     };
 
