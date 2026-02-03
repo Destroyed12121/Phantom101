@@ -31,7 +31,13 @@ body.phantom-bg-active #app {
 
 body.phantom-bg-active .tabs,
 body.phantom-bg-active .nav {
+<<<<<<< HEAD
     background: rgba(10, 10, 10, 0.45) !important;
+=======
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 /* Layout */
@@ -54,6 +60,11 @@ body.phantom-bg-active .nav {
 /* Glass effect when background is active */
 body.phantom-bg-active .tabs {
     background: rgba(10, 10, 10, 0.3);
+<<<<<<< HEAD
+=======
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 .tabs::-webkit-scrollbar {
@@ -150,6 +161,11 @@ body.phantom-bg-active .tabs {
 /* Glass effect when background is active */
 body.phantom-bg-active .nav {
     background: rgba(10, 10, 10, 0.3);
+<<<<<<< HEAD
+=======
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 .nav button {
@@ -585,6 +601,7 @@ input.bar::placeholder {
     color: #ef4444;
 }
 
+<<<<<<< HEAD
 /* Settings Tabs */
 .settings-nav-tabs {
     display: flex;
@@ -693,4 +710,39 @@ body.phantom-bg-active .iframe-loading {
 body.phantom-bg-active .message-container {
     background: rgba(10, 10, 10, 0.45) !important;
     backdrop-filter: blur(12px);
+=======
+.flex {
+    display: flex;
+}
+/* Toggle Switch */
+.toggle-switch {
+    width: 36px;
+    height: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.toggle-switch.active {
+    background: var(--toggle, var(--accent));
+    border-color: var(--toggle, var(--accent));
+}
+
+.toggle-knob {
+    width: 16px;
+    height: 16px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    transition: all 0.2s;
+}
+
+.toggle-switch.active .toggle-knob {
+    background: var(--toggle-knob, #fff);
+    left: 17px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }

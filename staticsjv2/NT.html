@@ -10,6 +10,7 @@
   <script src="../scripts/settings.js"></script>
   <script src="../scripts/background.js"></script>
   <script src="../scripts/quotes.js"></script>
+<<<<<<< HEAD
   <script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs" type="module"></script>
   <script type="module">
     import { BareMuxConnection } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
@@ -29,6 +30,10 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
+=======
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     * {
       box-sizing: border-box;
       margin: 0;
@@ -45,11 +50,14 @@
       align-items: center;
       justify-content: center;
       padding: 40px 20px;
+<<<<<<< HEAD
       transition: background 0.3s ease;
     }
 
     body.phantom-bg-active {
       background: transparent !important;
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 
     .clock {
@@ -57,7 +65,11 @@
       font-weight: 600;
       letter-spacing: -2px;
       margin-bottom: 8px;
+<<<<<<< HEAD
       color: var(--text);
+=======
+      color: var(--accent);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 
     .date {
@@ -77,6 +89,7 @@
       width: 100%;
       max-width: 500px;
       margin-bottom: 40px;
+<<<<<<< HEAD
       transition: all 0.2s ease;
     }
 
@@ -89,6 +102,8 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border-color: rgba(255, 255, 255, 0.1);
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 
     .search-box i {
@@ -124,7 +139,11 @@
     .shortcuts {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
+<<<<<<< HEAD
       gap: 12px;
+=======
+      gap: 16px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
       max-width: 500px;
       width: 100%;
     }
@@ -136,6 +155,7 @@
       gap: 8px;
       text-decoration: none;
       cursor: pointer;
+<<<<<<< HEAD
       padding: 8px;
       border-radius: 12px;
       transition: all 0.15s;
@@ -143,6 +163,8 @@
 
     .shortcut:hover {
       background: var(--surface-hover);
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 
     .shortcut-icon {
@@ -157,6 +179,7 @@
       transition: all 0.15s;
     }
 
+<<<<<<< HEAD
     body.phantom-bg-active .shortcut-icon {
       background: rgba(15, 15, 15, 0.6);
       backdrop-filter: blur(10px);
@@ -168,6 +191,11 @@
       background: var(--surface-hover);
       transform: translateY(-2px);
       border-color: var(--border-light);
+=======
+    .shortcut:hover .shortcut-icon {
+      background: var(--surface-hover);
+      transform: translateY(-2px);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 
     .shortcut-icon img {
@@ -203,11 +231,49 @@
       max-width: 400px;
       text-align: center;
     }
+<<<<<<< HEAD
+=======
+
+    .loader {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .loader.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
   </style>
 </head>
 
 <body>
+<<<<<<< HEAD
 
+=======
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+  </div>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
   <div class="clock" id="clock">00:00</div>
   <div class="date" id="date"></div>
@@ -277,6 +343,7 @@
   <script>
     const $ = s => document.querySelector(s);
     const nav = url => {
+<<<<<<< HEAD
       window.parent?.postMessage({ type: 'navigate', url }, '*');
     };
 
@@ -286,6 +353,12 @@
     // Initialize quotes
     if (window.Quotes) Quotes.init(true);
 
+=======
+      $('#loader').classList.add('show');
+      window.parent?.postMessage({ type: 'navigate', url }, '*');
+    };
+
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     // Clock
     function updateClock() {
       const now = new Date();
@@ -341,7 +414,14 @@
       });
     }
 
+<<<<<<< HEAD
 
+=======
+    // Quote
+    if (window.QUOTES?.length) {
+      $('#quote').textContent = window.QUOTES[Math.floor(Math.random() * window.QUOTES.length)];
+    }
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
     renderCustom();
   </script>

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // topbar
+=======
+// Topbar Component - Original style with animations
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 (function () {
     let rootPrefix = '';
     const scriptName = 'components/topbar.js';
@@ -11,6 +15,10 @@
         }
     }
 
+<<<<<<< HEAD
+=======
+    // Load Lucide icons if not already present
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     if (!window.lucide && !document.querySelector('script[src*="lucide"]')) {
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/lucide@latest';
@@ -26,20 +34,34 @@
         const topbarContainer = document.createElement('div');
         topbarContainer.id = 'topbar-container';
 
+<<<<<<< HEAD
+=======
+        // Logo - Lightning icon
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         const logoSection = document.createElement('a');
         logoSection.className = 'logo-section';
         logoSection.href = rootPrefix + 'index2.html';
         logoSection.innerHTML = '<div class="logo-placeholder"><i data-lucide="zap"></i></div>';
         topbarContainer.appendChild(logoSection);
 
+<<<<<<< HEAD
+=======
+        // Navigation - Order: Music, Movies, Games, Search, AI Chat, Separator, Settings
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         const navButtons = document.createElement('div');
         navButtons.className = 'nav-buttons';
 
         const buttons = [
+<<<<<<< HEAD
             { name: 'Music', icon: 'music', link: 'pages/music.html', },
             { name: 'Movies', icon: 'film', link: 'pages/movies.html' },
             { name: 'Games', icon: 'gamepad-2', link: 'pages/games.html' },
             { name: 'Watch', icon: 'play', link: 'pages/watch.html' },
+=======
+            { name: 'Music', icon: 'music', link: 'pages/music.html', badge: 'BETA' },
+            { name: 'Movies', icon: 'film', link: 'pages/movies.html' },
+            { name: 'Games', icon: 'gamepad-2', link: 'pages/games.html' },
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
             { name: 'Search', icon: 'search', link: 'staticsjv2/index.html' },
             { name: 'AI Chat', icon: 'bot', link: 'pages/chat.html' },
             { separator: true },
@@ -81,6 +103,12 @@
 
         if (window.lucide) {
             lucide.createIcons();
+<<<<<<< HEAD
+=======
+            // Retry a few times to ensure icons are rendered even if there's a race condition
+            setTimeout(() => lucide.createIcons(), 100);
+            setTimeout(() => lucide.createIcons(), 500);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         }
     }
 

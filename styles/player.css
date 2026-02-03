@@ -4,7 +4,11 @@
 
 .player-page {
     min-height: 100vh;
+<<<<<<< HEAD
     padding: 70px 20px 40px;
+=======
+    padding: 80px 20px 40px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -32,23 +36,39 @@
     position: relative;
     width: 100%;
     padding-top: 56.25%;
+<<<<<<< HEAD
     /* 16:9  */
+=======
+    /* 16:9 Aspect Ratio */
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     background: var(--bg);
     z-index: 5;
     overflow: hidden;
 }
 
+<<<<<<< HEAD
 /* Theater Mode */
+=======
+/* ============================================
+   THEATER MODE
+   ============================================ */
+/* ============================================
+   THEATER MODE
+   ============================================ */
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 body.theater-active {
     background: var(--bg) !important;
     overflow: hidden;
     /* Prevent scrolling */
 }
 
+<<<<<<< HEAD
 body.theater-active #site-footer {
     display: none !important;
 }
 
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 body.theater-active .topbar {
     transform: translateY(-100%);
     /* Hide topbar */
@@ -79,7 +99,11 @@ body.theater-active .player-frame-wrapper {
     justify-content: center;
 }
 
+<<<<<<< HEAD
 /* Theater Mode Overlays */
+=======
+/* Theater Mode Overlays - Bottom Aligned */
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 body.theater-active .player-controls,
 body.theater-active .player-info {
     position: absolute;
@@ -98,10 +122,13 @@ body.theater-active.user-idle .player-info {
     pointer-events: none;
 }
 
+<<<<<<< HEAD
 body.theater-active.user-idle {
     cursor: none;
 }
 
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 /* Stack styling */
 body.theater-active .player-controls {
     bottom: 0;
@@ -188,6 +215,7 @@ body.theater-active .player-info>* {
     font-size: 0.875rem;
 }
 
+<<<<<<< HEAD
 .player-quote {
     color: var(--text-muted);
     line-height: 1.6;
@@ -197,6 +225,8 @@ body.theater-active .player-info>* {
     opacity: 0.8;
 }
 
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 /* Movie Controls */
 .player-movie-controls {
     display: none;

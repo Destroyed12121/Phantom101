@@ -152,7 +152,10 @@
     <script src="scripts/settings.js"></script>
     <script src="scripts/background.js"></script>
     <script src="scripts/cloaking.js"></script>
+<<<<<<< HEAD
     <script src="scripts/quotes.js"></script>
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     <script>Settings.apply();</script>
     <link rel="stylesheet" href="styles/error.css">
     <link rel="stylesheet" href="styles/background.css">
@@ -164,6 +167,10 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LMBC27Z" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+<<<<<<< HEAD
+=======
+
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     <!-- First Visit Cloak Layer -->
     <div id="fv-cloak" class="neterror">
         <div id="main-frame-error" class="interstitial-wrapper">
@@ -204,6 +211,7 @@
                         if (overlay) overlay.style.display = 'block';
                         document.title = origin;
 
+<<<<<<< HEAD
                         // Remove favicon for fake error page
                         document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
                         const link = document.createElement('link');
@@ -211,6 +219,8 @@
                         link.href = 'data:,';
                         document.head.appendChild(link);
 
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
                         // Hide loading screen immediately if possible
                         const style = document.createElement('style');
                         style.innerHTML = '#loading-screen { display: none !important; }';
@@ -222,6 +232,7 @@
                             overlay.style.display = 'none';
                             document.getElementById('main-frame').src = 'index2.html';
                             document.title = 'Phantom Unblocked'; // Reset title
+<<<<<<< HEAD
 
                             // Restore favicon
                             document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
@@ -229,6 +240,8 @@
                             link.rel = 'icon';
                             link.href = 'favicon.svg';
                             document.head.appendChild(link);
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
                         };
                     } else {
                         // If no cloak, load main content immediately
@@ -263,7 +276,51 @@
 
     <iframe id="main-frame"></iframe>
 
+<<<<<<< HEAD
     <script src="scripts/rotation.js"></script>
+=======
+    <script>
+        // Panic Key Handler for index.html - Fast white screen
+        document.addEventListener('keydown', (e) => {
+            // Get settings
+            let panicKey = 'x';
+            let panicModifiers = ['ctrl', 'shift'];
+            let panicUrl = 'https://classroom.google.com';
+
+            try {
+                const settings = JSON.parse(localStorage.getItem('void_settings') || '{}');
+                if (settings.panicKey) panicKey = settings.panicKey;
+                if (settings.panicModifiers) panicModifiers = settings.panicModifiers;
+                if (settings.panicUrl) panicUrl = settings.panicUrl;
+            } catch (err) { }
+
+            // Check if required modifiers are pressed
+            const ctrlRequired = panicModifiers.includes('ctrl');
+            const shiftRequired = panicModifiers.includes('shift');
+            const altRequired = panicModifiers.includes('alt');
+
+            // Match if required modifiers match AND unrequired modifiers are not pressed
+            const ctrlMatch = ctrlRequired ? e.ctrlKey : !e.ctrlKey;
+            const shiftMatch = shiftRequired ? e.shiftKey : !e.shiftKey;
+            const altMatch = altRequired ? e.altKey : !e.altKey;
+
+            if (ctrlMatch && shiftMatch && altMatch && e.key.toLowerCase() === panicKey.toLowerCase()) {
+                e.preventDefault();
+
+                // Show white screen instantly
+                const overlay = document.getElementById('panic-overlay');
+                overlay.style.display = 'block';
+
+                // Redirect immediately
+                try {
+                    window.location.replace(panicUrl);
+                } catch (err) {
+                    window.location.href = panicUrl;
+                }
+            }
+        }, true); // Use capture phase for faster response
+    </script>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
     <script>
         const loadingScreen = document.getElementById('loading-screen');
@@ -273,7 +330,10 @@
 
         function showLoading() {
             loadingScreen.classList.remove('hidden');
+<<<<<<< HEAD
             if (window.Quotes) window.Quotes.init(true);
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
             loadStartTime = Date.now();
 
             clearTimeout(fallbackTimer);

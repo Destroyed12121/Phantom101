@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Proxy</title>
+    <script src="../config.js"></script>
+    <style>
+        body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent}
+        img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s ease-in}
+        img.loaded{opacity:1}
+    </style>
+</head>
+<body>
+    <img id="bg-img" alt="" loading="eager">
+    <script>
+        const CACHE_NAME='phantom-bg-cache-v2';
+        const SITE_CONFIG = window.SITE_CONFIG || {
+            defaultWisp: "wss://glseries.net/wisp/",
+            wispServers: [
+                { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
+                { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/wisp/" }
+            ]
+        };
+        const DEFAULT_WISP = SITE_CONFIG.defaultWisp;
+        const WISP_SERVERS = SITE_CONFIG.wispServers;
+        let parentBareMux=null;
+        const img=document.getElementById('bg-img');
+
+        window.addEventListener('message',e=>{if(e.data?.type==='baremux-data'&&e.data.BareMux)parentBareMux=e.data.BareMux});
+
+        const waitForParentBareMux=(maxWait=300)=>new Promise(resolve=>{if(parentBareMux)return resolve(true);const start=Date.now();const check=()=>{if(parentBareMux)resolve(true);else if(Date.now()-start>maxWait)resolve(false);else setTimeout(check,20)};check()});
+
+        const loadBlob=(blob,url)=>{const objectUrl=URL.createObjectURL(blob);img.src=objectUrl;img.onload=()=>{img.classList.add('loaded');window.parent.postMessage({type:'bg-loaded',url},'*')};img.onerror=()=>window.parent.postMessage({type:'bg-error',url},'*')};
+
+        const cacheImage=async(response)=>{try{const cache=await caches.open(CACHE_NAME);cache.put(new URL(response.url).href,response.clone())}catch(e){}};
+
+        const tryDirectFetch=async(url)=>{const response=await fetch(url);if(!response.ok)throw new Error('Direct fetch failed');await cacheImage(response);loadBlob(await response.blob(),url)};
+
+        const tryMinimalProxy=async(url)=>{if(!('serviceWorker' in navigator))throw new Error("Service Worker not supported");const basePath=location.pathname.replace(/[^/]*$/,'')+'/';const reg=await navigator.serviceWorker.register(basePath+'sw.js',{scope:basePath});await navigator.serviceWorker.ready;const wispUrl=localStorage.getItem("proxServer")||DEFAULT_WISP;const customWisps=JSON.parse(localStorage.getItem('customWisps')||'[]');const allServers=[...WISP_SERVERS,...customWisps];const sw=reg.active||navigator.serviceWorker.controller;if(sw)sw.postMessage({type:"config",wispurl:wispUrl,servers:allServers});const BareMuxModule=await import("https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs");const connection=new BareMuxModule.BareMuxConnection(basePath+"bareworker.js");await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",[{wisp:wispUrl}]);const response=await fetch(url);if(!response.ok)throw new Error('Proxy fetch failed');await cacheImage(response);loadBlob(await response.blob(),url)};
+
+        const fetchWithParentBareMux=async(url)=>{window.parent.postMessage({type:'proxy-fetch',url,targetOrigin:window.location.origin},'*');const handler=e=>{if(e.data?.type==='proxy-fetch-result'&&e.data.url===url){window.removeEventListener('message',handler);e.data.error?tryDirectFetch(url):loadBlob(e.data.blob,url)}};window.addEventListener('message',handler);setTimeout(()=>{window.removeEventListener('message',handler);if(!img.src)tryDirectFetch(url)},800)};
+
+        async function initialize(){const hash=window.location.hash.substring(1);let url=hash;let objectPosition='center';if(hash.includes('url=')){try{const params=new URLSearchParams(hash);url=params.get('url');objectPosition=params.get('pos')||'center'}catch(e){url=hash}}if(!url)return;img.style.objectPosition=objectPosition;try{const cache=await caches.open(CACHE_NAME);const cached=await cache.match(url);if(cached){loadBlob(await cached.blob(),url);return}}catch(e){}if(await waitForParentBareMux()&&parentBareMux){await fetchWithParentBareMux(url);return}try{await tryDirectFetch(url)}catch(err){try{await tryMinimalProxy(url)}catch(e){console.error("All proxy methods failed:",e);window.parent.postMessage({type:'bg-error',url,error:e.message},'*')}}}
+
+        window.addEventListener('load',initialize);
+    </script>
+</body>
+</html>

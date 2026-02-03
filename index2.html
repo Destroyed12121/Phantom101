@@ -198,10 +198,16 @@
     <script src="scripts/cloaking.js"></script>
     <script src="scripts/quotes.js"></script>
     <script src="scripts/notifications.js"></script>
+<<<<<<< HEAD
     <script src="scripts/rotation.js"></script>
     <script src="scripts/featured.js"></script>
     <script src="components/UGSfiles.js"></script>
     <script src="scripts/gloader.js"></script>
+=======
+    <script src="scripts/featured.js"></script>
+    <script src="components/UGSfiles.js"></script>
+    <script src="scripts/movies.js"></script>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     <script src="scripts/search.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js"></script>
     <script type="module">
@@ -245,6 +251,7 @@
 
 
     <script>
+<<<<<<< HEAD
 
 
         // Featured games
@@ -256,11 +263,21 @@
             if (!grid) return;
 
             const fragment = document.createDocumentFragment();
+=======
+        // Featured games
+        (async () => {
+            // Load featured games
+            await window.FeaturedGames.load();
+            const featuredGames = window.FeaturedGames.games;
+
+            const grid = document.getElementById('featured-grid');
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
             featuredGames.forEach(g => {
                 const card = document.createElement('a');
                 card.href = g.url;
                 card.className = 'featured-card';
                 card.innerHTML = `
+<<<<<<< HEAD
                     <div class="featured-card-icon" style="background: ${g.gameName ? 'transparent' : 'var(--surface-hover)'}; color: var(--text-muted);">
                         ${g.img ? `<img src="${g.img}" loading="eager" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-gamepad\\'></i>'">` : `<i class="${g.icon}"></i>`}
                     </div>
@@ -271,6 +288,23 @@
             grid.appendChild(fragment);
         })();
 
+=======
+                    <div class="featured-card-icon" style="background: ${g.img ? 'transparent' : 'var(--surface-hover)'}; color: var(--text-muted);">
+                        ${g.img ? `<img src="${g.img}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-gamepad\\'></i>'">` : `<i class="${g.icon}"></i>`}
+                    </div>
+                    <div class="featured-card-title">${g.name}</div>
+                `;
+                grid.appendChild(card);
+            });
+        })();
+
+        // Quote
+        const subtitle = document.getElementById('subtitle');
+        if (window.QUOTES?.length) {
+            subtitle.textContent = window.QUOTES[Math.floor(Math.random() * window.QUOTES.length)];
+        }
+
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
 
         // Theme notification
@@ -281,10 +315,20 @@
                 }
             }, 1500);
         });
+<<<<<<< HEAD
     </script>
 
     <script src="components/footer.js"></script>
     <script src="scripts/init.js"></script>
+=======
+
+
+
+    </script>
+
+    <script src="components/footer.js"></script>
+    <script src="staticsjv2/init.js"></script>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 </body>
 
 </html>

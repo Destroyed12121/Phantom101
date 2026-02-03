@@ -35,12 +35,16 @@
 
 | File | What It Does | Don't Redo This |
 |------|--------------|-----------------|
+<<<<<<< HEAD
 | `main.css` | Core design system: CSS variables, buttons, cards, modals, grids, utilities | ❌ Don't define new colors/components |
 | `background.css` | Background manager styles, glassmorphism effects | ❌ Don't add background styles elsewhere |
 | `layout.css` | Shared page layout: header, controls, search-box, select-wrapper | ❌ Don't duplicate in page-specific CSS |
 | `games.css` | Games page specific styles | - |
 | `movies.css` | Movies page specific styles | - |
 | `card.css` | Shared media card styles (movies, featured, etc.) | ❌ Don't duplicate card styles |
+=======
+| `main.css` | Full design system: CSS variables, buttons, cards, modals, grids, utilities | ❌ Don't define new colors/components |
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 | `topbar.css` | **Empty** - Real styles are in `components/topbar.css` | - |
 
 ---
@@ -51,6 +55,10 @@
 |------|--------------|-----------------|
 | `footer.js` | Adds footer (settings, changelog, discord, terms links) + panic key handler | ❌ Don't add footer HTML manually |
 | `topbar.js` | Adds navigation bar with icons | ❌ Don't add nav HTML manually |
+<<<<<<< HEAD
+=======
+| `topbar.css` | Styles for navigation bar | ❌ Don't style nav separately |
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
 ---
 

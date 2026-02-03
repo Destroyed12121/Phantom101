@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 // code editor
+=======
+// ============================================
+// CODE EDITOR - PHANTOM
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
 const state = {
     files: new Map(),
@@ -7,6 +13,10 @@ const state = {
     activePanel: 'terminal'
 };
 
+<<<<<<< HEAD
+=======
+// Default starter file
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 state.files.set('index.html', {
     content: `<!DOCTYPE html>
 <html>
@@ -31,13 +41,23 @@ state.files.set('index.html', {
     language: 'html'
 });
 
+<<<<<<< HEAD
+=======
+// Load JSZip if needed
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 if (typeof JSZip === 'undefined') {
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js';
     document.head.appendChild(script);
 }
 
+<<<<<<< HEAD
 // linting
+=======
+// ============================================
+// LINTER
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 function lintCode(code, language) {
     const problems = [];
     if (language !== 'javascript' && language !== 'typescript') return problems;
@@ -116,7 +136,13 @@ window.jumpToLine = (line) => {
     }
 };
 
+<<<<<<< HEAD
 // monaco
+=======
+// ============================================
+// MONACO EDITOR
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
 
 require(['vs/editor/editor.main'], function () {
@@ -162,7 +188,13 @@ require(['vs/editor/editor.main'], function () {
     log('Editor ready', 'info');
 });
 
+<<<<<<< HEAD
 // files
+=======
+// ============================================
+// FILE MANAGEMENT
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 const fileTree = document.getElementById('file-tree');
 const editorTabs = document.getElementById('editor-tabs');
 
@@ -306,7 +338,13 @@ function renameFile(oldName) {
     renderTabs();
 }
 
+<<<<<<< HEAD
 // drag n drop
+=======
+// ============================================
+// DRAG & DROP
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 fileTree.addEventListener('dragover', e => { e.preventDefault(); fileTree.classList.add('drag-over'); });
 fileTree.addEventListener('dragleave', () => fileTree.classList.remove('drag-over'));
 fileTree.addEventListener('drop', async e => {
@@ -340,7 +378,13 @@ async function processEntry(entry, path = '') {
     }
 }
 
+<<<<<<< HEAD
 // terminal
+=======
+// ============================================
+// TERMINAL
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 const terminalPanel = document.getElementById('terminal-panel');
 const terminalContent = document.getElementById('terminal-content');
 
@@ -379,13 +423,25 @@ document.addEventListener('mousemove', e => {
 });
 document.addEventListener('mouseup', () => { resizing = false; });
 
+<<<<<<< HEAD
 // toolbar
 
+=======
+// ============================================
+// TOOLBAR ACTIONS
+// ============================================
+
+// New file
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 document.getElementById('new-file-btn').onclick = () => {
     const name = prompt('File name:', 'new.js');
     if (name) addFile(name.trim());
 };
 
+<<<<<<< HEAD
+=======
+// Language select
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 document.getElementById('language-select').onchange = e => {
     if (state.editor && state.activeFile) {
         const lang = e.target.value;
@@ -394,6 +450,10 @@ document.getElementById('language-select').onchange = e => {
     }
 };
 
+<<<<<<< HEAD
+=======
+// Fix Code - Massive Update
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 document.getElementById('fix-code-btn').onclick = async () => {
     if (!state.editor) return;
 
@@ -403,6 +463,10 @@ document.getElementById('fix-code-btn').onclick = async () => {
     btn.disabled = true;
 
     try {
+<<<<<<< HEAD
+=======
+        // 1. Trigger Monaco's internal formatter first
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         await state.editor.getAction('editor.action.formatDocument').run();
 
         const lang = state.files.get(state.activeFile)?.language || 'javascript';
@@ -483,8 +547,14 @@ document.getElementById('fix-code-btn').onclick = async () => {
     }
 };
 
+<<<<<<< HEAD
 
 // run it
+=======
+// Button hidden in HTML
+
+// Open in New Tab (Run Feature)
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 document.getElementById('open-tab-btn').onclick = async () => {
     if (!state.activeFile || !state.files.has(state.activeFile)) return;
 
@@ -499,6 +569,10 @@ document.getElementById('open-tab-btn').onclick = async () => {
 
         const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+<<<<<<< HEAD
+=======
+        // Premium Project Bundler
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         if (lang === 'html') {
             state.files.forEach((otherData, otherName) => {
                 const ext = otherName.split('.').pop().toLowerCase();
@@ -587,6 +661,10 @@ document.getElementById('open-tab-btn').onclick = async () => {
     }
 };
 
+<<<<<<< HEAD
+=======
+// Save
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 document.getElementById('save-btn').onclick = () => {
     if (!state.activeFile) return;
 
@@ -601,6 +679,10 @@ document.getElementById('save-btn').onclick = () => {
     if (window.Notify) Notify.success('Saved', state.activeFile + ' downloaded');
 };
 
+<<<<<<< HEAD
+=======
+// Export ZIP
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 document.getElementById('export-btn').onclick = async () => {
     if (typeof JSZip === 'undefined') {
         if (window.Notify) Notify.error('Error', 'JSZip not loaded');
@@ -623,7 +705,13 @@ document.getElementById('export-btn').onclick = async () => {
     }
 };
 
+<<<<<<< HEAD
 // keys
+=======
+// ============================================
+// KEYBOARD SHORTCUTS
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
@@ -635,6 +723,12 @@ document.addEventListener('keydown', e => {
     }
 });
 
+<<<<<<< HEAD
+=======
+// ============================================
+// INIT
+// ============================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 renderFiles();
 renderTabs();
 if (window.Settings) Settings.apply();

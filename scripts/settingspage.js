@@ -166,7 +166,11 @@ function renderBackgrounds() {
             btn.onmouseenter = () => {
                 video.muted = true;
                 video.volume = 0;
+<<<<<<< HEAD
                 video.play().catch(() => { }); // Ignore play promise rejection
+=======
+                video.play().catch(() => {}); // Ignore play promise rejection
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
             };
             btn.onmouseleave = () => {
                 video.pause();
@@ -370,6 +374,7 @@ document.addEventListener('keydown', e => {
 });
 
 document.getElementById('clear-cache').onclick = async () => {
+<<<<<<< HEAD
     if (!confirm('Clear all cached data? This will unregister service workers and clear secondary storage.')) return;
 
     // 1. Clear Cache Storage
@@ -408,6 +413,12 @@ document.getElementById('clear-cache').onclick = async () => {
     else alert('Cache cleared successfully! Reloading...');
 
     setTimeout(() => location.reload(), 1000);
+=======
+    if (!confirm('Clear all cached data?')) return;
+    if ('caches' in window) { const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); }
+    if (window.Notify) Notify.success('Success', 'Cache cleared successfully!');
+    else alert('Cache cleared!');
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 };
 document.getElementById('reset-settings').onclick = () => {
     if (!confirm('Reset all settings?')) return;

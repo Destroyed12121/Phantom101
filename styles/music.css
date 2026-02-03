@@ -1,6 +1,24 @@
+<<<<<<< HEAD
 /* Music Page Styles */
 
 /* Global resets handled by main.css */
+=======
+/* Music Page Styles - Phantom Unified Design System */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
 .app {
     display: flex;
@@ -109,8 +127,12 @@
     transition: transform .2s;
 }
 
+<<<<<<< HEAD
 .playlist-item.expanded .playlist-expand,
 .playlist-expand.expanded {
+=======
+.playlist-item.expanded .playlist-expand {
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     transform: rotate(180deg);
 }
 
@@ -259,7 +281,11 @@
     background: var(--surface);
     padding: 4px;
     border-radius: 8px;
+<<<<<<< HEAD
     margin-bottom: 16px;
+=======
+    margin-bottom: 24px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -289,7 +315,11 @@
 .search-container {
     width: 100%;
     max-width: 480px;
+<<<<<<< HEAD
     margin-bottom: 24px;
+=======
+    margin-bottom: 40px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     z-index: 20;
 }
 
@@ -652,7 +682,11 @@
 
 /* Lyrics */
 .lyrics-section {
+<<<<<<< HEAD
     margin-top: 24px;
+=======
+    margin-top: 36px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     max-width: 500px;
     width: 100%;
     text-align: center;
@@ -671,6 +705,7 @@
     line-height: 2;
     max-height: 120px;
     overflow-y: auto;
+<<<<<<< HEAD
     scroll-behavior: smooth;
     mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
@@ -699,6 +734,10 @@
 .yt-toggle-btn:hover {
     opacity: 0.6;
     /* Increased from 0.4 for better visibility on hover */
+=======
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 .lyrics-line {
@@ -780,9 +819,32 @@
 }
 
 /* Modal */
+<<<<<<< HEAD
 .modal {
     padding: 20px;
     min-width: 280px;
+=======
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    width: 300px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 .modal-title {
@@ -799,6 +861,7 @@
     border-radius: 6px;
     color: var(--text);
     font-size: 13px;
+<<<<<<< HEAD
     margin-bottom: 16px;
 }
 
@@ -809,6 +872,9 @@
 
 .modal-input::placeholder {
     color: var(--text-muted);
+=======
+    margin-bottom: 12px;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 .modal-actions {

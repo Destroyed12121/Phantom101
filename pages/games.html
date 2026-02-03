@@ -11,8 +11,242 @@
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/background.css">
+<<<<<<< HEAD
     <link rel="stylesheet" href="../styles/layout.css">
     <link rel="stylesheet" href="../styles/games.css">
+=======
+    <style>
+        .games-page {
+            min-height: 100vh;
+            padding: 70px 20px 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            min-height: 1.25em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            flex: 1;
+            min-width: 200px;
+            transition: background 0.15s;
+        }
+
+        .search-box:hover {
+            background: var(--surface-hover);
+        }
+
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box i {
+            color: var(--text-muted);
+        }
+
+        .ctrl-btn {
+            padding: 10px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            color: var(--text);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ctrl-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--text);
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper select {
+            appearance: none;
+            padding: 10px 32px 10px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            color: var(--text);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* Grid */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 14px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .game-card {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card:hover {
+            transform: translateY(-3px) scale(1.02);
+            border-color: var(--border-light);
+            background: var(--surface-hover);
+            z-index: 5;
+        }
+
+        .game-img-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .game-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .game-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .like-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .game-card:hover .like-btn {
+            opacity: 1;
+        }
+
+        .like-btn.active {
+            color: #ef4444;
+            opacity: 1;
+        }
+
+        .like-btn:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .game-info {
+            padding: 10px;
+            flex: 1;
+        }
+
+        .game-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+        }
+
+        .section-header {
+            max-width: 1200px;
+            margin: 0 auto 16px;
+            padding: 0 4px;
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header i {
+            color: var(--accent, #3b82f6);
+        }
+
+        #liked-section {
+            margin-bottom: 40px;
+            display: none;
+        }
+    </style>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 </head>
 
 <body>
@@ -20,7 +254,11 @@
 
     <div class="games-page">
         <header class="page-header">
+<<<<<<< HEAD
             <h1 class="page-title">Games Library</h1>
+=======
+            <h1 class="page-title">Games libarry</h1>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
             <p class="page-subtitle" id="quote-display">Loading...</p>
         </header>
 
@@ -81,10 +319,20 @@
     <script src="../scripts/notifications.js"></script>
     <script src="../components/footer.js"></script>
     <script src="../components/UGSfiles.js"></script>
+<<<<<<< HEAD
     <script src="../scripts/gloader.js"></script>
     <script src="../scripts/games.js"></script>
     <script>
 
+=======
+    <script src="../scripts/games.js"></script>
+    <script>
+        // Init Quotes
+        if (window.QUOTES) {
+            const quote = window.QUOTES[Math.floor(Math.random() * window.QUOTES.length)];
+            document.getElementById('quote-display').textContent = `${quote}`;
+        }
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
     </script>
 </body>

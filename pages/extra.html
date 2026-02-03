@@ -4,11 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< HEAD
     <title>About - Phantom</title>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/extra.css">
+=======
+    <title>Extra - Phantom</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles/main.css">
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/background.css">
 </head>
@@ -20,6 +27,7 @@
     <script src="../scripts/notifications.js"></script>
     <script src="../components/topbar.js"></script>
 
+<<<<<<< HEAD
     <div class="extra-page">
         <!-- Header -->
         <section class="extra-hero">
@@ -192,6 +200,60 @@
             `).join('');
         }
         loadRoadmap();
+=======
+    <div style="max-width: 700px; margin: 0 auto; padding: 120px 24px 40px;">
+        <div id="extra-content"
+            style="color: var(--text-muted); line-height: 1.8; font-size: 0.9375rem; opacity: 0.8; white-space: pre-wrap;">
+            Loading content...
+        </div>
+
+        <a href="../index.html"
+            style="display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; color: var(--text-muted); font-size: 0.875rem;">
+            <i class="fa-solid fa-arrow-left"></i>
+            Back to Home
+        </a>
+    </div>
+
+    <script src="../components/footer.js"></script>
+    <script>
+        function formatText(text) {
+            // Escape HTML
+            let formatted = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+            // Strikethrough: ~~text~~ or ***text***
+            // Note: Processed before bold to appropriately handle ***
+            formatted = formatted.replace(/(\~\~|\*\*\*)(.*?)\1/g, '<s>$2</s>');
+
+            // Bold: **text** or __text__
+            return formatted.replace(/(\*\*|__)(.*?)\1/g, '<b>$2</b>');
+        }
+
+        async function loadExtraContent() {
+            const container = document.getElementById('extra-content');
+            try {
+                const timestamp = new Date().getTime();
+                const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/refs/heads/master/extra.js?t=${timestamp}`);
+                if (response.ok) {
+                    const text = await response.text();
+                    container.innerHTML = formatText(text);
+                } else {
+                    container.textContent = 'Failed to load content.';
+                    if (window.Notify) Notify.error('Error', 'Failed to load extra content.');
+                }
+            } catch (err) {
+                console.error('Error loading extra content:', err);
+                container.textContent = 'An error occurred while loading content.';
+            }
+        }
+
+        if (window.Settings) Settings.apply();
+        loadExtraContent();
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     </script>
 </body>
 

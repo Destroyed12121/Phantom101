@@ -18,5 +18,9 @@
 
 ## License
 
+<<<<<<< HEAD
 This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+=======
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 

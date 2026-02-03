@@ -19,9 +19,15 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+<<<<<<< HEAD
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     z-index: 10000;
     border: 1px solid var(--border);
+=======
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    border: 1px solid var(--surface-hover);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     height: 48px;
     box-sizing: border-box;
 }

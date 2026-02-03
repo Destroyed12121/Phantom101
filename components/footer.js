@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 // footer
 (function () {
     'use strict';
 
+=======
+// Footer Component
+// Includes: Global Footer, Changelog Popup, Global Panic Key, Rotating Cloaks
+(function () {
+    'use strict';
+
+    // Detect root prefix (needed for links to work from subdirectories)
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     let rootPrefix = '';
     const scriptName = 'components/footer.js';
     const scripts = document.getElementsByTagName('script');
@@ -13,14 +22,28 @@
         }
     }
 
+<<<<<<< HEAD
+=======
+    // Get config and settings
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     const config = window.SITE_CONFIG || { name: 'Phantom', version: '1.0.0', discord: { inviteUrl: '#' }, changelog: [], cloakPresets: [] };
     const STORAGE_KEY = 'void_settings';
     let storedSettings = {};
     try { storedSettings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
 
+<<<<<<< HEAD
     // settings
     let settings = { ...(config.defaults || {}), ...storedSettings };
 
+=======
+    // Merge defaults with stored settings
+    // This ensures new defaults (like showChangelogOnUpdate: true) are respected if not overwritten by user
+    let settings = { ...(config.defaults || {}), ...storedSettings };
+
+    // ==========================================
+    // 1. FOOTER UI
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     const footer = document.createElement('footer');
     footer.id = 'site-footer';
     footer.innerHTML = `
@@ -66,7 +89,11 @@
             <a href="${config.discord?.inviteUrl || '#'}" target="_blank" class="footer-link"><i class="fa-brands fa-discord"></i> Discord</a>
             <a href="${rootPrefix}pages/terms.html" class="footer-link">Terms</a>
             <a href="${rootPrefix}pages/disclaimer.html" class="footer-link">Disclaimer</a>
+<<<<<<< HEAD
             <a href="${rootPrefix}pages/extra.html" class="footer-link">Credits</a>
+=======
+            <a href="${rootPrefix}pages/extra.html" class="footer-link">Extra</a>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         </div>
         <span class="footer-version" id="footer-version">${config.name || 'Phantom'} v${config.version || '1.0.0'}</span>
     `;
@@ -75,7 +102,13 @@
 
 
 
+<<<<<<< HEAD
     // gtm
+=======
+    // ==========================================
+    // GOOGLE TAG MANAGER INJECTION
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     // Inject GTM head script if not already present
     if (!document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
         window.dataLayer = window.dataLayer || [];
@@ -93,6 +126,10 @@
         document.body.insertBefore(gtmNoscript, document.body.firstChild);
     }
 
+<<<<<<< HEAD
+=======
+    // Changelog Popup Logic
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     const openChangelog = (e, customTitle, customContent) => {
         if (e && e.preventDefault) e.preventDefault();
         const changes = customContent || config.changelog || ['No changes listed'];
@@ -143,6 +180,7 @@
     const versionBtn = document.getElementById('footer-version');
     if (versionBtn) versionBtn.onclick = openChangelog;
 
+<<<<<<< HEAD
     // sync
     // syncRemoteChangelog removed - using local config
 
@@ -150,6 +188,61 @@
     // Initialize Sync
     // syncRemoteChangelog();
 
+=======
+    // ==========================================
+    // REMOTE CHANGELOG FETCHING
+    // ==========================================
+    async function syncRemoteChangelog() {
+        const LAST_MSG_HASH = 'phantom_changelog_hash';
+
+        try {
+            // Using a timeout for reliability
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const timestamp = new Date().getTime();
+            const response = await fetch(`https://raw.githubusercontent.com/Destroyed12121/Phantom101/refs/heads/master/message.js?t=${timestamp}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) return;
+            const content = await response.text();
+            if (!content || content.trim().length === 0) return;
+
+            // Parsing (Plaintext or Array)
+            let newChangelog = [];
+            const trimmed = content.trim();
+            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                try { newChangelog = JSON.parse(trimmed.replace(/'/g, '"')); } catch { }
+            }
+            if (!newChangelog.length) {
+                newChangelog = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            }
+
+            if (newChangelog.length === 0) return;
+
+            // Create a simple hash/identifier for the content
+            const contentId = btoa(unescape(encodeURIComponent(newChangelog.join('|')))).substring(0, 32);
+            const previousId = localStorage.getItem(LAST_MSG_HASH);
+
+            // If it's the first time seeing this specific remote message, show it
+            if (previousId !== contentId) {
+                setTimeout(() => {
+                    openChangelog(null, "Announcement", newChangelog);
+                    localStorage.setItem(LAST_MSG_HASH, contentId);
+                }, 2000);
+            }
+        } catch (err) {
+            console.warn("Changelog sync failed:", err);
+        }
+    }
+
+    // Initialize Sync
+    syncRemoteChangelog();
+
+    // ==========================================
+    // AUTO SHOW CHANGELOG ON VERSION UPDATE
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     const currentVersion = config.version;
     const lastVersion = settings.lastVersion;
 
@@ -164,7 +257,13 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     }
 
+<<<<<<< HEAD
     // panic
+=======
+    // ==========================================
+    // 2. GLOBAL PANIC KEY - Fast white screen redirect
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     if (settings.panicKey) {
         document.addEventListener('keydown', (e) => {
             const keys = settings.panicModifiers || ['ctrl', 'shift'];
@@ -198,10 +297,22 @@
         }, true); // Use capture phase for faster response
     }
 
+<<<<<<< HEAD
+=======
+    // ==========================================
+    // 3. CLOAKING (DELEGATED TO CLOAKING.JS)
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     // Cloaking logic has been moved to scripts/cloaking.js for better synchronization.
     // If you need cloaking on a specific page, include that script.
 
 
+<<<<<<< HEAD
+=======
+    // ==========================================
+    // 4. LEAVE CONFIRMATION
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     window.addEventListener('beforeunload', (e) => {
         // Reload settings to get latest value
         try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
@@ -213,7 +324,13 @@
         }
     });
 
+<<<<<<< HEAD
     // discord
+=======
+    // ==========================================
+    // 5. DISCORD WIDGET (CRATE)
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     let crateInstance = null;
 
     function initDiscord() {
@@ -260,7 +377,13 @@
         initDiscord();
     });
 
+<<<<<<< HEAD
     // counters
+=======
+    // ==========================================
+    // 6. SUPERCOUNTERS WIDGET
+    // ==========================================
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     // Only show on home page (index2.html) checking if main-content exists
     const mainContent = document.querySelector('.main-content');
     // Ensure we are on the home page view (search bar checks etc) or just check existence

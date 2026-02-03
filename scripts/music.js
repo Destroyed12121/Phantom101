@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 
+=======
+// ============================================
+// MUSIC BACKEND (Ported from Arcora)
+// ============================================
+
+// --- Configuration & Endpoints ---
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 const YT_KEYS = [
     "AIzaSyBMhadsGk2S2B9bP46EycgI2y8yCWLLdAs",
     "AIzaSyCOeLUcSlLDWAbKDUc-LUx8hdsenY-97rU",
@@ -6,6 +14,7 @@ const YT_KEYS = [
     "AIzaSyCWl9hmr-a0dVHKeUmUP5P7boAWJ3h48fs"
 ];
 const LRC_LYRIC_EP = "https://lrclib.net/api/get";
+<<<<<<< HEAD
 const SEARCH_EP = "https://itunes.apple.com/search?term=";
 const PROXY_BASE = "../staticsjv2/embed.html?skip#";
 
@@ -13,6 +22,14 @@ const PROXY_BASE = "../staticsjv2/embed.html?skip#";
 let player;
 let playerReady = false;
 let commandQueue = [];
+=======
+const PLAIN_LYRIC_EP = "https://api.lyrics.ovh/v1/";
+const SEARCH_EP = "https://itunes.apple.com/search?term=";
+const PROXY_BASE = "../staticsjv2/embed.html?skip#"; // Local fallback path
+
+// --- State Management ---
+let player;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 let isPlaying = false;
 let keyIndex = 0;
 let currentTrack = null;
@@ -23,6 +40,7 @@ let isShuffled = false;
 let isRadioMode = false;
 let isProxyMode = false;
 let isRepeat = false;
+<<<<<<< HEAD
 let activeSource = 'youtube';
 let audioPlayer = null;
 let audio1, audio2;
@@ -39,6 +57,17 @@ let lastAttemptedVideoId = null;
 let recentlyPlayed = JSON.parse(localStorage.getItem('arcora_recent')) || [];
 
 // DOM Elements
+=======
+let playlists = JSON.parse(localStorage.getItem('arcora_playlists')) || [{ name: 'Favorites', songs: [] }];
+let searchTimeout;
+let searchAutoHideTimeout;
+let pendingVideoId = null;
+let lastAttemptedVideoId = null;
+let syncTimer = null;
+let lastVolume = parseInt(localStorage.getItem('arcora_last_volume')) || 100;
+
+// --- DOM Elements ---
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 const $ = id => document.getElementById(id);
 const searchInput = $('searchInput');
 const searchResults = $('searchResults');
@@ -65,6 +94,7 @@ const sidebar = $('sidebar');
 const mobileMenuBtn = $('mobileMenuBtn');
 const closeSidebar = $('closeSidebar');
 const fallbackContainer = $('fallbackContainer');
+<<<<<<< HEAD
 const likedCount = $('likedCount');
 const recentCount = $('recentCount');
 
@@ -82,6 +112,15 @@ const notify = (type, title, msg) => {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     // Load persisted state
+=======
+const fallbackFrame = $('fallbackFrame');
+const likedCount = $('likedCount');
+const recentCount = $('recentCount');
+
+// --- Initialization ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Load Persisted State
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     isRadioMode = localStorage.getItem('arcora_radio_mode') === 'true';
     isProxyMode = localStorage.getItem('arcora_proxy_mode') === 'true';
 
@@ -89,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRadioUI();
     updateProxyUI();
     loadPlaylists();
+<<<<<<< HEAD
     renderRecentSongs();
 
     // Search
@@ -103,6 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Player controls
+=======
+    renderLibrarySongs();
+
+    // Event Listeners
+    searchInput.addEventListener('input', handleSearchInput);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     playPauseBtn.addEventListener('click', togglePlayback);
     $('nextBtn').addEventListener('click', playNext);
     $('prevBtn').addEventListener('click', playPrev);
@@ -116,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     volumeBtn.addEventListener('click', toggleMute);
     progressBar.addEventListener('click', handleSeek);
 
+<<<<<<< HEAD
     // Toggle YT Visibility (hidden button listener)
     $('toggleYTBtn')?.addEventListener('click', () => {
         forceYTShow = !forceYTShow;
@@ -200,6 +247,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start sync timer
     startSyncTimer();
+=======
+    // Mobile Menu
+    mobileMenuBtn.addEventListener('click', () => sidebar.classList.add('mobile-open'));
+    closeSidebar.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
+
+    // Add Playlist
+    $('addPlaylistBtn').addEventListener('click', () => $('playlistModal').classList.add('show'));
+    $('cancelPlaylist').addEventListener('click', () => $('playlistModal').classList.remove('show'));
+    $('confirmPlaylist').addEventListener('click', createNewPlaylist);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
     // Load YouTube API
     if (!window.YT) {
@@ -210,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+<<<<<<< HEAD
 // New Playlist prompt (simple)
 function showNewPlaylistPrompt() {
     const name = prompt('Enter playlist name:');
@@ -228,6 +286,12 @@ function showNewPlaylistPrompt() {
 // Search Logic
 function handleSearchInput() {
     clearTimeout(searchTimeout);
+=======
+// --- Search Logic (iTunes) ---
+function handleSearchInput() {
+    clearTimeout(searchTimeout);
+    clearTimeout(searchAutoHideTimeout);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     const query = searchInput.value.trim();
 
     if (query.length < 2) {
@@ -247,7 +311,11 @@ function handleSearchInput() {
                 console.error("Search failed:", err);
                 searchResults.innerHTML = '<div class="loading-text">Search failed.</div>';
             });
+<<<<<<< HEAD
     }, 400);
+=======
+    }, 500);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 function displayResults(results) {
@@ -257,6 +325,7 @@ function displayResults(results) {
     }
 
     const favs = getPlaylist('Favorites')?.songs || [];
+<<<<<<< HEAD
     const isFav = (item) => favs.some(f =>
         f.trackName?.toLowerCase() === item.trackName?.toLowerCase() &&
         f.artistName?.toLowerCase() === item.artistName?.toLowerCase()
@@ -270,18 +339,43 @@ function displayResults(results) {
             <div class="result-item" data-idx="${idx}">
                 <img class="result-img" src="${art}" onerror="this.style.display='none'">
                 <div class="result-info" onclick="handleResultClick(${idx})">
+=======
+    const isFav = (item) => favs.some(f => f.trackName === item.trackName && f.artistName === item.artistName);
+
+    searchResults.innerHTML = results.map(item => {
+        const art = item.artworkUrl100?.replace('100x100', '300x300') || '';
+        const liked = isFav(item);
+
+        // Encode data for click handling
+        const songData = JSON.stringify({
+            trackName: item.trackName,
+            artistName: item.artistName,
+            artworkUrl100: item.artworkUrl100
+        }).replace(/"/g, '&quot;');
+
+        return `
+            <div class="result-item" onclick="handleResultClick(this)" data-song="${songData}">
+                <img class="result-img" src="${art}" onerror="this.style.display='none'">
+                <div class="result-info">
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
                     <div class="result-title">${esc(item.trackName)}</div>
                     <div class="result-artist">${esc(item.artistName)}</div>
                 </div>
                 <div class="result-actions">
+<<<<<<< HEAD
                     <button class="result-action" onclick="event.stopPropagation(); addSearchResultToPlaylist(${idx})"><i class="fa-solid fa-plus"></i></button>
                     <button class="result-action" onclick="event.stopPropagation(); toggleSearchFavorite(${idx})">
+=======
+                    <button class="result-action" onclick="event.stopPropagation(); addToPlaylistMenu(this, '${songData}')"><i class="fa-solid fa-plus"></i></button>
+                    <button class="result-action" onclick="event.stopPropagation(); toggleFavoriteFromSearch(this, '${songData}')">
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
                         <i class="fa-${liked ? 'solid' : 'regular'} fa-heart ${liked ? 'liked' : ''}"></i>
                     </button>
                 </div>
             </div>
         `;
     }).join('');
+<<<<<<< HEAD
 
     // Store results globally for access
     window._searchResults = results;
@@ -379,13 +473,35 @@ function playSong(title, artist, artwork, genre = '', previewUrl = '', index = -
         try { player.stopVideo(); } catch (e) { }
     }
 
+=======
+}
+
+window.handleResultClick = (el) => {
+    const data = JSON.parse(el.dataset.song);
+    playSongWithContext(data, [data], 0);
+    searchResults.classList.remove('show');
+    searchInput.value = '';
+};
+
+// --- Playback Logic ---
+function playSongWithContext(song, playlist, index) {
+    currentPlaylist = [...playlist];
+    originalPlaylist = [...playlist];
+    playSong(song.trackName, song.artistName, song.artworkUrl100, index);
+}
+
+function playSong(title, artist, artwork, index = -1) {
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     // Update UI
     trackTitle.textContent = title;
     trackArtist.textContent = artist;
 
+<<<<<<< HEAD
     // Reset image first to avoid showing old thumbnail
     albumCover.src = '';
 
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     if (artwork) {
         albumCover.src = artwork.replace('100x100', '600x600');
         albumCover.style.display = 'block';
@@ -395,6 +511,7 @@ function playSong(title, artist, artwork, genre = '', previewUrl = '', index = -
         albumPlaceholder.style.display = 'block';
     }
 
+<<<<<<< HEAD
     currentTrack = { title, artist, artwork, genre, previewUrl };
     updateLikeBtn();
     fetchLyrics(artist, title);
@@ -433,16 +550,41 @@ const videoCache = JSON.parse(localStorage.getItem('arcora_video_cache')) || {};
 function getYT(query, retryCount = 0) {
     if (videoCache[query]) {
         console.log(`CACHE HIT: ${query}`);
+=======
+    currentTrack = { title, artist, artwork };
+    updateLikeBtn(); // Update heart state
+    fetchLyrics(artist, title);
+
+    if (index !== -1) currentIndex = index;
+
+    // Start Playback
+    isPlaying = true;
+    updatePlayBtn();
+
+    // Find video ID via YouTube Data API
+    const searchQuery = `${title} - ${artist}`;
+    getYT(searchQuery);
+}
+
+function getYT(query) {
+    const videoCache = JSON.parse(localStorage.getItem('arcora_video_cache')) || {};
+
+    if (videoCache[query]) {
+        console.log(`CACHE HIT: ${query} -> ${videoCache[query]}`);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         loadVid(videoCache[query]);
         return;
     }
 
+<<<<<<< HEAD
     if (retryCount >= YT_KEYS.length) {
         console.error("All YouTube API keys exhausted.");
         notify('error', 'Error', 'Music service unavailable');
         return;
     }
 
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     const currentKey = YT_KEYS[keyIndex];
     keyIndex = (keyIndex + 1) % YT_KEYS.length;
 
@@ -460,6 +602,7 @@ function getYT(query, retryCount = 0) {
                 localStorage.setItem('arcora_video_cache', JSON.stringify(videoCache));
                 loadVid(id);
             } else {
+<<<<<<< HEAD
                 console.warn("No video found for:", query);
                 notify('warning', 'Not Found', 'Song not on YouTube');
             }
@@ -467,12 +610,22 @@ function getYT(query, retryCount = 0) {
         .catch(err => {
             console.warn(`API key ${retryCount + 1} failed:`, err);
             getYT(query, retryCount + 1);
+=======
+                notify('error', 'Error', 'No video found');
+            }
+        })
+        .catch(err => {
+            console.error('YouTube API Error:', err);
+            notify('error', 'API Error', 'Using fallback due to error');
+            // If API fails, we can try to guess or just notify
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         });
 }
 
 function loadVid(videoId) {
     lastAttemptedVideoId = videoId;
 
+<<<<<<< HEAD
     // ONLY use proxy if user explicitly enabled it
     if (isProxyMode) {
         useProxyPlayer(videoId);
@@ -499,6 +652,25 @@ function loadVid(videoId) {
 // YouTube Player
 window.onYouTubeIframeAPIReady = () => {
     player = new YT.Player('fallbackContainer', {
+=======
+    if (isProxyMode) {
+        useFallbackPlayer(videoId);
+        return;
+    }
+
+    if (player && typeof player.loadVideoById === 'function') {
+        player.loadVideoById(videoId);
+        player.playVideo();
+        hideFallback();
+    } else {
+        pendingVideoId = videoId;
+    }
+}
+
+// --- Player Implementation ---
+window.onYouTubeIframeAPIReady = () => {
+    player = new YT.Player('fallbackContainer', { // We use fallbackContainer as a holder first, but mapped to a specific div usually
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         height: '100%',
         width: '100%',
         videoId: '',
@@ -519,6 +691,7 @@ window.onYouTubeIframeAPIReady = () => {
 };
 
 function onPlayerReady(event) {
+<<<<<<< HEAD
     console.log("YT Player Ready");
     playerReady = true;
     player.setVolume(lastVolume);
@@ -527,6 +700,14 @@ function onPlayerReady(event) {
         const cmd = commandQueue.shift();
         try { cmd(); } catch (e) { console.error("Queue exec error", e); }
     }
+=======
+    player.setVolume(lastVolume);
+    if (pendingVideoId) {
+        loadVid(pendingVideoId);
+        pendingVideoId = null;
+    }
+    startSyncTimer();
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 function onPlayerStateChange(event) {
@@ -535,13 +716,17 @@ function onPlayerStateChange(event) {
     } else if (event.data === YT.PlayerState.PAUSED) {
         isPlaying = false;
     } else if (event.data === YT.PlayerState.ENDED) {
+<<<<<<< HEAD
         console.log('YT ended, playing next...');
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         playNext();
     }
     updatePlayBtn();
 }
 
 function onPlayerError(event) {
+<<<<<<< HEAD
     console.warn("YouTube Player Error Code:", event.data);
 
     // Only notify if it's a real obstruction/block error
@@ -554,6 +739,17 @@ function onPlayerError(event) {
 function useProxyPlayer(videoId) {
     if (player && player.destroy) {
         try { player.destroy(); player = null; playerReady = false; } catch (e) { }
+=======
+    console.warn("YouTube Player Error:", event.data);
+    if (lastAttemptedVideoId) useFallbackPlayer(lastAttemptedVideoId);
+}
+
+// --- Fallback / Proxy Player ---
+function useFallbackPlayer(videoId) {
+    // Destroy YT Player if exists to free up container
+    if (player && player.destroy) {
+        try { player.destroy(); player = null; } catch (e) { }
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 
     fallbackContainer.innerHTML = '';
@@ -566,6 +762,7 @@ function useProxyPlayer(videoId) {
 
     fallbackContainer.appendChild(frame);
     fallbackContainer.classList.add('show');
+<<<<<<< HEAD
     fallbackContainer.classList.remove('audio-only');
 }
 
@@ -584,11 +781,31 @@ function hideFallback() {
     } else {
         fallbackContainer.classList.remove('show');
     }
+=======
+
+    // We lose direct control via API, but we gain proxy capability
+}
+
+function hideFallback() {
+    // If not in proxy mode, we might want to ensure standard player is visible
+    // But since we are reusing the container for standard player (via API), we manage visibility via CSS classes if needed
+    // In this specific implementation, standard YT player replaces the innerHTML of fallbackContainer anyway?
+    // Wait, onYouTubeIframeAPIReady targets 'fallbackContainer'.
+    // So 'fallbackContainer' IS the player container.
+    // The CSS .fallback-container might have .show .audio-only rules.
+    fallbackContainer.classList.add('show'); // Make sure it's visible so standard player shows
+    if (!isProxyMode) fallbackContainer.classList.add('audio-only'); // Hide video by default unless proxy or toggled?
+    else fallbackContainer.classList.remove('audio-only');
+
+    // Wait, music.html has videoToggleBtn? User removed it.
+    // So default behavior: Audio Only (hidden) unless Proxy or Fallback.
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 function togglePlayback() {
     if (!currentTrack) return;
 
+<<<<<<< HEAD
     if (isProxyMode) {
         notify('info', 'Proxy', 'Use player controls');
         return;
@@ -631,36 +848,72 @@ function playNext() {
 
     // End of playlist
     if (!isShuffled && currentIndex >= currentPlaylist.length - 1) {
+=======
+    // If using fallback iframe (Proxy Mode), we can only reload or clear
+    if (isProxyMode || !player) {
+        // Proxy controls are limited without postMessage support from the proxy target
+        // For now, simple pause = clear src? No that stops buffering.
+        // Arcora didn't have advanced proxy controls, just "useFallbackPlayer".
+        // We'll stick to basic toggle for standard player.
+        return;
+    }
+
+    if (isPlaying) player.pauseVideo();
+    else player.playVideo();
+}
+
+function playNext() {
+    if (currentPlaylist.length === 0) return;
+
+    if (currentIndex >= currentPlaylist.length - 1) {
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         if (isRadioMode) {
             startRadio();
         } else if (isRepeat) {
             currentIndex = 0;
             const next = currentPlaylist[0];
+<<<<<<< HEAD
             playSong(next.trackName, next.artistName, next.artworkUrl100, next.genre || '', next.previewUrl || '', 0);
+=======
+            playSong(next.trackName, next.artistName, next.artworkUrl100, 0);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         }
         return;
     }
 
+<<<<<<< HEAD
     // Normal next
     let nextIndex;
     if (isShuffled) {
         do { nextIndex = Math.floor(Math.random() * currentPlaylist.length); }
         while (nextIndex === currentIndex && currentPlaylist.length > 1);
+=======
+    let nextIndex;
+    if (isShuffled && currentPlaylist.length > 1) {
+        do { nextIndex = Math.floor(Math.random() * currentPlaylist.length); }
+        while (nextIndex === currentIndex);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     } else {
         nextIndex = currentIndex + 1;
     }
 
+<<<<<<< HEAD
     console.log('Playing next index:', nextIndex);
     const next = currentPlaylist[nextIndex];
     if (next) {
         playSong(next.trackName, next.artistName, next.artworkUrl100, next.genre || '', next.previewUrl || '', nextIndex);
     }
+=======
+    const next = currentPlaylist[nextIndex];
+    playSong(next.trackName, next.artistName, next.artworkUrl100, nextIndex);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 function playPrev() {
     if (currentIndex > 0) {
         const prevIndex = currentIndex - 1;
         const prev = currentPlaylist[prevIndex];
+<<<<<<< HEAD
         playSong(prev.trackName, prev.artistName, prev.artworkUrl100, prev.genre || '', prev.previewUrl || '', prevIndex);
     } else {
         // Restart current track
@@ -767,6 +1020,45 @@ async function startRadio() {
     } catch (e) {
         console.error("Radio Error", e);
         notify('error', 'Radio', 'Failed to find tracks');
+=======
+        playSong(prev.trackName, prev.artistName, prev.artworkUrl100, prevIndex);
+    } else {
+        if (player && player.seekTo) player.seekTo(0);
+    }
+}
+
+// --- Radio Mode ---
+async function startRadio() {
+    if (!currentTrack) { toggleRadioMode(); return; }
+
+    notify('info', 'Radio', `Finding songs similar to ${currentTrack.artist}...`);
+    const url = `${SEARCH_EP}${encodeURIComponent(currentTrack.artist)}&media=music&entity=song&limit=25`;
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const newSongs = (data.results || []).filter(s =>
+            !currentPlaylist.some(existing => existing.trackName === s.trackName)
+        ).map(s => ({
+            trackName: s.trackName,
+            artistName: s.artistName,
+            artworkUrl100: s.artworkUrl100
+        }));
+
+        if (newSongs.length > 0) {
+            currentPlaylist.push(...newSongs);
+            originalPlaylist.push(...newSongs); // Expand original too
+            notify('success', 'Radio', `Added ${newSongs.length} songs`);
+            playNext();
+        } else {
+            notify('warning', 'Radio', 'No more songs found');
+            toggleRadioMode();
+        }
+    } catch (e) {
+        console.error(e);
+        toggleRadioMode();
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 }
 
@@ -774,6 +1066,7 @@ function toggleRadioMode() {
     isRadioMode = !isRadioMode;
     localStorage.setItem('arcora_radio_mode', isRadioMode);
     updateRadioUI();
+<<<<<<< HEAD
     notify('info', 'Radio', isRadioMode ? 'Enabled' : 'Disabled');
 }
 
@@ -782,10 +1075,21 @@ function updateRadioUI() {
     radioBadge?.classList.toggle('show', isRadioMode);
 }
 
+=======
+}
+
+function updateRadioUI() {
+    radioBtn.classList.toggle('active', isRadioMode);
+    radioBadge.classList.toggle('show', isRadioMode);
+}
+
+// --- Proxy Mode ---
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 function toggleProxyMode() {
     isProxyMode = !isProxyMode;
     localStorage.setItem('arcora_proxy_mode', isProxyMode);
     updateProxyUI();
+<<<<<<< HEAD
 
     if (currentTrack && lastAttemptedVideoId) {
         // Reload with new mode
@@ -795,10 +1099,16 @@ function toggleProxyMode() {
             // Reinitialize YT player
             location.reload(); // Simplest way to reset player
         }
+=======
+    // If playing, reload
+    if (currentTrack) {
+        loadVid(lastAttemptedVideoId);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 }
 
 function updateProxyUI() {
+<<<<<<< HEAD
     proxyBtn?.classList.toggle('active', isProxyMode);
 }
 
@@ -837,6 +1147,27 @@ function fetchLyrics(artist, title) {
         .catch(() => {
             clearTimeout(timeoutId);
             lyricsContent.innerHTML = '<div class="lyrics-line" style="opacity:0.5">Lyrics not found</div>';
+=======
+    proxyBtn.classList.toggle('active', isProxyMode);
+    if (isProxyMode) notify('info', 'Proxy Mode', 'Enabled');
+}
+
+// --- Lyrics ---
+function fetchLyrics(artist, title) {
+    lyricsContent.innerHTML = '<div class="lyrics-line">Loading...</div>';
+    const url = `${LRC_LYRIC_EP}?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            if (data.syncedLyrics) renderLyrics(parseLRC(data.syncedLyrics));
+            else if (data.plainLyrics) lyricsContent.innerHTML = data.plainLyrics.replace(/\n/g, '<br>');
+            else throw new Error("No lyrics");
+        })
+        .catch(() => {
+            // Fallback
+            lyricsContent.innerHTML = '<div class="lyrics-line">No lyrics found</div>';
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         });
 }
 
@@ -858,6 +1189,7 @@ function renderLyrics(lines) {
 }
 
 window.seekTo = (time) => {
+<<<<<<< HEAD
     try {
         if (activeSource === 'itunes' && audioPlayer) {
             audioPlayer.currentTime = time;
@@ -868,12 +1200,19 @@ window.seekTo = (time) => {
 };
 
 // Sync Timer
+=======
+    if (player && player.seekTo) player.seekTo(time, true);
+};
+
+// --- Sync Timer (Progress & Lyrics) ---
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 function startSyncTimer() {
     if (syncTimer) clearInterval(syncTimer);
     syncTimer = setInterval(updateProgress, 250);
 }
 
 function updateProgress() {
+<<<<<<< HEAD
     let curr = 0;
     let dur = 0;
 
@@ -893,6 +1232,16 @@ function updateProgress() {
 
     if (dur > 0 && !isNaN(dur)) {
         progressFill.style.width = `${(curr / dur) * 100}%`;
+=======
+    if (!player || !player.getCurrentTime) return;
+
+    const curr = player.getCurrentTime();
+    const dur = player.getDuration();
+
+    if (dur > 0) {
+        const pct = (curr / dur) * 100;
+        progressFill.style.width = `${pct}%`;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         currentTimeEl.textContent = formatTime(curr);
         totalTimeEl.textContent = formatTime(dur);
 
@@ -906,30 +1255,47 @@ function updateProgress() {
         });
 
         if (activeIdx !== -1) {
+<<<<<<< HEAD
             const activeLine = lines[activeIdx];
             activeLine.classList.add('active');
 
             // Manual scroll inside container to avoid shifting whole page
             const top = activeLine.offsetTop - (lyricsContent.offsetHeight / 2) + (activeLine.offsetHeight / 2);
             lyricsContent.scrollTo({ top: top, behavior: 'smooth' });
+=======
+            lines[activeIdx].classList.add('active');
+            lines[activeIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         }
     }
 }
 
+<<<<<<< HEAD
 // Controls
 function toggleShuffle() {
     isShuffled = !isShuffled;
     shuffleBtn?.classList.toggle('active', isShuffled);
+=======
+// --- Controls ---
+function toggleShuffle() {
+    isShuffled = !isShuffled;
+    shuffleBtn.classList.toggle('active', isShuffled);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     notify('info', 'Shuffle', isShuffled ? 'On' : 'Off');
 }
 
 function toggleRepeat() {
     isRepeat = !isRepeat;
+<<<<<<< HEAD
     repeatBtn?.classList.toggle('active', isRepeat);
+=======
+    repeatBtn.classList.toggle('active', isRepeat);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     notify('info', 'Repeat', isRepeat ? 'On' : 'Off');
 }
 
 function handleSeek(e) {
+<<<<<<< HEAD
     const rect = progressBar.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
 
@@ -983,19 +1349,58 @@ function handleVolumeClick(e) {
     if (audioPlayer) {
         audioPlayer.volume = vol / 100;
     }
+=======
+    if (!player || !player.getDuration) return;
+    const rect = progressBar.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    player.seekTo(pct * player.getDuration(), true);
+}
+
+function toggleMute() {
+    if (!player) return;
+    if (player.isMuted()) {
+        player.unMute();
+        player.setVolume(lastVolume);
+        setVolumeUI(lastVolume);
+    } else {
+        lastVolume = player.getVolume();
+        player.mute();
+        setVolumeUI(0);
+    }
+}
+
+function handleVolumeClick(e) {
+    if (!player) return;
+    const rect = volumeBar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const vol = Math.round(pct * 100);
+    player.setVolume(vol);
+    player.unMute();
+    lastVolume = vol;
+    localStorage.setItem('arcora_last_volume', vol);
+    setVolumeUI(vol);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 function setVolumeUI(vol) {
     volumeFill.style.width = `${vol}%`;
+<<<<<<< HEAD
     const icon = vol === 0 ? 'fa-volume-xmark' : vol < 50 ? 'fa-volume-low' : 'fa-volume-high';
     volumeBtn.querySelector('i').className = `fa-solid ${icon}`;
+=======
+    volumeBtn.querySelector('i').className = vol === 0 ? 'fa-solid fa-volume-xmark' : vol < 50 ? 'fa-solid fa-volume-low' : 'fa-solid fa-volume-high';
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 function updatePlayBtn() {
     playPauseBtn.querySelector('i').className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
 }
 
+<<<<<<< HEAD
 // Playlist Management
+=======
+// --- Playlist Management ---
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 function getPlaylist(name) {
     return playlists.find(p => p.name === name);
 }
@@ -1003,6 +1408,7 @@ function getPlaylist(name) {
 function loadPlaylists() {
     const fav = getPlaylist('Favorites');
 
+<<<<<<< HEAD
     // Liked Songs
     if (fav && $('likedSongs')) {
         $('likedSongs').innerHTML = fav.songs.slice(0, 50).map((s, i) => renderMiniSong(s, 'Favorites', i)).join('');
@@ -1027,10 +1433,34 @@ function loadPlaylists() {
             </div>
         `).join('');
     }
+=======
+    // Render Liked (Favorites)
+    if (fav) {
+        $('likedSongs').innerHTML = fav.songs.slice(0, 50).map((s, i) => renderMiniSong(s, 'Favorites', i)).join('');
+        likedCount.textContent = `${fav.songs.length} songs`;
+    }
+
+    // Render Custom
+    const customHTML = playlists.filter(p => p.name !== 'Favorites').map((p, pIdx) => `
+        <div class="playlist-item" onclick="toggleCustomPlaylist('${p.name}')">
+            <div class="playlist-icon"><i class="fa-solid fa-list"></i></div>
+            <div class="playlist-info">
+                <div class="playlist-name">${esc(p.name)}</div>
+                <div class="playlist-count">${p.songs.length} songs</div>
+            </div>
+            <i class="fa-solid fa-trash" style="margin-left:auto; opacity:0.5; cursor:pointer" onclick="deletePlaylist('${p.name}', event)"></i>
+        </div>
+        <div class="playlist-songs" id="pl-${esc(p.name)}" style="display:none">
+            ${p.songs.map((s, i) => renderMiniSong(s, p.name, i)).join('')}
+        </div>
+    `).join('');
+    $('customPlaylists').innerHTML = customHTML;
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 window.toggleCustomPlaylist = (name) => {
     const el = document.getElementById(`pl-${name}`);
+<<<<<<< HEAD
     if (el) {
         el.classList.toggle('show');
     }
@@ -1042,10 +1472,22 @@ window.deletePlaylist = (name) => {
         savePlaylists();
         loadPlaylists();
         notify('info', 'Deleted', name);
+=======
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+window.deletePlaylist = (name, e) => {
+    e.stopPropagation();
+    if (confirm(`Delete ${name}?`)) {
+        playlists = playlists.filter(p => p.name !== name);
+        savePlaylists();
+        loadPlaylists();
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     }
 };
 
 function renderMiniSong(s, playlistName, index) {
+<<<<<<< HEAD
     return `
         <div class="playlist-song" onclick='playPlaylistSong("${esc(playlistName)}", ${index})'>
             <img src="${s.artworkUrl100 || ''}" onerror="this.style.display='none'">
@@ -1053,19 +1495,39 @@ function renderMiniSong(s, playlistName, index) {
                 <div class="playlist-song-title">${esc(s.trackName || '')}</div>
                 <div class="playlist-song-artist">${esc(s.artistName || '')}</div>
             </div>
+=======
+    const data = JSON.stringify({
+        trackName: s.trackName,
+        artistName: s.artistName,
+        artworkUrl100: s.artworkUrl100
+    }).replace(/"/g, '&quot;');
+
+    return `
+        <div class="playlist-song" onclick='playPlaylistSong("${playlistName}", ${index})'>
+             <img src="${s.artworkUrl100}" onerror="this.style.display='none'">
+             <div class="playlist-song-info">
+                <div class="playlist-song-title">${esc(s.trackName)}</div>
+                <div class="playlist-song-artist">${esc(s.artistName)}</div>
+             </div>
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         </div>
     `;
 }
 
 window.playPlaylistSong = (plName, index) => {
     const pl = getPlaylist(plName);
+<<<<<<< HEAD
     if (pl && pl.songs[index]) {
         playSongWithContext(pl.songs[index], pl.songs, index);
     }
+=======
+    if (pl) playSongWithContext(pl.songs[index], pl.songs, index);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 };
 
 function toggleFavorite(song) {
     const fav = getPlaylist('Favorites');
+<<<<<<< HEAD
     if (!fav) return;
 
     const trackName = song.trackName || song.title;
@@ -1075,11 +1537,15 @@ function toggleFavorite(song) {
         s.trackName?.toLowerCase() === trackName?.toLowerCase() &&
         s.artistName?.toLowerCase() === artistName?.toLowerCase()
     );
+=======
+    const idx = fav.songs.findIndex(s => s.trackName === song.trackName && s.artistName === song.artistName);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
     if (idx >= 0) {
         fav.songs.splice(idx, 1);
         notify('info', 'Favorites', 'Removed');
     } else {
+<<<<<<< HEAD
         fav.songs.push({
             trackName: trackName,
             artistName: artistName,
@@ -1087,6 +1553,9 @@ function toggleFavorite(song) {
             genre: song.genre || '',
             previewUrl: song.previewUrl || ''
         });
+=======
+        fav.songs.push({ trackName: song.trackName || song.title, artistName: song.artistName || song.artist, artworkUrl100: song.artworkUrl100 || song.artwork });
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         notify('success', 'Favorites', 'Added');
     }
     savePlaylists();
@@ -1094,6 +1563,7 @@ function toggleFavorite(song) {
     updateLikeBtn();
 }
 
+<<<<<<< HEAD
 function showAddToPlaylistMenu(btn) {
     if (!currentTrack) return;
 
@@ -1130,37 +1600,99 @@ function showAddToPlaylistMenu(btn) {
         }
     }
 }
+=======
+window.toggleFavoriteFromSearch = (btn, json) => {
+    const data = JSON.parse(json);
+    toggleFavorite(data);
+    const fav = getPlaylist('Favorites');
+    const isNowFav = fav.songs.some(s => s.trackName === data.trackName);
+    btn.innerHTML = `<i class="fa-${isNowFav ? 'solid' : 'regular'} fa-heart ${isNowFav ? 'liked' : ''}"></i>`;
+};
+
+window.addToPlaylistMenu = (btn, json) => {
+    const data = JSON.parse(json);
+    const menu = $('addMenu');
+    menu.innerHTML = playlists.filter(p => p.name !== 'Favorites').map(p => `
+        <button class="add-menu-item" onclick="addSongToPlaylist('${p.name}', '${json.replace(/'/g, "\\'")}')">
+            <i class="fa-solid fa-list"></i> ${esc(p.name)}
+        </button>
+    `).join('');
+
+    // Position menu
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = `${rect.bottom}px`;
+    menu.style.left = `${rect.left - 100}px`;
+    menu.classList.add('show');
+
+    // Close on click outside
+    const close = (e) => {
+        if (!menu.contains(e.target)) {
+            menu.classList.remove('show');
+            document.removeEventListener('click', close);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', close), 0);
+};
+
+window.addSongToPlaylist = (plName, json) => {
+    const data = JSON.parse(json);
+    const pl = getPlaylist(plName);
+    if (pl && !pl.songs.some(s => s.trackName === data.trackName)) {
+        pl.songs.push(data);
+        savePlaylists();
+        loadPlaylists();
+        notify('success', 'Added', `Added to ${plName}`);
+    } else {
+        notify('warning', 'Exists', 'Song already in playlist');
+    }
+    $('addMenu').classList.remove('show');
+};
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 
 function savePlaylists() {
     localStorage.setItem('arcora_playlists', JSON.stringify(playlists));
 }
 
 function createNewPlaylist() {
+<<<<<<< HEAD
     const input = $('playlistNameInput');
     const name = input?.value?.trim();
+=======
+    const name = $('playlistNameInput').value.trim();
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     if (name && !getPlaylist(name)) {
         playlists.push({ name, songs: [] });
         savePlaylists();
         loadPlaylists();
         notify('success', 'Created', name);
     }
+<<<<<<< HEAD
     $('playlistModal')?.classList.remove('show');
     if (input) input.value = '';
+=======
+    $('playlistModal').classList.remove('show');
+    $('playlistNameInput').value = '';
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
 }
 
 function updateLikeBtn() {
     if (!currentTrack) return;
     const fav = getPlaylist('Favorites');
+<<<<<<< HEAD
     if (!fav) return;
 
     const isFav = fav.songs.some(s =>
         s.trackName?.toLowerCase() === currentTrack.title?.toLowerCase() &&
         s.artistName?.toLowerCase() === currentTrack.artist?.toLowerCase()
     );
+=======
+    const isFav = fav.songs.some(s => s.trackName === currentTrack.title && s.artistName === currentTrack.artist);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     likeBtn.querySelector('i').className = `fa-${isFav ? 'solid' : 'regular'} fa-heart`;
     likeBtn.classList.toggle('active', isFav);
 }
 
+<<<<<<< HEAD
 // Recently Played
 function addToRecentlyPlayed(song) {
     if (!song || !song.trackName) return;
@@ -1214,3 +1746,17 @@ window.playRecentSong = (index) => {
         playSongWithContext(recentlyPlayed[index], recentlyPlayed, index);
     }
 };
+=======
+function renderLibrarySongs() {
+    // Already handled by loadPlaylists for the most part
+    // The original music.js had separate renderLibrarySongs for recent/liked
+    // We integrated it into loadPlaylists which renders sidebar
+}
+
+function renderResults(results) { displayResults(results); }
+
+// Helper
+const esc = s => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const formatTime = s => isNaN(s) ? '0:00' : `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+const notify = (type, title, msg) => typeof Notify !== 'undefined' ? Notify[type](title, msg) : console.log(title, msg);
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac

@@ -4,9 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< HEAD
     <title></title>
     <style>
      
+=======
+    <title>Site Can't Be Reached</title>
+    <style>
+        /* Base styles and variables derived from erorr.html */
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
         html {
             -webkit-text-size-adjust: 100%;
             font-size: 100%;
@@ -306,6 +312,7 @@
         const origin = window.location.hostname || "This site";
         document.getElementById("origin-text").textContent = origin;
         document.title = origin;
+<<<<<<< HEAD
 
         // Remove favicon for fake error page
         document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
@@ -313,6 +320,8 @@
         link.rel = 'icon';
         link.href = 'data:,';
         document.head.appendChild(link);
+=======
+>>>>>>> b354220fb359bebcfd34b81e8e9fc8a9219a9bac
     </script>
 </body>
 
