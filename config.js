@@ -7,8 +7,9 @@ window.SITE_CONFIG = {
 
     changelog: [
         "Youtube and Twitch added in Watch page",
-        "fixxed aboutblank opening - should now always open correctly when securly is on",
-        "minor fixxes and changes"
+        "fixxed aboutblank opening - should now open correctly when securly is on",
+        "fixxed music.",
+        "lots of minor changes"
 
 
     ],
@@ -59,21 +60,21 @@ window.SITE_CONFIG = {
         "***fix music page to hide youtube player unless toggled via 3 dot small button, and always shown on proxy mode, fix all the controls for video time, volume***",
         "**add singlefile this is lowk so hard i dont really understand it**",
         "**advertise phantom (too much work tbh)**",
-        "**add a watch page for youtube and twitch**",
+        "***add a watch page for youtube and twitch***",
         "**add a miniplayer for music**",
         "***shorten some page's code***",
         "***fix paths in search autocomplete***",
         "***fix markdown in ai not using correct text colors***",
         "***make backgrounds show in the loading screen***",
         "***fix icons for topbar in code.html***",
-        "**fix wisp server not notifying or autoswitiching when offline in proxy**",
+        "***fix wisp server not notifying or autoswitiching when offline in proxy***",
         "***fix code runner open not working at all***",
         "***make backgrounds show in player.html***",
         "***make backgrounds show in staticsjv2***",
         "***make player.html player controls use theme colros not hardcoded***",
         "***make ai chat and music sidebar go all the way down and up with borders***",
         "**make the only song in music be lebron lebron lebron james**",
-        "**fix music controls**",
+        "***fix music controls***",
         "***finish extra page into credits and make this todo be tucked away somewhere and not the main part of it***"
     ],
     defaultWisp: "wss://glseries.net/wisp/",

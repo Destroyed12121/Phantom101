@@ -36,7 +36,7 @@
         navButtons.className = 'nav-buttons';
 
         const buttons = [
-            { name: 'Music', icon: 'music', link: 'pages/music.html', badge: 'BETA' },
+            { name: 'Music', icon: 'music', link: 'pages/music.html', },
             { name: 'Movies', icon: 'film', link: 'pages/movies.html' },
             { name: 'Games', icon: 'gamepad-2', link: 'pages/games.html' },
             { name: 'Watch', icon: 'play', link: 'pages/watch.html' },
@@ -54,7 +54,7 @@
                 return;
             }
 
-            const link = document.createElement('a');   
+            const link = document.createElement('a');
             link.href = rootPrefix + btn.link;
             link.className = 'nav-btn';
 

@@ -98,6 +98,10 @@ body.theater-active.user-idle .player-info {
     pointer-events: none;
 }
 
+body.theater-active.user-idle {
+    cursor: none;
+}
+
 /* Stack styling */
 body.theater-active .player-controls {
     bottom: 0;

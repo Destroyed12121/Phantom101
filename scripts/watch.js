@@ -24,15 +24,21 @@ function setPlatform(p) {
 function showDefaultStreamers() {
     if (!grid) return;
     grid.innerHTML = "";
-    const streamers = ['Clix', 'Jynxzi', 'Lacy', 'Flight23White', 'Caseoh_', 'Kaicenat', 'Stableronaldo', 'Marlon', 'PlaqueboyMax', 'Adinross', 'IshowSpeed',];
+    const streamers = [
+        'Clix', 'Jynxzi', 'Lacy', 'Flight23White', 'Caseoh_',
+        'Kaicenat', 'Stableronaldo', 'Marlon', 'PlaqueboyMax',
+        'Adinross', 'IshowSpeed', 'Skeepy', 'AsianGuyStream',
+        'Mongraal', 'SypherPK', 'NickEh30', 'Tfue', 'Ninja',
+        'Speedrun', 'XQc'
+    ];
 
     streamers.forEach(channel => {
         const title = `${channel}`;
-        const thumb = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channel}-440x248.jpg`;
+        const thumb = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channel.toLowerCase()}-440x248.jpg?t=${Date.now()}`;
         const card = createMediaCard(thumb, title, "Twitch", () => {
             const streamUrl = `${TWITCH_PROXY}?channel=${channel}`;
             playMedia(title, streamUrl);
-        });
+        }, true);
         grid.appendChild(card);
     });
 }
@@ -88,23 +94,26 @@ function searchTwitch(query) {
     const channels = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
     channels.forEach(channel => {
-        const title = `${channel} (Live)`;
-        const thumb = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channel}-440x248.jpg`;
+        const title = `${channel}`;
+        const thumb = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channel}-440x248.jpg?t=${Date.now()}`;
         const card = createMediaCard(thumb, title, "Twitch.tv", () => {
             const streamUrl = `${TWITCH_PROXY}?channel=${channel}`;
             playMedia(title, streamUrl);
-        });
+        }, true);
         grid.appendChild(card);
     });
 
     if (statusText) statusText.textContent = channels.length > 0 ? "Channels ready." : "";
 }
 
-function createMediaCard(thumb, title, meta, onClick) {
+function createMediaCard(thumb, title, meta, onClick, isLive = false) {
     const card = document.createElement('div');
     card.className = 'media-card';
+    if (isLive) card.classList.add('is-live');
+
     card.innerHTML = `
-        <img src="${thumb}" loading="lazy" alt="${title}" onerror="this.src='https://via.placeholder.com/440x248?text=Offline'">
+        <img src="${thumb}" loading="lazy" alt="${title}" onerror="this.src='https://via.placeholder.com/440x248?text=Offline/Locked'">
+        ${isLive ? '<div class="live-badge">LIVE</div>' : ''}
         <div class="media-card-overlay">
             <div class="media-card-info">
                 <div class="media-card-title">${title}</div>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BG Proxy</title>
+    <script src="../config.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
+    <script type="module">
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+        window.BareMux = BareMux;
+        window.bareMuxReady = true;
+    </script>
+</head>
+
+<body>
+    <script>
+        // Lightweight background image proxy
+        // This page is loaded in an invisible iframe by background.js
+        // It proxies image requests and sends them back via postMessage
+
+        const DEFAULT_WISP = window.SITE_CONFIG?.defaultWisp || "wss://glseries.net/wisp/";
+        let connectionInstance = null;
+        let initPromise = null;
+
+        async function ensureConnection() {
+            if (connectionInstance) return connectionInstance;
+            if (initPromise) return initPromise;
+
+            initPromise = (async () => {
+                // Wait for BareMux to be ready
+                let retries = 0;
+                while (!window.BareMux && retries < 50) {
+                    await new Promise(r => setTimeout(r, 100));
+                    retries++;
+                }
+
+                if (!window.BareMux) {
+                    throw new Error('BareMux not ready');
+                }
+
+                const basePath = location.pathname.replace(/[^/]*$/, '') + '/';
+                const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
+
+                connectionInstance = new BareMux.BareMuxConnection(basePath + "bareworker.js");
+                await connectionInstance.setTransport(
+                    "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
+                    [{ wisp: wispUrl }]
+                );
+
+                return connectionInstance;
+            })();
+
+            return initPromise;
+        }
+
+        async function proxyImage(url, requestId) {
+            try {
+                await ensureConnection();
+
+                const client = new window.BareMux.BareClient();
+                const response = await client.fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const reader = new FileReader();
+
+                return new Promise((resolve) => {
+                    reader.onload = () => {
+                        // Send base64 data back to parent
+                        window.parent.postMessage({
+                            type: 'bg-proxy-response',
+                            requestId,
+                            success: true,
+                            data: reader.result,
+                            contentType: blob.type || 'image/jpeg'
+                        }, '*');
+                        resolve();
+                    };
+                    reader.onerror = () => {
+                        window.parent.postMessage({
+                            type: 'bg-proxy-response',
+                            requestId,
+                            success: false,
+                            error: 'Failed to read blob'
+                        }, '*');
+                        resolve();
+                    };
+                    reader.readAsDataURL(blob);
+                });
+            } catch (error) {
+                window.parent.postMessage({
+                    type: 'bg-proxy-response',
+                    requestId,
+                    success: false,
+                    error: error.message
+                }, '*');
+            }
+        }
+
+        // Listen for proxy requests from parent
+        window.addEventListener('message', async (e) => {
+            if (e.data?.type === 'bg-proxy-request' && e.data.url && e.data.requestId) {
+                await proxyImage(e.data.url, e.data.requestId);
+            }
+        });
+
+        // Signal ready to parent
+        window.parent.postMessage({ type: 'bg-proxy-ready' }, '*');
+    </script>
+</body>
+
+</html>

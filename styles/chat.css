@@ -39,10 +39,15 @@
     font-weight: 600;
 }
 
+.brand-section i,
 .brand-section svg {
     width: 20px;
     height: 20px;
     color: var(--text-muted);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .chat-title,
@@ -213,9 +218,14 @@
     color: var(--text);
 }
 
+.message-avatar i,
 .message-avatar svg {
+    font-size: 18px;
     width: 18px;
     height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .message-content {

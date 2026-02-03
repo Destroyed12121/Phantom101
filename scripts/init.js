@@ -5,7 +5,7 @@ const ProxyInit = {
     WISP_SERVERS: window.SITE_CONFIG?.wispServers || [],
     BASE_PATH: (window.STATICSJ_BASE_PATH || "/staticsjv2/").replace(/\/?$/, '/'),
 
-    async ping(url, timeout = 2000) {
+    async ping(url, timeout = 1000) {
         return new Promise(res => {
             const start = Date.now();
             try {
@@ -18,8 +18,16 @@ const ProxyInit = {
     },
 
     async findBest() {
-        if (localStorage.getItem('wispAutoswitch') === 'false' || !this.WISP_SERVERS.length) return localStorage.getItem("proxServer") || this.DEFAULT_WISP;
-        const results = await Promise.all(this.WISP_SERVERS.map(s => this.ping(s.url)));
+        const current = localStorage.getItem("proxServer") || this.DEFAULT_WISP;
+
+        // Fast check current server first
+        const check = await this.ping(current, 800);
+        if (check.success) return current;
+
+        // Only search for best if current is dead
+        if (localStorage.getItem('wispAutoswitch') === 'false' || !this.WISP_SERVERS.length) return current;
+
+        const results = await Promise.all(this.WISP_SERVERS.map(s => this.ping(s.url, 1500)));
         const working = results.filter(r => r.success).sort((a, b) => a.latency - b.latency);
         return working[0]?.url || this.DEFAULT_WISP;
     },
@@ -31,9 +39,18 @@ const ProxyInit = {
             const best = await this.findBest();
             localStorage.setItem("proxServer", best);
 
-            let attempts = 0;
-            while (!window.BareMux && attempts < 50) { await new Promise(r => setTimeout(r, 100)); attempts++; }
-            if (!window.BareMux || typeof $scramjetLoadController === 'undefined') throw new Error("Proxy libs failed to load");
+            // Lazy wait for libraries if they're coming from broad scripts
+            if (!window.BareMux) {
+                let attempts = 0;
+                while (!window.BareMux && attempts < 20) {
+                    await new Promise(r => setTimeout(r, 100));
+                    attempts++;
+                }
+            }
+            if (!window.BareMux || typeof $scramjetLoadController === 'undefined') {
+                console.log("Proxy: Base libraries not found, will retry on demand");
+                return;
+            }
 
             const { ScramjetController } = $scramjetLoadController();
             const scramjet = new ScramjetController({

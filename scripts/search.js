@@ -102,45 +102,41 @@ const PhantomSearch = {
         const q = query.toLowerCase();
         const results = [];
         const seen = new Set();
+
         const add = (item) => {
-            if (seen.has(item.name)) return; // Simple dedup by name for now
+            if (seen.has(item.name)) return;
             seen.add(item.name);
             results.push(item);
         };
 
-        // 1. GAMES & PAGES (High Priority)
+        // games n pages get first dibs
         this.allGames
             .filter(g => g.name.toLowerCase().includes(q) || (g.normalized && g.normalized.includes(q)))
-            .sort((a, b) => { // Basic relevance sort
+            .sort((a, b) => {
                 const aName = a.name.toLowerCase();
                 const bName = b.name.toLowerCase();
 
-                // Prioritize exact matches
                 if (aName === q && bName !== q) return -1;
                 if (bName === q && aName !== q) return 1;
 
-                // Prioritize startsWith
                 const aStarts = aName.startsWith(q);
                 const bStarts = bName.startsWith(q);
                 if (aStarts && !bStarts) return -1;
                 if (bStarts && !aStarts) return 1;
 
-                // Secondary sort: Gnmath (source='gnmath') over UGS (source='ugs')
+                // gnmath is usually better than ugs
                 if (a.source === 'gnmath' && b.source !== 'gnmath') return -1;
                 if (b.source === 'gnmath' && a.source !== 'gnmath') return 1;
 
                 return 0;
             })
-            .slice(0, 3) // Limit to 3 games
+            .slice(0, 3)
             .forEach(g => {
-                // Treat gnmath and ugs as 'game' for both label and URL construction
                 if (g.type === 'gnmath' || g.type === 'ugs' || g.type === 'game') {
                     const normalized = g.normalized || g.name.toLowerCase().replace(/[^a-z0-9]/g, '');
                     const finalUrl = `${this.rootPrefix}pages/games.html?gamename=${normalized}`;
-                    // Overwrite type to 'game' so the label renderer shows "Game"
                     add({ ...g, url: finalUrl, type: 'game' });
                 } else {
-                    // Fallback for unknown types (though unlikely based on gloader)
                     const finalUrl = g.url.startsWith('http') ? g.url : this.rootPrefix + g.url;
                     add({ ...g, url: finalUrl });
                 }
@@ -150,7 +146,23 @@ const PhantomSearch = {
             .filter(p => p.name.toLowerCase().includes(q) || (p.keywords && p.keywords.some(k => k.includes(q))))
             .forEach(p => add({ ...p, url: this.rootPrefix + p.url }));
 
-        // 2. DOMAINS (User requested Priority)
+        // give tv shows a little nudge
+        if (externalResults) {
+            const tv = externalResults.find(m => m.media_type === 'tv');
+            if (tv) {
+                add({
+                    name: tv.name,
+                    id: tv.id,
+                    overview: tv.overview,
+                    media_type: 'tv',
+                    type: 'tv',
+                    img: tv.poster_path ? 'https://image.tmdb.org/t/p/w92' + tv.poster_path : null,
+                    url: `${this.rootPrefix}pages/player.html?type=tv&id=${tv.id}&title=${encodeURIComponent(tv.name)}`
+                });
+            }
+        }
+
+        // handy domains
         this.popularDomains
             .filter(d => d.domain.includes(q) || d.name.toLowerCase().includes(q))
             .slice(0, 2)
@@ -159,35 +171,27 @@ const PhantomSearch = {
                 url: d.url || `${this.rootPrefix}staticsjv2/index.html#${encodeURIComponent('https://' + d.domain)}`
             }));
 
-        // 3. MOVIES & TV (Strict Limits: Max 2 Movies, Max 1 TV)
+        // add a few movies if we have space
         if (externalResults) {
-            const movies = [];
-            const tvs = [];
-            externalResults.forEach(m => {
-                const type = m.media_type || 'movie';
-                const item = {
-                    name: m.title || m.name,
-                    id: m.id,
-                    overview: m.overview,
-                    media_type: type, // 'movie' or 'tv'
-                    type: type,
-                    img: m.poster_path ? 'https://image.tmdb.org/t/p/w92' + m.poster_path : null,
-                    url: `${this.rootPrefix}pages/player.html?type=${type}&id=${m.id}&title=${encodeURIComponent(m.title || m.name)}`
-                };
-                if (type === 'movie') movies.push(item);
-                else if (type === 'tv') tvs.push(item);
-            });
-
-            // Add Max 2 Movies
-            movies.slice(0, 2).forEach(m => add(m));
-            // Add Max 1 TV
-            tvs.slice(0, 1).forEach(t => add(t));
+            externalResults
+                .filter(m => m.media_type !== 'tv')
+                .slice(0, 2)
+                .forEach(m => {
+                    add({
+                        name: m.title || m.name,
+                        id: m.id,
+                        overview: m.overview,
+                        media_type: 'movie',
+                        type: 'movie',
+                        img: m.poster_path ? 'https://image.tmdb.org/t/p/w92' + m.poster_path : null,
+                        url: `${this.rootPrefix}pages/player.html?type=movie&id=${m.id}&title=${encodeURIComponent(m.title || m.name)}`
+                    });
+                });
         }
 
         const MAX_TOTAL = 6;
         let finalSuggestions = results.slice(0, MAX_TOTAL);
 
-        // Always add Web Search
         finalSuggestions.push({
             name: `Search the web for "${query}"`,
             query: query,
@@ -205,6 +209,7 @@ const PhantomSearch = {
             this.search(query, this.movieCache[query]);
             return;
         }
+
         const API_KEY = window.API_KEY || '2713804610e1e236b1cf44bfac3a7776';
         try {
             const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`);

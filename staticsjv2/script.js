@@ -26,7 +26,7 @@ function getAllWispServers() {
     return [...WISP_SERVERS, ...getStoredWisps()];
 }
 
-async function pingWispServer(url, timeout = 2000) {
+async function pingWispServer(url, timeout = 1000) {
     return new Promise(resolve => {
         const start = Date.now();
         try {
@@ -58,7 +58,8 @@ async function findBestWispServer() {
     const servers = getAllWispServers();
     const currentUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
 
-    const results = await Promise.all(servers.map(s => pingWispServer(s.url, 2000)));
+    // Ping all in parallel with a shorter timeout
+    const results = await Promise.all(servers.map(s => pingWispServer(s.url, 1500)));
     const best = results.filter(r => r.success).sort((a, b) => a.latency - b.latency)[0];
 
     return best ? best.url : currentUrl;
@@ -68,14 +69,16 @@ async function initWispAutoswitch() {
     if (localStorage.getItem('wispAutoswitch') === 'false') return;
 
     const currentUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
-    const currentHealth = await pingWispServer(currentUrl);
+
+    // Use a very short timeout for the initial check to see if we're good
+    const currentHealth = await pingWispServer(currentUrl, 800);
 
     if (currentHealth.success) {
         console.log("Wisp: Current server OK", currentUrl);
         return;
     }
 
-    console.log("Wisp: Finding faster server...");
+    console.log("Wisp: Current server offline or slow, finding faster server...");
     const bestUrl = await findBestWispServer();
 
     if (bestUrl && bestUrl !== currentUrl) {
@@ -86,7 +89,7 @@ async function initWispAutoswitch() {
         const serverObj = servers.find(s => s.url === bestUrl);
         const name = serverObj ? serverObj.name : "New Server";
 
-        notify('info', 'Auto-switched', `Switched to ${name} because the previous server was offline/slow.`);
+        notify('info', 'Auto-switched', `Switched to ${name} for better performance.`);
     }
 }
 
@@ -197,9 +200,16 @@ const notify = (type, title, msg) => window.Notify?.[type](title, msg);
 async function init() {
     try {
         initializeBrowserUI();
-        await registerServiceWorker();
-        await initWispAutoswitch();
-        await getSharedConnection();
+
+        // Start parallel setup
+        const swPromise = registerServiceWorker();
+        const connectionPromise = getSharedConnection();
+        const wispPromise = initWispAutoswitch();
+
+        // Wait for essential systems
+        await Promise.all([swPromise, connectionPromise, wispPromise]);
+
+        // Final steps
         await getSharedScramjet();
         await createTab(true);
 

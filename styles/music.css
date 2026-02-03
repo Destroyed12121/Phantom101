@@ -109,7 +109,8 @@
     transition: transform .2s;
 }
 
-.playlist-item.expanded .playlist-expand {
+.playlist-item.expanded .playlist-expand,
+.playlist-expand.expanded {
     transform: rotate(180deg);
 }
 
@@ -258,7 +259,7 @@
     background: var(--surface);
     padding: 4px;
     border-radius: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -288,7 +289,7 @@
 .search-container {
     width: 100%;
     max-width: 480px;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
     z-index: 20;
 }
 
@@ -651,7 +652,7 @@
 
 /* Lyrics */
 .lyrics-section {
-    margin-top: 36px;
+    margin-top: 24px;
     max-width: 500px;
     width: 100%;
     text-align: center;
@@ -670,8 +671,34 @@
     line-height: 2;
     max-height: 120px;
     overflow-y: auto;
-    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+    scroll-behavior: smooth;
+    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+}
+
+.yt-toggle-btn {
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    opacity: 0.05;
+    /* Barely visible */
+    cursor: pointer;
+    z-index: 9999;
+    transition: opacity 0.3s;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.yt-toggle-btn:hover {
+    opacity: 0.6;
+    /* Increased from 0.4 for better visibility on hover */
 }
 
 .lyrics-line {
@@ -753,8 +780,36 @@
 }
 
 /* Modal */
-/* Modal styles handled by main.css (or use specific class if needed) */
+.modal {
+    padding: 20px;
+    min-width: 280px;
+}
 
+.modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.modal-input::placeholder {
+    color: var(--text-muted);
+}
 
 .modal-actions {
     display: flex;

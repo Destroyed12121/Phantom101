@@ -96,19 +96,6 @@ document.getElementById('btn-reload').onclick = () => {
     switcher.retry = 0;
     type === 'game' ? loadGame(currentUrl) : loadProvider(PROVIDERS[curProvIdx].id);
 };
-document.getElementById('btn-theater').onclick = () => {
-    const b = document.body;
-    const isTheater = b.classList.toggle('theater-active');
-    const btn = document.getElementById('btn-theater');
-    btn.innerHTML = isTheater ? '<i class="fa-solid fa-compress"></i> Exit Theater' : '<i class="fa-solid fa-masks-theater"></i> Theater Mode';
-
-    // Scroll to top to prevent footer from showing
-    window.scrollTo(0, 0);
-
-    if (isTheater) {
-        window.Notify?.success('Theater Mode', 'Enjoy your movie!');
-    }
-};
 document.getElementById('btn-fullscreen').onclick = () => {
     window.Notify?.info('Fullscreen', 'Entering fullscreen mode...');
     const target = (videoFrame.style.display === 'block') ? videoFrame : frame;
@@ -129,6 +116,39 @@ document.getElementById('btn-download').onclick = async () => {
     a.href = URL.createObjectURL(b); a.download = `${title || 'game'}.html`.replace(/\s+/g, '_');
     a.click();
     window.Notify?.success('Download Started', `${title || 'game'}.html`);
+};
+// Theater Mode Logic
+let idleTimer;
+const resetIdleTimer = () => {
+    if (!document.body.classList.contains('theater-active')) return;
+    document.body.classList.remove('user-idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+        if (document.body.classList.contains('theater-active')) {
+            document.body.classList.add('user-idle');
+        }
+    }, 3000); // 3 seconds of inactivity
+};
+
+['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(e => {
+    document.addEventListener(e, resetIdleTimer, { passive: true });
+});
+
+document.getElementById('btn-theater').onclick = () => {
+    const b = document.body;
+    const isTheater = b.classList.toggle('theater-active');
+    const btn = document.getElementById('btn-theater');
+    btn.innerHTML = isTheater ? '<i class="fa-solid fa-compress"></i> Exit Theater' : '<i class="fa-solid fa-masks-theater"></i> Theater Mode';
+
+    window.scrollTo(0, 0);
+
+    if (isTheater) {
+        window.Notify?.success('Theater Mode', 'Enjoy your movie!');
+        resetIdleTimer();
+    } else {
+        b.classList.remove('user-idle');
+        clearTimeout(idleTimer);
+    }
 };
 
 init();

@@ -494,7 +494,12 @@ class PhantomChat {
 
         this.dom.chatBody.appendChild(div);
 
-        if (window.lucide) lucide.createIcons({ icons: { ghost: lucide.icons.ghost, user: lucide.icons.user }, nameAttr: 'data-lucide' });
+        // Render Lucide icons in the new message
+        if (window.lucide) {
+            lucide.createIcons({
+                root: div
+            });
+        }
 
         if (!isThinking && type === 'text' && window.hljs) {
             div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
