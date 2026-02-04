@@ -158,7 +158,7 @@ async function registerServiceWorker() {
     };
 
     const send = () => {
-        const sw = reg.active || navigator.serviceWorker.controller;
+        const sw = reg.active || navigator.serviceWorker?.controller;
         if (sw) sw.postMessage(config);
     };
 
@@ -176,9 +176,20 @@ async function registerServiceWorker() {
             const tab = getActiveTab();
             if (tab && e.data.url) {
                 tab.loading = true;
+                tab.userSkipped = false;
                 showIframeLoading(true, e.data.url);
                 updateLoadingBar(tab, 10);
                 tab.frame.go(e.data.url);
+            }
+        } else if (e.data.type === 'resource-loaded') {
+            const tab = getActiveTab();
+            if (tab && tab.loading) {
+                // Real progress: increment on every resource
+                const isError = e.data.status >= 400;
+                // Idea 4: Error Braking - slower progress on failures
+                const increment = isError ? 0.5 : 2.5;
+                tab.progress = Math.min(96, tab.progress + increment);
+                updateLoadingBar(tab, tab.progress);
             }
         }
     });
@@ -273,7 +284,11 @@ function initializeBrowserUI() {
     const skipBtn = document.getElementById('skip-btn');
     if (skipBtn) skipBtn.onclick = () => {
         const t = getActiveTab();
-        if (t) { t.loading = false; showIframeLoading(false); }
+        if (t) {
+            t.loading = false;
+            t.userSkipped = true;
+            showIframeLoading(false);
+        }
     };
 
     const addrBar = document.getElementById('address-bar');
@@ -300,7 +315,8 @@ async function createTab(makeActive = true) {
         frame,
         loading: false,
         favicon: null,
-        skipTimeout: null
+        userSkipped: false,
+        progress: 0
     };
 
     frame.frame.src = "NT.html";
@@ -319,18 +335,23 @@ async function createTab(makeActive = true) {
         if (tab.id === activeTabId) showIframeLoading(true, tab.url);
         updateTabsUI();
         updateAddressBar();
-        updateLoadingBar(tab, 10);
+
+        tab.progress = 10;
+        updateLoadingBar(tab, tab.progress);
 
         if (tab.skipTimeout) clearTimeout(tab.skipTimeout);
         tab.skipTimeout = setTimeout(() => {
             if (tab.loading && tab.id === activeTabId) document.getElementById('skip-btn')?.style.setProperty('display', 'inline-block');
-        }, 2000);
+        }, 500);
     });
 
     frame.frame.addEventListener('load', () => {
         tab.loading = false;
         clearTimeout(tab.skipTimeout);
-        if (tab.id === activeTabId) showIframeLoading(false);
+        if (tab.id === activeTabId) {
+            showIframeLoading(false);
+            tab.userSkipped = false;
+        }
         try { if (frame.frame.contentWindow.document.title) tab.title = frame.frame.contentWindow.document.title; } catch { }
         if (frame.frame.contentWindow.location.href.includes('NT.html')) { tab.title = "New Tab"; tab.url = ""; tab.favicon = null; }
         updateTabsUI();
@@ -348,6 +369,11 @@ async function createTab(makeActive = true) {
 function showIframeLoading(show, url = '') {
     const loader = document.getElementById("loading");
     if (!loader) return;
+
+    const tab = getActiveTab();
+    // Persistent Skip: If user skipped once on this tab, never show loading again
+    if (show && tab && tab.userSkipped) return;
+
     loader.style.display = show ? "flex" : "none";
     if (show) {
         document.getElementById("loading-title").textContent = "Connecting";
@@ -417,17 +443,37 @@ function handleSubmit(url) {
         input = input.includes('.') && !input.includes(' ') ? `https://${input}` : `https://search.brave.com/search?q=${encodeURIComponent(input)}`;
     }
     tab.loading = true;
+    // Removed userSkipped reset to keep skip persistent for the tab
     showIframeLoading(true, input);
-    updateLoadingBar(tab, 10);
+    // Let urlchange listener handle the progress logic
     tab.frame.go(input);
 }
 
 function updateLoadingBar(tab, percent) {
     if (tab.id !== activeTabId) return;
     const bar = document.getElementById("loading-bar");
+    if (!bar) return;
+
+    if (percent < 100 && bar._cleanup) {
+        clearTimeout(bar._cleanup);
+        bar._cleanup = null;
+    }
+
+    const container = bar.parentElement;
     bar.style.width = percent + "%";
     bar.style.opacity = percent === 100 ? "0" : "1";
-    if (percent === 100) setTimeout(() => { bar.style.width = "0%"; }, 200);
+
+    if (percent < 100) {
+        container?.classList.add('active');
+    }
+
+    if (percent === 100) {
+        container?.classList.remove('active');
+        bar._cleanup = setTimeout(() => {
+            bar.style.width = "0%";
+            bar._cleanup = null;
+        }, 200);
+    }
 }
 
 //settings
@@ -505,7 +551,7 @@ function renderServerList() {
     toggle.innerHTML = `<div class="wisp-option-header"><div class="wisp-option-name">Auto-switch</div><div class="toggle ${isAutoswitch ? 'active' : ''}"></div></div>`;
     toggle.onclick = () => {
         localStorage.setItem('wispAutoswitch', !isAutoswitch);
-        navigator.serviceWorker.controller?.postMessage({ type: 'config', autoswitch: !isAutoswitch });
+        navigator.serviceWorker?.controller?.postMessage({ type: 'config', autoswitch: !isAutoswitch });
         location.reload();
     };
     list.appendChild(toggle);
@@ -550,7 +596,10 @@ async function checkServerHealth(url, el) {
 
 function setWisp(url) {
     localStorage.setItem('proxServer', url);
-    navigator.serviceWorker.controller?.postMessage({ type: 'config', wispurl: url });
+    const controller = navigator.serviceWorker?.controller;
+    if (controller) {
+        controller.postMessage({ type: 'config', wispurl: url });
+    }
     setTimeout(() => location.reload(), 500);
 }
 

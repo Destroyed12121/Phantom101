@@ -5,6 +5,7 @@ const Games = {
     renderedCount: 0,
     BATCH_SIZE: 50,
     liked: JSON.parse(localStorage.getItem('liked_games') || '[]'),
+    recent: JSON.parse(localStorage.getItem('recent_games') || '[]'),
     isLoading: false,
     firstLoad: true,
 
@@ -41,6 +42,7 @@ const Games = {
             // Use centralized loader
             this.allGames = await window.Gloader.load(this.lib);
             this.filteredGames = [...this.allGames];
+            this.applyLikedSort();
             this.resetRender();
 
             if (window.Notify) window.Notify.success('Games', `${this.allGames.length} games loaded`);
@@ -81,6 +83,7 @@ const Games = {
             // Default order preservation if possible, or just index based
             // Since we don't have original index easily, we might rely on load order
         }
+        this.applyLikedSort();
         this.resetRender();
     },
 
@@ -89,7 +92,7 @@ const Games = {
         if (!grid) return;
         grid.innerHTML = '';
         this.renderedCount = 0;
-        this.updateLikedSection();
+        this.updateRecentSection();
         const countDisplay = document.getElementById('game-count');
         if (countDisplay) countDisplay.innerText = `${this.filteredGames.length} Games`;
         this.renderMore();
@@ -107,9 +110,13 @@ const Games = {
         const div = document.createElement('div');
         div.className = 'game-card';
         const isLiked = this.isLiked(game);
-        const imgHTML = game.img ?
-            `<img src="${game.img}" loading="lazy" alt="${game.name}" onerror="this.parentElement.innerHTML='<div class=\\'game-placeholder\\'><i class=\\'fa-solid fa-gamepad\\'></i></div>'">` :
-            `<div class="game-placeholder"><i class="fa-solid fa-gamepad"></i></div>`;
+
+        let imgHTML;
+        if (game.img) {
+            imgHTML = `<img src="${game.img}" loading="lazy" alt="${game.name}" onerror="this.parentElement.innerHTML='<div class=\\'game-placeholder\\' style=\\'${this.getGradient(game.name)}\\'><i class=\\'fa-solid fa-gamepad\\'></i></div>'">`;
+        } else {
+            imgHTML = `<div class="game-placeholder" style="${this.getGradient(game.name)}"><i class="fa-solid fa-gamepad"></i></div>`;
+        }
 
         div.innerHTML = `
             <div class="game-img-wrapper">
@@ -128,34 +135,69 @@ const Games = {
             e.stopPropagation();
             this.toggleLike(game);
             likeBtn.classList.toggle('active', this.isLiked(game));
-            this.updateLikedSection();
         };
         return div;
     },
 
-    updateLikedSection() {
-        const likedGrid = document.getElementById('liked-grid');
-        const likedSection = document.getElementById('liked-section');
-        if (!likedGrid) return;
-        const likedGames = this.allGames.filter(g => this.isLiked(g));
-        likedGrid.innerHTML = '';
-        if (likedGames.length > 0) {
-            likedSection.style.display = 'block';
-            likedGames.forEach(g => likedGrid.appendChild(this.createCard(g)));
-        } else {
-            likedSection.style.display = 'none';
-        }
+    applyLikedSort() {
+        this.filteredGames.sort((a, b) => {
+            return (this.isLiked(b) ? 1 : 0) - (this.isLiked(a) ? 1 : 0);
+        });
     },
 
     openGame(game) {
+        this.addToRecent(game);
         window.location.href = `player.html?type=game&title=${encodeURIComponent(game.name)}&url=${encodeURIComponent(game.url)}`;
     },
 
-    isLiked(game) { return this.liked.some(g => g.name === game.name); },
+    addToRecent(game) {
+        if (window.Settings && window.Settings.get('historyEnabled') === false) return;
+        // Remove if exists
+        this.recent = this.recent.filter(g => g.url !== game.url);
+        // Add to front
+        this.recent.unshift({ name: game.name, url: game.url, img: game.img, type: game.type });
+        // Cap at 12
+        if (this.recent.length > 12) this.recent.pop();
+        localStorage.setItem('recent_games', JSON.stringify(this.recent));
+    },
+
+    updateRecentSection() {
+        const recentGrid = document.getElementById('recent-grid');
+        const recentSection = document.getElementById('recent-section');
+        if (!recentGrid) return;
+
+        if (window.Settings && window.Settings.get('historyEnabled') === false) {
+            recentSection.style.display = 'none';
+            return;
+        }
+
+        // Filter valid recent games (sanity check against allGames isn't strictly necessary but good if data corrupted)
+        // But users might have played games from other libraries, so we just show what's in history
+        recentGrid.innerHTML = '';
+        if (this.recent.length > 0) {
+            recentSection.style.display = 'block';
+            this.recent.forEach(g => recentGrid.appendChild(this.createCard(g)));
+        } else {
+            recentSection.style.display = 'none';
+        }
+    },
+
+    getGradient(name) {
+        const colors = [
+            ['#f43f5e', '#e11d48'], ['#3b82f6', '#2563eb'], ['#10b981', '#059669'],
+            ['#8b5cf6', '#7c3aed'], ['#f59e0b', '#d97706'], ['#ec4899', '#db2777'],
+            ['#6366f1', '#4f46e5'], ['#14b8a6', '#0d9488']
+        ];
+        const index = name.length % colors.length;
+        const [c1, c2] = colors[index];
+        return `background: linear-gradient(135deg, ${c1}, ${c2}); display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:rgba(255,255,255,0.8); font-size:2rem;`;
+    },
+
+    isLiked(game) { return this.liked.some(g => g.url === game.url); },
 
     toggleLike(game) {
         if (this.isLiked(game)) {
-            this.liked = this.liked.filter(g => g.name !== game.name);
+            this.liked = this.liked.filter(g => g.url !== game.url);
         } else {
             this.liked.push({ name: game.name, url: game.url, img: game.img, type: game.type });
         }
@@ -195,6 +237,7 @@ const Games = {
 
     performSearch(term) {
         this.filteredGames = term ? this.allGames.filter(g => g.name.toLowerCase().includes(term)) : [...this.allGames];
+        this.applyLikedSort();
         this.resetRender();
     }
 };

@@ -193,8 +193,6 @@
             const apply = () => this.applyBackground();
             window.addEventListener('settings-changed', apply);
             window.addEventListener('storage', apply);
-            window.addEventListener('beforeunload', () => this.cleanup());
-            window.addEventListener('pagehide', () => this.cleanup());
 
             document.addEventListener('visibilitychange', () => {
                 const video = this.elements.video;
@@ -203,7 +201,7 @@
                 else if (this.current.type === 'video') video.play().catch(() => { });
             });
 
-            this.applyBackground();
+            apply();
         },
 
         applyBackground() {

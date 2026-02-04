@@ -76,7 +76,6 @@ document.getElementById('border-color').value = settings.borderColor || '#1f1f1f
 document.getElementById('border-light-color').value = settings.borderLightColor || '#2a2a2a';
 
 document.getElementById('max-rating').value = settings.maxMovieRating || 'R';
-document.getElementById('game-library').value = settings.gameLibrary || 'multi';
 
 // Background Presets
 function renderBackgrounds() {
@@ -295,6 +294,8 @@ if (settings.themeRotation) document.getElementById('theme-rotation-toggle').cla
 else document.getElementById('theme-rotation-toggle').classList.remove('active');
 if (settings.autoSwitchProviders !== false) document.getElementById('autoswitch-toggle').classList.add('active');
 else document.getElementById('autoswitch-toggle').classList.remove('active');
+if (settings.historyEnabled !== false) document.getElementById('history-toggle').classList.add('active');
+else document.getElementById('history-toggle').classList.remove('active');
 if (settings.backgroundRotation) document.getElementById('background-rotation-toggle').classList.add('active');
 else document.getElementById('background-rotation-toggle').classList.remove('active');
 
@@ -324,13 +325,13 @@ document.getElementById('surface-active-color').oninput = e => { settings.surfac
 document.getElementById('border-color').oninput = e => { settings.borderColor = e.target.value; saveSettings(settings); };
 document.getElementById('border-light-color').oninput = e => { settings.borderLightColor = e.target.value; saveSettings(settings); };
 document.getElementById('max-rating').onchange = e => { settings.maxMovieRating = e.target.value; saveSettings(settings); };
-document.getElementById('game-library').onchange = e => { settings.gameLibrary = e.target.value; saveSettings(settings); };
 document.getElementById('discord-toggle').onclick = function () { this.classList.toggle('active'); settings.discordWidget = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('miniplayer-toggle').onclick = function () { this.classList.toggle('active'); settings.miniplayer = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('leave-confirm-toggle').onclick = function () { this.classList.toggle('active'); settings.leaveConfirmation = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('changelog-toggle').onclick = function () { this.classList.toggle('active'); settings.showChangelogOnUpdate = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('theme-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.themeRotation = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('autoswitch-toggle').onclick = function () { this.classList.toggle('active'); settings.autoSwitchProviders = this.classList.contains('active'); saveSettings(settings); };
+document.getElementById('history-toggle').onclick = function () { this.classList.toggle('active'); settings.historyEnabled = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('background-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.backgroundRotation = this.classList.contains('active'); saveSettings(settings); };
 
 document.getElementById('rotate-toggle').onclick = function () {

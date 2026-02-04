@@ -65,6 +65,9 @@ const PhantomSearch = {
     },
 
     onInput(e) {
+        // Trigger UGS load if first time typing
+        if (window.loadUGSFiles) window.loadUGSFiles();
+
         const query = e.target.value.trim();
         if (!query) { this.hide(); return; }
         this.search(query);

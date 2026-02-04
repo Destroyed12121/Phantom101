@@ -257,6 +257,16 @@
 }
 
 /* .btn handled by main.css */
+.btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    background: var(--accent);
+}
 
 /* Background Presets */
 .bg-preset-btn {
@@ -319,6 +329,9 @@
     font-size: 0.625rem;
     z-index: 1;
 }
+
+
+
 
 .bg-preset-delete {
     position: absolute;

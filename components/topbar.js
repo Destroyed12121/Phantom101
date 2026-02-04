@@ -30,6 +30,11 @@
         logoSection.className = 'logo-section';
         logoSection.href = rootPrefix + 'index2.html';
         logoSection.innerHTML = '<div class="logo-placeholder"><i data-lucide="zap"></i></div>';
+        logoSection.onclick = () => {
+            if (window.parent && window.parent.showLoading) {
+                window.parent.showLoading();
+            }
+        };
         topbarContainer.appendChild(logoSection);
 
         const navButtons = document.createElement('div');
@@ -66,6 +71,12 @@
             span.textContent = btn.name;
             link.appendChild(span);
 
+            link.onclick = (e) => {
+                if (window.parent && window.parent.showLoading) {
+                    window.parent.showLoading();
+                }
+            };
+
             if (btn.badge) {
                 const badge = document.createElement('div');
                 badge.className = 'nav-badge-beta';
@@ -82,6 +93,16 @@
         if (window.lucide) {
             lucide.createIcons();
         }
+
+        // Load AudioEngine
+        const aeScript = document.createElement('script');
+        aeScript.src = rootPrefix + 'scripts/audio-engine.js';
+        document.body.appendChild(aeScript);
+
+        // Load MiniPlayer
+        const mpScript = document.createElement('script');
+        mpScript.src = rootPrefix + 'components/miniplayer.js';
+        document.body.appendChild(mpScript);
     }
 
     function initTopbar() {

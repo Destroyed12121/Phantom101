@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Unblocked</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+    
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
@@ -148,12 +154,25 @@
             display: none;
         }
     </style>
-    <script src="config.js"></script>
-    <script src="scripts/settings.js"></script>
-    <script src="scripts/background.js"></script>
-    <script src="scripts/cloaking.js"></script>
-    <script src="scripts/quotes.js"></script>
-    <script>Settings.apply();</script>
+    <script src="config.js" defer></script>
+    <script src="scripts/settings.js" defer></script>
+    <script src="scripts/background.js" defer></script>
+    <script src="scripts/cloaking.js" defer></script>
+    <script src="scripts/quotes.js" defer></script>
+    <script>
+        // Apply settings immediately to prevent theme flash if possible, 
+        // though deferred scripts will handle the full application.
+        try {
+            const stored = localStorage.getItem('void_settings');
+            if (stored) {
+                const s = JSON.parse(stored);
+                if (s.accentColor) document.documentElement.style.setProperty('--accent', s.accentColor);
+                if (s.surfaceColor) document.documentElement.style.setProperty('--surface', s.surfaceColor);
+                if (s.textColor) document.documentElement.style.setProperty('--text', s.textColor);
+                if (s.background?.type === 'color') document.documentElement.style.setProperty('--bg', s.background.value);
+            }
+        } catch (e) { }
+    </script>
     <link rel="stylesheet" href="styles/error.css">
     <link rel="stylesheet" href="styles/background.css">
 
@@ -164,7 +183,7 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LMBC27Z" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
-    <!-- First Visit Cloak Layer -->
+    <!-- First Visit Cloak -->
     <div id="fv-cloak" class="neterror">
         <div id="main-frame-error" class="interstitial-wrapper">
             <div id="main-content">
@@ -249,7 +268,7 @@
         <div class="loading-text">Loading...</div>
     </div>
 
-    <!-- Launch Screen -->
+    <!-- Launch Sc reen -->
     <div id="launch-screen" class="launch-screen hidden">
         <div class="loading-logo">
             <i class="fa-solid fa-ghost"></i>
@@ -263,7 +282,7 @@
 
     <iframe id="main-frame"></iframe>
 
-    <script src="scripts/rotation.js"></script>
+    <script src="scripts/rotation.js" defer></script>
 
     <script>
         const loadingScreen = document.getElementById('loading-screen');

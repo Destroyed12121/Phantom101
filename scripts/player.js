@@ -1,11 +1,12 @@
 const params = new URLSearchParams(window.location.search);
-const type = params.get('type'), id = params.get('id'), title = params.get('title'), urlParam = params.get('url'), season = params.get('season'), episode = params.get('episode');
+const type = params.get('type'), id = params.get('id'), title = params.get('title'), urlParam = params.get('url'), season = params.get('season'), episode = params.get('episode'), source = params.get('source');
 const frame = document.getElementById('game-frame'), titleEl = document.getElementById('player-title'), descEl = document.getElementById('player-desc'), quoteEl = document.getElementById('player-quote'), proxyToggle = document.getElementById('proxy-toggle');
 
 const PROVIDERS = [
-    { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}', tv: 'https://player.vidify.top/embed/tv/{id}&s={season}&e={episode}' } },
-    { id: 'vidfast', name: 'Vidfast', urls: { movie: 'https://vidfast.to/embed/movie/{id}', tv: 'https://vidfast.to/embed/tv/{id}&s={season}&e={episode}' } },
-    { id: 'vidsrc', name: 'VidSrc', urls: { movie: 'https://vidsrc-embed.su/embed/movie?tmdb={id}', tv: 'https://vidsrc-embed.su/embed/tv?tmdb={id}&s={season}&e={episode}' } }
+    { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}', tv: 'https://player.vidify.top/embed/tv/{id}/{season}/{episode}' } },
+    { id: 'vidfast', name: 'Vidfast', urls: { movie: 'https://vidfast.to/embed/movie/{id}', tv: 'https://vidfast.to/embed/tv/{id}/{season}/{episode}' } },
+    { id: 'vidsrc_su', name: 'VidSrc (SU)', urls: { movie: 'https://vidsrc-embed.su/embed/movie?tmdb={id}', tv: 'https://vidsrc-embed.su/embed/tv?tmdb={id}&s={season}&e={episode}' } },
+    { id: 'vidsrc', name: 'VidSrc', urls: { movie: 'https://vidsrc.to/embed/movie/{id}', tv: 'https://vidsrc.to/embed/tv/{id}/{season}/{episode}' } }
 ];
 
 let currentUrl = '', curProvIdx = 0;
@@ -15,35 +16,106 @@ class SmartSwitcher {
     clear() { clearTimeout(this.tm); this.tm = null; }
     start() { this.clear(); this.tm = setTimeout(() => this.fail(), 15000); }
     fail() {
+        if (type === 'video') return; // Don't fail-check search results/youtube
         if (++this.retry >= 3) return window.Notify?.error('Error', 'All providers failed');
         window.Notify?.info('Switching', 'Slow source, trying next...');
         if (type === 'game') this.toggleProxy(); else this.next();
     }
     next() { curProvIdx = (curProvIdx + 1) % PROVIDERS.length; const s = document.getElementById('provider-select'); if (s) s.value = PROVIDERS[curProvIdx].id; loadProvider(PROVIDERS[curProvIdx].id, true); }
-    toggleProxy() { if (proxyToggle) { proxyToggle.checked = !proxyToggle.checked; type === 'game' ? loadGame(currentUrl, true) : loadProvider(PROVIDERS[curProvIdx].id, true); } }
+    toggleProxy() { if (proxyToggle) { proxyToggle.classList.toggle('active'); source === 'twitch' ? loadTwitch(id) : (type === 'game' ? loadGame(currentUrl, true) : loadProvider(PROVIDERS[curProvIdx].id, true)); } }
 }
 const switcher = new SmartSwitcher();
 
 function init() {
     titleEl.textContent = title || (type === 'tv' ? `S${season} E${episode}` : (type === 'game' ? 'Game' : 'Movie'));
-    if (type === 'game') {
-        document.getElementById('btn-download').style.display = 'flex';
+    if (source === 'twitch') {
+        document.getElementById('movie-controls').style.display = 'flex';
+        const provGroup = document.querySelector('.player-control-group');
+        if (provGroup) provGroup.style.display = 'none';
+
+        if (proxyToggle) {
+            const proxyParam = params.get('proxy');
+            if (proxyParam === 'true') proxyToggle.classList.add('active');
+            proxyToggle.onclick = () => {
+                proxyToggle.classList.toggle('active');
+                switcher.retry = 0;
+                loadTwitch(id);
+            };
+        }
+        loadTwitch(id);
+    } else if (type === 'game' || type === 'video') {
+        if (type === 'game') document.getElementById('btn-download').style.display = 'flex';
         if (urlParam) loadGame(urlParam);
     } else {
         document.getElementById('movie-controls').style.display = 'flex';
         const sel = document.getElementById('provider-select');
         PROVIDERS.forEach(p => sel.add(new Option(p.name, p.id)));
         sel.onchange = () => (switcher.retry = 0, loadProvider(sel.value));
-        if (proxyToggle) proxyToggle.onchange = () => (switcher.retry = 0, loadProvider(PROVIDERS[curProvIdx].id));
+        if (proxyToggle) {
+            proxyToggle.onclick = () => {
+                proxyToggle.classList.toggle('active');
+                switcher.retry = 0;
+                loadProvider(PROVIDERS[curProvIdx].id);
+            };
+        }
         loadProvider(PROVIDERS[0].id);
     }
     const q = window.Quotes ? window.Quotes.getRandom() : '';
     descEl.textContent = (type !== 'game' ? (JSON.parse(sessionStorage.getItem('currentMovie') || '{}').overview || 'No description') : '');
     if (quoteEl) quoteEl.textContent = q;
+
+    saveWatchProgress();
+}
+
+function saveWatchProgress() {
+    // We treat everything here as "Watching" since player.js is the player
+    // Use URL params to reconstruct the state
+    if (source === 'twitch' || type === 'twitch') return;
+    if (window.Settings && window.Settings.get('historyEnabled') === false) return;
+
+    const currentImg = params.get('img');
+
+    const item = {
+        title: title || (source === 'twitch' ? id : 'Unknown'),
+        url: window.location.href,
+        type: type || 'video',
+        timestamp: Date.now(),
+        img: currentImg
+    };
+
+    const history = JSON.parse(localStorage.getItem('continue_watching') || '[]');
+    // Filter out same url or same title/id
+    const newHistory = [item, ...history.filter(h => h.url !== item.url && h.title !== item.title)].slice(0, 10);
+
+    localStorage.setItem('continue_watching', JSON.stringify(newHistory));
 }
 
 const videoFrame = document.getElementById('video-frame');
 let hlsPlayer = null;
+let ytPlayer = null;
+let ytInterval = null;
+
+// YouTube API Loading
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+const firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// Cooperative YouTube API Loading
+const oldYTReady = window.onYouTubeIframeAPIReady;
+window.onYouTubeIframeAPIReady = () => {
+    if (oldYTReady) oldYTReady();
+    console.log('Player YouTube API Ready');
+};
+
+function getSavedProgress() {
+    const key = (type === 'game' || type === 'video') ? urlParam : id;
+    if (key) {
+        const data = localStorage.getItem(`progress_${key}`);
+        return data ? JSON.parse(data) : null;
+    }
+    return null;
+}
 
 async function loadGame(url, silent = false) {
     currentUrl = url;
@@ -52,26 +124,88 @@ async function loadGame(url, silent = false) {
 
     // Reset visibility
     frame.style.display = 'block';
+    frame.width = "100%";
+    frame.height = "100%";
     videoFrame.style.display = 'none';
     if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
 
-    // Check if it's an HLS stream (m3u8 or Twitch proxy)
+    // Clear YouTube player trackers
+    if (ytInterval) { clearInterval(ytInterval); ytInterval = null; }
+    ytPlayer = null;
+
+    const saved = getSavedProgress();
+    const startOffset = saved ? saved.currentTime : 0;
+
+    // Check if it's an HLS stream (m3u8)
     const isHLS = url.includes('.m3u8') || url.includes('twitch.leelive2021.workers.dev');
 
     if (isHLS) {
         frame.style.display = 'none';
         videoFrame.style.display = 'block';
+
+        const initVideo = () => {
+            if (startOffset > 0) videoFrame.currentTime = startOffset;
+            videoFrame.play();
+        };
+
         if (Hls.isSupported()) {
             hlsPlayer = new Hls();
             hlsPlayer.loadSource(url);
             hlsPlayer.attachMedia(videoFrame);
-            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => videoFrame.play());
+            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, initVideo);
         } else if (videoFrame.canPlayType('application/vnd.apple.mpegurl')) {
             videoFrame.src = url;
-            videoFrame.addEventListener('loadedmetadata', () => videoFrame.play());
+            videoFrame.addEventListener('loadedmetadata', initVideo);
         }
-    } else if (url.includes('#') || url.includes('staticsjv2/') || url.includes('youtube.com') || url.includes('youtube-nocookie.com')) {
-        frame.src = url;
+
+        // Track progress for native video
+        videoFrame.ontimeupdate = () => {
+            updateHistoryProgress(videoFrame.currentTime, videoFrame.duration);
+        };
+    } else if (url.includes('#') || url.includes('staticsjv2/') || url.includes('youtube.com') || url.includes('youtube-nocookie.com') || url.includes('workers.dev')) {
+        let finalUrl = url;
+        const isYT = url.includes('youtube.com') || url.includes('youtube-nocookie.com');
+
+        if (isYT) {
+            const separator = finalUrl.includes('?') ? '&' : '?';
+            finalUrl += `${separator}enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+        }
+
+        if (startOffset > 0) {
+            const separator = finalUrl.includes('?') ? '&' : '?';
+            const param = isYT ? 'start' : 't';
+            finalUrl = `${finalUrl}${separator}${param}=${Math.floor(startOffset)}`;
+        }
+
+        frame.src = finalUrl;
+
+        if (isYT) {
+            // Wait for API and frame to be ready
+            frame.onload = () => {
+                if (window.YT && YT.Player) {
+                    ytPlayer = new YT.Player(frame, {
+                        events: {
+                            'onStateChange': (event) => {
+                                if (event.data === YT.PlayerState.PLAYING) {
+                                    if (!ytInterval) {
+                                        ytInterval = setInterval(() => {
+                                            if (ytPlayer && ytPlayer.getCurrentTime) {
+                                                const cur = ytPlayer.getCurrentTime();
+                                                const dur = ytPlayer.getDuration();
+                                                if (dur > 0) updateHistoryProgress(cur, dur);
+                                            }
+                                        }, 2000);
+                                    }
+                                } else {
+                                    clearInterval(ytInterval);
+                                    ytInterval = null;
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+        }
     } else {
         try {
             const h = await (await fetch(url)).text();
@@ -81,14 +215,57 @@ async function loadGame(url, silent = false) {
     }
 }
 
+function loadTwitch(channel) {
+    const url = proxyToggle?.classList.contains('active')
+        ? `https://twitch.leelive2021.workers.dev/?channel=${encodeURIComponent(channel)}`
+        : `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${window.location.hostname}`;
+    loadGame(url);
+}
+
 function loadProvider(pid, silent = false) {
     const p = PROVIDERS.find(x => x.id === pid);
     if (!p) return;
     if (!silent) switcher.retry = 0;
     switcher.start();
     let u = (type === 'movie' ? p.urls.movie : p.urls.tv).replace('{id}', id).replace('{tmdb_id}', id).replace('{season}', season).replace('{episode}', episode);
-    if (proxyToggle?.checked) u = `../staticsjv2/embed.html#${u}`;
+
+    // Resume for providers
+    const saved = getSavedProgress();
+    if (saved && saved.currentTime > 0) {
+        const separator = u.includes('?') ? '&' : '?';
+        // Most generic players use start or t
+        const param = pid === 'vidify' ? 't' : 'start';
+        u += `${separator}${param}=${Math.floor(saved.currentTime)}`;
+    }
+
+    if (proxyToggle?.classList.contains('active')) u = `../staticsjv2/embed.html#${u}`;
     currentUrl = u; frame.src = u;
+}
+
+function updateHistoryProgress(currentTime, duration, mediaIdOverride = null) {
+    if (source === 'twitch' || type === 'twitch') return;
+    if (window.Settings && window.Settings.get('historyEnabled') === false) return;
+    const history = JSON.parse(localStorage.getItem('continue_watching') || '[]');
+    if (history.length > 0) {
+        const progress = {
+            currentTime,
+            duration,
+            percentage: (currentTime / duration) * 100
+        };
+        history[0].progress = progress;
+        history[0].timestamp = Date.now(); // Keep timestamp update for history
+        localStorage.setItem('continue_watching', JSON.stringify(history));
+
+        // Also save to individual key for getSavedProgress
+        const key = (type === 'game' || type === 'video') ? urlParam : id;
+        if (key) {
+            localStorage.setItem(`progress_${key}`, JSON.stringify({
+                currentTime,
+                duration,
+                lastWatched: Date.now() // Include lastWatched for individual progress
+            }));
+        }
+    }
 }
 
 document.getElementById('btn-reload').onclick = () => {
@@ -150,5 +327,18 @@ document.getElementById('btn-theater').onclick = () => {
         clearTimeout(idleTimer);
     }
 };
+
+// Vidify Progress-Tracking
+window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://player.vidify.top') return;
+
+    if (event.data?.type === 'WATCH_PROGRESS') {
+        const { mediaId, eventType, currentTime, duration } = event.data.data;
+
+        if (eventType === 'timeupdate' || eventType === 'pause' || eventType === 'play') {
+            updateHistoryProgress(currentTime, duration, mediaId);
+        }
+    }
+});
 
 init();

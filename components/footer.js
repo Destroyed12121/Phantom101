@@ -21,6 +21,14 @@
     // settings
     let settings = { ...(config.defaults || {}), ...storedSettings };
 
+    // Inject modals.css 
+    if (!document.querySelector('link[href*="styles/modals.css"]')) {
+        const modalLink = document.createElement('link');
+        modalLink.rel = 'stylesheet';
+        modalLink.href = `${rootPrefix}styles/modals.css`;
+        document.head.appendChild(modalLink);
+    }
+
     const footer = document.createElement('footer');
     footer.id = 'site-footer';
     footer.innerHTML = `
@@ -75,8 +83,7 @@
 
 
 
-    // gtm
-    // Inject GTM head script if not already present
+    // Inject GTM head script 
     if (!document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });

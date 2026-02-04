@@ -667,13 +667,21 @@
 }
 
 .lyrics-content {
-    font-size: 13px;
+    font-size: 16px;
     line-height: 2;
-    max-height: 120px;
+    height: 220px;
     overflow-y: auto;
     scroll-behavior: smooth;
-    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 25%, black 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%, black 100%);
+    padding: 100px 0;
+    box-sizing: border-box;
+    transition: all 0.4s ease;
+}
+
+.lyrics-content::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar for cleaner look since it auto-scrolls */
 }
 
 .yt-toggle-btn {
@@ -714,12 +722,15 @@
 
 .lyrics-line.active {
     color: var(--accent);
-    font-weight: 600;
-    transform: scale(1.05);
+    font-weight: 700;
+    transform: scale(1.1);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+    opacity: 1;
 }
 
 .lyrics-line.past {
-    color: var(--text-dim);
+    color: var(--text-muted);
+    opacity: 0.3;
 }
 
 /* Fallback container */

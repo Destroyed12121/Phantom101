@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="../styles/card.css">
     <link rel="stylesheet" href="../styles/watch.css">
     <link rel="stylesheet" href="../styles/background.css">
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
+    <script>Settings.apply();</script>
 </head>
 
 <body>
@@ -38,18 +41,23 @@
             </div>
         </div>
 
+        <div id="continue-watching-section"
+            style="display: none; margin-bottom: 2rem; max-width: 1200px; margin-inline: auto;">
+            <div class="section-header"
+                style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">
+                <i class="fa-solid fa-clock-rotate-left"></i> Continue Watching
+            </div>
+            <div class="media-grid" id="continue-watching-grid"
+                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); padding-top: 0;"></div>
+        </div>
+
         <div class="media-grid" id="media-grid">
             <!-- Search results will appear here -->
         </div>
     </div>
 
-    <script src="../scripts/notifications.js"></script>
-    <script src="../config.js"></script>
-    <script src="../scripts/settings.js"></script>
     <script src="../scripts/background.js"></script>
-    <script src="../scripts/quotes.js"></script>
     <script src="../scripts/watch.js"></script>
-
     <script src="../components/footer.js"></script>
 </body>
 

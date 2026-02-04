@@ -475,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!grid) return;
 
     loadGenres();
+    loadContinueWatching();
     loadMedia();
 
     document.getElementById('movies-tab').onclick = () => switchTab('movies');
@@ -523,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Help notification
     setTimeout(() => {
         if (window.Notify) {
-            Notify.info("Can't find a movie?", "Try using genres to browse the collection!", 6000);
+            Notify.info("Can't find a movie?", "Try using genres", 6000);
         }
     }, 15000);
 });
@@ -636,8 +637,87 @@ function playMedia(item, type) {
         params.append('season', item.season || 1);
         params.append('episode', item.episode || 1);
     }
+    if (item.poster_path) {
+        params.append('img', IMG_BASE + item.poster_path);
+    }
     sessionStorage.setItem('currentMovie', JSON.stringify(item));
     window.location.href = `player.html?${params.toString()}`;
+}
+
+function loadContinueWatching() {
+    const history = JSON.parse(localStorage.getItem('continue_watching') || '[]');
+    const container = document.getElementById('continue-watching-section');
+    const grid = document.getElementById('continue-watching-grid');
+
+    if (!history.length || !container || !grid || (window.Settings && window.Settings.get('historyEnabled') === false)) {
+        if (container) container.style.display = 'none';
+        return;
+    }
+
+    // Filter for movies/tv only (exclude 'game' type if coming from watch.html, or include them? User wants it in movies page, likely just movies/tv? 
+    // Actually, user might want to see movies they watched in watch.html here too.
+    // Let's show all for now, or filter by type exists in history item.
+    // History items have type: 'video' (default in player.js) or 'game' or 'movie'/'tv' if passed? 
+    // player.js uses `type || 'video'`. 
+    // movies.js playMedia passes `type` (movie/tv).
+    // watch.js playMedia passes `type='game'`.
+    // Let's just show everything but prefer movie/tv layout.
+
+    container.style.display = 'block';
+    console.log("Loading continue watching", history);
+    grid.innerHTML = '';
+
+    history.forEach(item => {
+        // Only show movies and tv shows
+        if (item.type !== 'movie' && item.type !== 'tv') return;
+
+        // Compatibility check: if type is missing (old data), check url structure or default to allow
+        if (!item.type && !item.url.includes('id=')) return;
+
+
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        const title = item.title;
+        const thumb = item.img || 'https://via.placeholder.com/300x450?text=No+Preview';
+
+        // Try to extract season/episode from URL if available
+        let meta = 'Resume';
+        try {
+            const urlObj = new URL(item.url);
+            const s = urlObj.searchParams.get('season');
+            const e = urlObj.searchParams.get('episode');
+            if (s && e) meta = `S${s} E${e}`;
+        } catch (e) { }
+
+        // Remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '<i class="fa-solid fa-times"></i>';
+        removeBtn.style.cssText = 'position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            const newHistory = history.filter(h => h.url !== item.url);
+            localStorage.setItem('continue_watching', JSON.stringify(newHistory));
+            loadContinueWatching();
+        };
+
+        card.innerHTML = `
+            <img src="${thumb}" loading="lazy" alt="${title}">
+            <div class="media-card-overlay">
+                <div class="media-card-info">
+                    <div class="media-card-title">${title}</div>
+                    <div class="media-card-meta">${meta}</div>
+                    ${item.progress ? `<div class="progress-bar-container" style="width:100%;height:3px;background:rgba(255,255,255,0.3);margin-top:4px;border-radius:2px;overflow:hidden;"><div class="progress-bar" style="width:${item.progress.percentage}%;height:100%;background:var(--accent);display:block;"></div></div>` : ''}
+                </div>
+            </div>
+        `;
+
+        card.appendChild(removeBtn);
+
+        card.onclick = () => {
+            window.location.href = item.url;
+        };
+        grid.appendChild(card);
+    });
 }
 
 async function searchMedia() {

@@ -294,7 +294,7 @@ scramjet.addEventListener("request", async (e) => {
 
         for (let i = 0; i <= MAX_RETRIES; i++) {
             try {
-                return await scramjet.client.fetch(e.url, {
+                const response = await scramjet.client.fetch(e.url, {
                     method: e.method,
                     body: e.body,
                     headers: e.requestHeaders,
@@ -304,6 +304,19 @@ scramjet.addEventListener("request", async (e) => {
                     redirect: "manual",
                     duplex: "half",
                 });
+
+                // Real resource tracking for loading bar
+                self.clients.matchAll().then(clients => {
+                    clients.forEach(client => {
+                        client.postMessage({
+                            type: 'resource-loaded',
+                            url: e.url,
+                            status: response.status
+                        });
+                    });
+                });
+
+                return response;
             } catch (err) {
                 lastErr = err;
                 const errMsg = err.message.toLowerCase();

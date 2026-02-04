@@ -127,6 +127,10 @@ body.theater-active .player-info {
     padding-bottom: 0;
 }
 
+body.theater-active .player-quote {
+    display: none;
+}
+
 body.theater-active .player-info>* {
     pointer-events: auto;
 }
@@ -144,12 +148,14 @@ body.theater-active .player-info>* {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
     border: none;
     z-index: 6;
     /* Video above background */
     background: transparent;
+    object-fit: contain;
+    /* Ensure video keeps ratio but fills space */
 }
 
 /* ============================================
@@ -220,15 +226,15 @@ body.theater-active .player-info>* {
     display: flex;
     align-items: center;
     cursor: pointer;
+    gap: 8px;
 }
 
 .player-proxy-toggle .player-control-label {
     font-size: 0.875rem;
     color: var(--text);
-    margin-left: 8px;
 }
 
-/* Dropdown */
+/* Provider Select styling remains */
 .provider-select {
     padding: 8px 12px;
     background: var(--surface);
@@ -238,54 +244,11 @@ body.theater-active .player-info>* {
     font-size: 0.875rem;
     outline: none;
     cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
-/* Switch Toggle */
-.switch {
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-    position: relative;
-    margin-right: 8px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--border);
-    transition: .3s;
-    border-radius: 22px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background-color: var(--text-dim);
-    transition: .3s;
-    border-radius: 50%;
-}
-
-input:checked+.slider {
-    background-color: var(--accent);
-}
-
-input:checked+.slider:before {
-    transform: translateX(18px);
-    background-color: var(--bg);
+.provider-select:hover {
+    border-color: var(--border-light);
 }
 
 /* Ensure buttons are clickable */

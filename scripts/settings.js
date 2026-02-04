@@ -15,7 +15,8 @@
             maxMovieRating: 'R',
             offlineGames: [],
             gameLibrary: 'multi',
-            leaveConfirmation: false
+            leaveConfirmation: false,
+            historyEnabled: true
         };
     };
 

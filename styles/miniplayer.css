@@ -1,0 +1,169 @@
+/* Box-style Mini Player */
+.miniplayer.box-style {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 280px;
+    height: 70px;
+    background: var(--surface, #111);
+    border: 1px solid var(--accent, #fff);
+    display: flex;
+    /* controlled by JS visibility */
+    align-items: center;
+    padding: 0;
+    z-index: 10000;
+    box-shadow: none;
+    font-family: 'Inter', sans-serif;
+    overflow: visible;
+}
+
+.mp-box-art {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--accent, #fff);
+}
+
+.mp-box-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.mp-box-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    min-width: 0;
+    height: 100%;
+    justify-content: center;
+}
+
+.mp-box-info {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 4px;
+}
+
+.mp-title {
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+}
+
+.mp-artist {
+    color: var(--text-muted, #888);
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mp-box-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.mp-box-controls button {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+    opacity: 0.8;
+}
+
+.mp-box-controls button:hover {
+    opacity: 1;
+    color: var(--accent, #fff);
+}
+
+.mp-box-controls button.active {
+    color: var(--accent, #fff);
+}
+
+.mp-play-btn {
+    font-size: 1.1rem !important;
+}
+
+.mp-box-progress {
+    position: absolute;
+    bottom: 0;
+    left: 70px;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mp-progress-fill {
+    height: 100%;
+    background: var(--accent, #fff);
+    width: 0%;
+}
+
+/* Ensure no rounded corners for box style */
+.miniplayer.box-style,
+.mp-box-art,
+.mp-box-progress {
+    border-radius: 0 !important;
+}
+
+.mp-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    z-index: 30;
+}
+
+.mp-close-btn:hover {
+    opacity: 1;
+    color: var(--accent, #fff);
+}
+
+.mp-drag-handle {
+    position: absolute;
+    top: -6px;
+    /* 6px above as requested */
+    left: 0;
+    right: 35px;
+    /* Leave space for the X button */
+    height: 18px;
+    /* 6px above + 12px into the box */
+    cursor: move;
+    z-index: 20;
+    /* transition: background 0.2s; */
+}
+
+/* Loading State */
+.miniplayer.mp-loading {
+    opacity: 0.6;
+    filter: grayscale(0.5);
+    cursor: wait !important;
+}
+
+.miniplayer.mp-loading button,
+.miniplayer.mp-loading .mp-drag-handle,
+.miniplayer.mp-disabled {
+    pointer-events: none;
+}
+
+.miniplayer.mp-disabled {
+    opacity: 1;
+    filter: grayscale(1) brightness(0.5);
+    pointer-events: none !important;
+}

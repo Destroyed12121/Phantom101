@@ -339,7 +339,7 @@ class PhantomChat {
 
         try {
             const messages = [
-                { role: 'system', content: 'You are Phantom AI, a helpful and knowledgeable assistant. Use Markdown formatting. Be concise but thorough.' },
+                { role: 'system', content: 'You are Phantom AI, a helpful and knowledgeable assistant. Use Markdown formatting. Use KaTeX for mathematical formulas (e.g., use $ for inline and $$ for block math). Be concise but thorough.' },
                 ...conv.messages.slice(-10).map(m => ({
                     role: m.role === 'ai' ? 'assistant' : m.role,
                     content: m.content
@@ -436,6 +436,61 @@ class PhantomChat {
         return div.innerHTML;
     }
 
+    processMarkdown(content) {
+        if (!window.marked) return this.escapeHtml(content);
+
+        // Protect LaTeX from marked mangling
+        const mathBlocks = [];
+        let placeholderCount = 0;
+
+        // 1. Protect block math $$...$$
+        content = content.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
+            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            mathBlocks.push({ placeholder, content: match });
+            return placeholder;
+        });
+
+        // 2. Protect environments \begin{...}...\end{...}
+        content = content.replace(/\\begin\{([a-z*]+)\}[\s\S]+?\\end\{\1\}/g, (match) => {
+            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            mathBlocks.push({ placeholder, content: match });
+            return placeholder;
+        });
+
+        // 3. Protect \[...\]
+        content = content.replace(/\\\[([\s\S]+?)\\\]/g, (match) => {
+            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            mathBlocks.push({ placeholder, content: match });
+            return placeholder;
+        });
+
+        // 4. Protect \(...\)
+        content = content.replace(/\\\(([\s\S]+?)\\\)/g, (match) => {
+            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            mathBlocks.push({ placeholder, content: match });
+            return placeholder;
+        });
+
+        // 5. Protect inline math $...$
+        // We do this after block math to avoid catching $$ as two empty $ $
+        content = content.replace(/\$([^\$\n]+?)\$/g, (match) => {
+            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            mathBlocks.push({ placeholder, content: match });
+            return placeholder;
+        });
+
+        // Parse markdown
+        let html = marked.parse(content);
+
+        // Restore LaTeX blocks
+        // Using function replacement to avoid issues with '$' characters in content
+        mathBlocks.forEach(({ placeholder, content: original }) => {
+            html = html.replace(placeholder, () => original);
+        });
+
+        return html;
+    }
+
     appendMessage({ role, content, type = 'text', prompt, id, isThinking }) {
         this.dom.hero.style.display = 'none';
 
@@ -468,7 +523,7 @@ class PhantomChat {
                 </div>
             `;
         } else {
-            messageHtml = window.marked ? marked.parse(content) : this.escapeHtml(content);
+            messageHtml = this.processMarkdown(content);
         }
 
         const imgId = type === 'image' ? `img-${Date.now()}` : '';
@@ -509,8 +564,18 @@ class PhantomChat {
             renderMathInElement(div, {
                 delimiters: [
                     { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false }
-                ]
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\begin{equation}', right: '\\end{equation}', display: true },
+                    { left: '\\begin{align}', right: '\\end{align}', display: true },
+                    { left: '\\begin{alignat}', right: '\\end{alignat}', display: true },
+                    { left: '\\begin{gather}', right: '\\end{gather}', display: true },
+                    { left: '\\begin{CD}', right: '\\end{CD}', display: true },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                throwOnError: false,
+                trust: true,
+                strict: false
             });
         }
 

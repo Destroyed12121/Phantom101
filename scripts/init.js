@@ -34,10 +34,19 @@ const ProxyInit = {
 
     async init() {
         try {
-            if (window.Notify) window.Notify.info("Initializing", "Starting proxy service...");
+            // Delay initialization slightly to prioritize core UI
+            if (document.readyState !== 'complete') {
+                await new Promise(r => window.addEventListener('load', r, { once: true }));
+                // wait another 500ms for animations/etc
+                await new Promise(r => setTimeout(r, 500));
+            }
 
             const best = await this.findBest();
             localStorage.setItem("proxServer", best);
+
+            if (window.Notify) {
+                window.Notify.info("Initializing", "Starting proxy service...");
+            }
 
             // Lazy wait for libraries if they're coming from broad scripts
             if (!window.BareMux) {
@@ -88,6 +97,51 @@ const ProxyInit = {
 };
 
 ProxyInit.init();
+
+// Register Offline Service Worker (Root)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(reg => console.log('Offline SW registered'))
+        .catch(err => console.error('Offline SW failed', err));
+}
+
+// Offline Banner Logic
+window.addEventListener('load', () => {
+    const banner = document.getElementById('offline-banner');
+    if (!banner) return;
+
+    function updateOnlineStatus() {
+        if (navigator.onLine) {
+            banner.classList.remove('show');
+        } else {
+            banner.classList.add('show');
+            setTimeout(() => banner.classList.remove('show'), 5000); // Auto-hide after 5s
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+});
+
+// Global link interceptor for loading screen
+(function () {
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link || !link.href) return;
+
+        try {
+            const url = new URL(link.href, window.location.href);
+            const isInternal = url.origin === window.location.origin &&
+                !url.pathname.includes('staticsjv2/') &&
+                !link.hasAttribute('download') &&
+                link.target !== '_blank';
+
+            if (isInternal && window.parent && window.parent.showLoading) {
+                window.parent.showLoading();
+            }
+        } catch (e) { }
+    });
+})();
 
 window.addEventListener('message', async (e) => {
     if (e.data?.type === 'proxy-fetch' && e.data.url) {

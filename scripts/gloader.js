@@ -4,7 +4,7 @@ const COVER_PREFIX_1 = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
 const UGS_PREFIX = "https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/";
 
 const Gloader = {
-    CACHE_KEY: 'phantom_games_cache',
+    CACHE_KEY: 'phantom_games_cache_v2',
     EXPIRY_MS: 7 * 24 * 60 * 60 * 1000, // 7 Days
 
     async load(lib = 'multi') {

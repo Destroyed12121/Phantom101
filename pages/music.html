@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/music.css">
     <link rel="stylesheet" href="../styles/background.css">
+    <link rel="stylesheet" href="../styles/modals.css">
     <script src="../config.js"></script>
     <script src="../scripts/settings.js"></script>
     <script src="../scripts/background.js"></script>
@@ -144,11 +145,16 @@
 
     <div class="modal-overlay" id="playlistModal">
         <div class="modal">
-            <div class="modal-title">New Playlist</div>
-            <input type="text" class="modal-input" id="playlistNameInput" placeholder="Playlist name">
-            <div class="modal-actions">
-                <button class="modal-btn cancel" id="cancelPlaylist">Cancel</button>
-                <button class="modal-btn confirm" id="confirmPlaylist">Create</button>
+            <div class="modal-header">
+                <div class="modal-title">New Playlist</div>
+                <button class="modal-close" id="cancelPlaylistIcon"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="input" id="playlistNameInput" placeholder="Playlist name">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="cancelPlaylist">Cancel</button>
+                <button class="btn btn-primary" id="confirmPlaylist">Create</button>
             </div>
         </div>
     </div>

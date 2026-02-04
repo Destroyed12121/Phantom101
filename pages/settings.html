@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/settings.css">
     <link rel="stylesheet" href="../styles/background.css">
+    <link rel="stylesheet" href="../styles/modals.css">
     <script src="../config.js"></script>
     <script src="../scripts/notifications.js"></script>
     <script src="../scripts/cloaking.js"></script>
@@ -141,7 +142,8 @@
                         </div>
                         <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
                             <input type="text" class="setting-input" id="custom-bg-position"
-                                placeholder="Image position (e.g., top left, center, bottom right)" style="flex: 1; min-width: 250px;">
+                                placeholder="Image position (e.g., top left, center, bottom right)"
+                                style="flex: 1; min-width: 250px;">
                         </div>
                         <div style="margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap;">
                             <span
@@ -296,17 +298,16 @@
                         <div class="toggle" id="autoswitch-toggle"></div>
                     </div>
                 </div>
+
                 <div class="settings-section">
-                    <h2 class="section-title"><i class="fa-solid fa-gamepad"></i> Games</h2>
+                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> History</h2>
                     <div class="setting-row">
                         <div class="setting-info">
-                            <div class="setting-label">Default Library</div>
+                            <div class="setting-label">Continue Watching / Recently Played</div>
+                            <div class="setting-desc">Enable tracking and showing your recently watched movies and
+                                played games</div>
                         </div>
-                        <select class="setting-select" id="game-library">
-                            <option value="multi">Multi (Default)</option>
-                            <option value="gnmath">Gnmath (With covers)</option>
-                            <option value="ugs">UGS (More games)</option>
-                        </select>
+                        <div class="toggle active" id="history-toggle"></div>
                     </div>
                 </div>
             </div>
@@ -325,7 +326,8 @@
                     <h2 class="section-title"><i class="fa-solid fa-music"></i> Music</h2>
                     <div class="setting-row">
                         <div class="setting-info">
-                            <div class="setting-label">Show Mini Player (SOON) <span style="font-size: 0.75rem; color: var(--text-muted);">cough  never happening lowk cough</span></div>
+                            <div class="setting-label">Global Mini Player</div>
+                            <div class="setting-desc">Show music controls on all pages</div>
                         </div>
                         <div class="toggle active" id="miniplayer-toggle"></div>
                     </div>
