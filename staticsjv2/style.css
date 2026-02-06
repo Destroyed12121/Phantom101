@@ -244,17 +244,22 @@ input.bar::placeholder {
     flex: 1;
     position: relative;
     background: var(--bg);
+    width: 100%;
 }
 
 .iframe-container iframe {
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
     border: none;
     position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .iframe-container iframe.hidden {
-    display: none;
+    display: none !important;
 }
 
 .iframe-container iframe.loading {

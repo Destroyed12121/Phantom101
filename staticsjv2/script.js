@@ -455,17 +455,40 @@ async function createTab(makeActive = true) {
         }, 500);
     });
 
-    frame.frame.addEventListener('load', () => {
+    const onFrameLoad = () => {
         tab.loading = false;
         clearTimeout(tab.skipTimeout);
         if (tab.id === activeTabId) {
             showIframeLoading(false);
             tab.userSkipped = false;
         }
-        try { if (frame.frame.contentWindow.document.title) tab.title = frame.frame.contentWindow.document.title; } catch { }
-        if (frame.frame.contentWindow.location.href.includes('NT.html')) { tab.title = "New Tab"; tab.url = ""; tab.favicon = null; }
+        try {
+            const doc = frame.frame.contentWindow.document;
+            if (doc.title) tab.title = doc.title;
+        } catch { }
+
+        if (frame.frame.contentWindow.location.href.includes('NT.html')) {
+            tab.title = "New Tab";
+            tab.url = "";
+            tab.favicon = null;
+        }
         updateTabsUI();
         updateAddressBar();
+        updateLoadingBar(tab, 100);
+    };
+
+    frame.frame.addEventListener('load', onFrameLoad);
+
+    // Scramjet specific load success signal if available
+    frame.addEventListener('load', onFrameLoad);
+
+    frame.addEventListener("error", (e) => {
+        tab.loading = false;
+        clearTimeout(tab.skipTimeout);
+        if (tab.id === activeTabId) showIframeLoading(false);
+        console.error("Tab Error:", e);
+        notify('error', 'Page Error', 'Failed to load the requested page.');
+        updateTabsUI();
         updateLoadingBar(tab, 100);
     });
 
@@ -547,16 +570,18 @@ function updateAddressBar() {
 
 function handleSubmit(url) {
     const tab = getActiveTab();
+    if (!tab) return;
+
     let input = url ?? document.getElementById("address-bar").value.trim();
     if (!input) return;
 
-    if (!input.startsWith('http')) {
+    if (!input.startsWith('http') && !input.startsWith('/') && !input.includes('://')) {
         input = input.includes('.') && !input.includes(' ') ? `https://${input}` : `https://search.brave.com/search?q=${encodeURIComponent(input)}`;
     }
+
     tab.loading = true;
-    // Removed userSkipped reset to keep skip persistent for the tab
+    tab.userSkipped = false; // Reset skip on new navigation
     showIframeLoading(true, input);
-    // Let urlchange listener handle the progress logic
     tab.frame.go(input);
 }
 
