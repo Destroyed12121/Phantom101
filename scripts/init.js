@@ -41,9 +41,6 @@ const ProxyInit = {
                 await new Promise(r => setTimeout(r, 500));
             }
 
-            const best = await this.findBest();
-            localStorage.setItem("proxServer", best);
-
             if (window.Notify) {
                 window.Notify.info("Initializing", "Starting proxy service...");
             }
@@ -57,10 +54,18 @@ const ProxyInit = {
                 }
             }
             if (!window.BareMux || typeof $scramjetLoadController === 'undefined') {
-                console.log("Proxy: Base libraries not found, will retry on demand");
-                return;
+                console.warn("Proxy: Base libraries not found, retrying...");
+                // Allow one more grace period
+                await new Promise(r => setTimeout(r, 1000));
+                if (!window.BareMux) throw new Error("Proxy dependencies missing");
             }
 
+            // 1. Start Independent Tasks in Parallel
+
+            // Task A: Wisp Selection
+            const wispTask = this.findBest();
+
+            // Task B: Scramjet Initialization
             const { ScramjetController } = $scramjetLoadController();
             const scramjet = new ScramjetController({
                 prefix: this.BASE_PATH + "scramjet/",
@@ -70,28 +75,48 @@ const ProxyInit = {
                     sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
                 }
             });
-            await scramjet.init();
+            const scramjetTask = scramjet.init();
 
-            if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.register(this.BASE_PATH + "sw.js", { scope: this.BASE_PATH });
+            // Task C: Service Worker Registration
+            const swTask = (async () => {
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.register(this.BASE_PATH + "sw.js", { scope: this.BASE_PATH });
+                    await navigator.serviceWorker.ready;
+                    return reg;
+                }
+                return null;
+            })();
+
+            // 2. Await Critical Data (Wisp)
+            const best = await wispTask;
+            localStorage.setItem("proxServer", best);
+            console.log("Proxy: Using Wisp Server", best);
+
+            // 3. Configure SW (needs Wisp)
+            const reg = await swTask;
+            if (reg && reg.active) {
                 const config = {
                     type: "config",
                     wispurl: best,
                     servers: [...this.WISP_SERVERS, ...JSON.parse(localStorage.getItem('customWisps') || '[]')],
                     autoswitch: localStorage.getItem('wispAutoswitch') !== 'false'
                 };
-
-                const send = () => reg.active?.postMessage(config);
-                send(); setTimeout(send, 500);
-
-                const conn = new BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
-                await conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: best }]);
-
-                if (window.Notify) window.Notify.success("Ready", "Proxy service initialized");
+                reg.active.postMessage(config);
             }
+
+            // 4. Setup Transport (needs Wisp)
+            const conn = new BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
+            const transportTask = conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: best }]);
+
+            // 5. Complete Final Waits
+            await Promise.all([scramjetTask, transportTask]);
+
+            if (window.Notify) window.Notify.success("Ready", "Proxy service initialized");
+            console.log("Proxy: Init complete");
+
         } catch (e) {
-            console.error(e);
-            if (window.Notify) window.Notify.error("Failed", e.message);
+            console.error("Proxy Init Error:", e);
+            if (window.Notify) window.Notify.error("Failed", "Proxy error: " + (e.message || "Unknown error"));
         }
     }
 };
