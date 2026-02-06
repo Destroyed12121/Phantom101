@@ -15,14 +15,28 @@ let activeTabId = null;
 let nextTabId = 1;
 
 // Promise to wait for BareMux
-let bareMuxReadyResolve;
 const bareMuxReady = new Promise(resolve => {
-    bareMuxReadyResolve = resolve;
+    // If already loaded, resolve immediately
     if (window.BareMux) {
         resolve();
-    } else {
-        window.addEventListener('baremux-ready', () => resolve(), { once: true });
+        return;
     }
+
+    // Listen for the ready event
+    window.addEventListener('baremux-ready', () => resolve(), { once: true });
+
+    // Fallback: poll in case the event was missed (module already loaded)
+    let attempts = 0;
+    const poll = setInterval(() => {
+        attempts++;
+        if (window.BareMux) {
+            clearInterval(poll);
+            resolve();
+        } else if (attempts > 100) { // 5 seconds max
+            clearInterval(poll);
+            // Don't reject - let the main code handle the missing BareMux
+        }
+    }, 50);
 });
 
 // =====================================================
@@ -289,12 +303,9 @@ const notify = (type, title, msg) => window.Notify?.[type](title, msg);
 async function init() {
     try {
         // Wait for BareMux first
-        notify('info', 'Initializing', 'Starting proxy service...');
-
         await bareMuxReady;
 
         if (!window.BareMux) {
-            notify('error', 'Error', 'Failed to load proxy libraries. Please refresh.');
             console.error('BareMux not available after ready event');
             return;
         }
@@ -318,11 +329,9 @@ async function init() {
             history.replaceState(null, null, location.pathname);
         }
 
-        notify('success', 'Ready', 'Proxy service initialized');
         console.log("Browser: All backend systems ready.");
     } catch (err) {
         console.error("Init Error:", err);
-        notify('error', 'Error', 'Failed to initialize: ' + (err.message || 'Unknown error'));
     }
 }
 
