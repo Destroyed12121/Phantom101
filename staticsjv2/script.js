@@ -100,17 +100,26 @@ async function initWispAutoswitch() {
 // =====================================================
 
 const getBasePath = () => {
-    // Attempt to determine base path from location or baseURI
-    let path = location.pathname;
+    // robustly determine path even in about:blank or blob: contexts
+    try {
+        const scripts = document.querySelectorAll('script');
+        for (const script of scripts) {
+            if (script.src && script.src.includes('script.js')) {
+                const url = new URL(script.src);
+                const path = url.pathname.replace('script.js', '');
+                return path.endsWith('/') ? path : path + '/';
+            }
+        }
+    } catch { }
 
-    // In about:blank or srcdoc, location.pathname is often blank or 'srcdoc'
+    // Fallback logic
+    let path = location.pathname;
     if (location.protocol === 'about:' || location.hostname === '') {
         try {
-            // Try to deduce from baseURI if set (e.g. by <base> tag or inheritance)
             const url = new URL(document.baseURI);
             path = url.pathname;
         } catch {
-            return './'; // Last resort
+            return './';
         }
     }
 
