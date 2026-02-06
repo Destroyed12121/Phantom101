@@ -302,34 +302,29 @@ const notify = (type, title, msg) => window.Notify?.[type](title, msg);
 
 async function init() {
     try {
-        // Wait for BareMux first
-        await bareMuxReady;
-
-        if (!window.BareMux) {
-            console.error('BareMux not available after ready event');
-            return;
-        }
-
+        // Essential UI components first
         initializeBrowserUI();
 
-        // Start parallel setup
+        // Start background tasks without blocking UI/Tab creation
         const swPromise = registerServiceWorker();
         const connectionPromise = getSharedConnection();
         const wispPromise = initWispAutoswitch();
 
-        // Wait for essential systems
-        await Promise.all([swPromise, connectionPromise, wispPromise]);
+        // Create the initial tab immediately - createTab handles its own dependencies
+        createTab(true).then(() => {
+            if (window.location.hash) {
+                handleSubmit(decodeURIComponent(window.location.hash.substring(1)));
+                history.replaceState(null, null, location.pathname);
+            }
+        });
 
-        // Final steps
-        await getSharedScramjet();
-        await createTab(true);
+        // Continue running backend tasks in background
+        Promise.all([swPromise, connectionPromise, wispPromise]).then(() => {
+            console.log("Browser: All backend systems ready.");
+        }).catch(err => {
+            console.error("Browser: Background init error:", err);
+        });
 
-        if (window.location.hash) {
-            handleSubmit(decodeURIComponent(window.location.hash.substring(1)));
-            history.replaceState(null, null, location.pathname);
-        }
-
-        console.log("Browser: All backend systems ready.");
     } catch (err) {
         console.error("Init Error:", err);
     }

@@ -34,30 +34,22 @@ const ProxyInit = {
 
     async init() {
         try {
-            // Delay initialization slightly to prioritize core UI
-            if (document.readyState !== 'complete') {
-                await new Promise(r => window.addEventListener('load', r, { once: true }));
-                // wait another 500ms for animations/etc
-                await new Promise(r => setTimeout(r, 500));
-            }
-
+            // Start initialization immediately
             if (window.Notify) {
                 window.Notify.info("Initializing", "Starting proxy service...");
             }
 
-            // Lazy wait for libraries if they're coming from broad scripts
-            if (!window.BareMux) {
+            // Fast wait for libraries
+            if (!window.BareMux || typeof $scramjetLoadController === 'undefined') {
                 let attempts = 0;
-                while (!window.BareMux && attempts < 20) {
+                while ((!window.BareMux || typeof $scramjetLoadController === 'undefined') && attempts < 50) {
                     await new Promise(r => setTimeout(r, 100));
                     attempts++;
                 }
             }
+
             if (!window.BareMux || typeof $scramjetLoadController === 'undefined') {
-                console.warn("Proxy: Base libraries not found, retrying...");
-                // Allow one more grace period
-                await new Promise(r => setTimeout(r, 1000));
-                if (!window.BareMux) throw new Error("Proxy dependencies missing");
+                throw new Error("Proxy dependencies missing");
             }
 
             // 1. Start Independent Tasks in Parallel
