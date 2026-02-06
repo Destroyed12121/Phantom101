@@ -102,46 +102,59 @@ const getBasePath = () => {
     return path.endsWith('/') ? path : path + '/';
 };
 
+let scramjetPromise = null;
 async function getSharedScramjet() {
     if (sharedScramjet) return sharedScramjet;
+    if (scramjetPromise) return scramjetPromise;
 
-    const { ScramjetController } = $scramjetLoadController();
-    sharedScramjet = new ScramjetController({
-        prefix: getBasePath() + "scramjet/",
-        files: {
-            wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
-            all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
-            sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
-        }
-    });
+    scramjetPromise = (async () => {
+        const { ScramjetController } = $scramjetLoadController();
+        sharedScramjet = new ScramjetController({
+            prefix: getBasePath() + "scramjet/",
+            files: {
+                wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
+                all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
+                sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
+            }
+        });
 
-    try {
-        await sharedScramjet.init();
-    } catch (err) {
-        if (err.message && (err.message.includes('IDBDatabase') || err.message.includes('object stores'))) {
-            console.warn('Clearing IndexedDB due to error...');
-            ['scramjet-data', 'scrambase', 'ScramjetData'].forEach(db => {
-                try { indexedDB.deleteDatabase(db); } catch { }
-            });
-            sharedScramjet = null; // Retry once
-            return getSharedScramjet();
+        try {
+            await sharedScramjet.init();
+        } catch (err) {
+            if (err.message && (err.message.includes('IDBDatabase') || err.message.includes('object stores'))) {
+                console.warn('Clearing IndexedDB due to error...');
+                ['scramjet-data', 'scrambase', 'ScramjetData'].forEach(db => {
+                    try { indexedDB.deleteDatabase(db); } catch { }
+                });
+                sharedScramjet = null;
+                scramjetPromise = null;
+                return getSharedScramjet();
+            }
+            throw err;
         }
-        throw err;
-    }
-    return sharedScramjet;
+        return sharedScramjet;
+    })();
+
+    return scramjetPromise;
 }
 
+let connectionPromise = null;
 async function getSharedConnection() {
     if (sharedConnectionReady) return sharedConnection;
+    if (connectionPromise) return connectionPromise;
 
-    const wispUrl = localStorage.getItem("proxServer") ?? DEFAULT_WISP;
-    sharedConnection = new BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
-    await sharedConnection.setTransport(
-        "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
-        [{ wisp: wispUrl }]
-    );
-    sharedConnectionReady = true;
-    return sharedConnection;
+    connectionPromise = (async () => {
+        const wispUrl = localStorage.getItem("proxServer") ?? DEFAULT_WISP;
+        sharedConnection = new BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
+        await sharedConnection.setTransport(
+            "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
+            [{ wisp: wispUrl }]
+        );
+        sharedConnectionReady = true;
+        return sharedConnection;
+    })();
+
+    return connectionPromise;
 }
 
 async function registerServiceWorker() {
@@ -484,8 +497,6 @@ function openSettings() {
     document.getElementById('close-wisp-modal').onclick = () => modal.classList.add('hidden');
     document.getElementById('save-custom-wisp').onclick = saveCustomWisp;
 
-
-    // Tab switching
     const tabs = modal.querySelectorAll('.nav-tab');
     const panels = modal.querySelectorAll('.settings-panel');
     const title = document.getElementById('modal-title');
@@ -493,18 +504,12 @@ function openSettings() {
 
     tabs.forEach(tab => {
         tab.onclick = () => {
-            // Only Proxy tab remains relevant for now (or if we keep tabs but remove Appearance content)
-            // If the user wants to remove the selector, we assume checking if "Appearance" tab should be hidden or removed
-            // But the HTML might still have the tab button. 
-            // Let's just hide the appearance tab functionality or keep it as a stub if needed?
-            // The prompt said "delete the backgrounds selector".
-            // I will remove the logic that switches to it if I can, or just empty the appearance panel logic.
-
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
             const target = tab.dataset.tab;
-            document.getElementById(`${target}-panel`).classList.add('active');
+            const panel = document.getElementById(`${target}-panel`);
+            if (panel) panel.classList.add('active');
 
             if (target === 'proxy') {
                 title.innerHTML = '<i class="fa-solid fa-server"></i> Proxy Settings';
@@ -513,10 +518,6 @@ function openSettings() {
         };
     });
 
-    // Force switch to proxy tab and hide appearance tab if possible (via CSS or removal)
-    // For now, removing the logic that sets Appearance title/footer.
-
-    renderServerList();
     renderServerList();
 }
 
@@ -583,13 +584,13 @@ window.deleteCustomWisp = (url) => {
 async function checkServerHealth(url, el) {
     const dot = el.querySelector('.status-indicator');
     const txt = el.querySelector('.ping-text');
-    const start = Date.now();
-    try {
-        await fetch(url.replace('wss://', 'https://').replace('/wisp/', '/health'), { method: 'HEAD', mode: 'no-cors' });
-        dot.classList.add('status-success');
-        txt.textContent = `${Date.now() - start}ms`;
-    } catch {
-        dot.classList.add('status-error');
+    const result = await pingWispServer(url, 2000);
+
+    if (result.success) {
+        dot.className = 'status-indicator status-success';
+        txt.textContent = `${result.latency}ms`;
+    } else {
+        dot.className = 'status-indicator status-error';
         txt.textContent = 'Offline';
     }
 }
