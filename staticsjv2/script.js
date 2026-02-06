@@ -403,8 +403,18 @@ async function createTab(makeActive = true, url = "NT.html", title = "New Tab", 
         progress: 0
     };
 
-    frame.frame.src = url;
+    // Use frame.go for proxying, direct src for internal pages
+    if (url === "NT.html" || url === "" || url === "about:blank") {
+        frame.frame.src = url;
+    } else {
+        // Must delay slightly to ensure frame is attached or go() might fail on some implementations
+        setTimeout(() => frame.go(url), 10);
+    }
+
     frame.addEventListener("urlchange", (e) => {
+        // Prevent recursive loop if the update comes from the same url
+        if (tab.url === e.url) return;
+
         tab.url = e.url;
         tab.loading = true;
         try {
