@@ -7,6 +7,7 @@ window.SITE_CONFIG = {
 
     changelog: [
         "v1.1.2:",
+        "added twitch chat to twitch",
         "added continue watching and recently played",
         "added music miniplayer",
         "added minor offline support to allow playing games without wifi",

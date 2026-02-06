@@ -1,6 +1,7 @@
 const params = new URLSearchParams(window.location.search);
 const type = params.get('type'), id = params.get('id'), title = params.get('title'), urlParam = params.get('url'), season = params.get('season'), episode = params.get('episode'), source = params.get('source');
 const frame = document.getElementById('game-frame'), titleEl = document.getElementById('player-title'), descEl = document.getElementById('player-desc'), quoteEl = document.getElementById('player-quote'), proxyToggle = document.getElementById('proxy-toggle');
+const chatContainer = document.getElementById('chat-container'), chatFrame = document.getElementById('chat-frame'), btnChat = document.getElementById('btn-chat');
 
 const PROVIDERS = [
     { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}', tv: 'https://player.vidify.top/embed/tv/{id}/{season}/{episode}' } },
@@ -30,8 +31,15 @@ function init() {
     titleEl.textContent = title || (type === 'tv' ? `S${season} E${episode}` : (type === 'game' ? 'Game' : 'Movie'));
     if (source === 'twitch') {
         document.getElementById('movie-controls').style.display = 'flex';
+        btnChat.style.display = 'flex';
         const provGroup = document.querySelector('.player-control-group');
         if (provGroup) provGroup.style.display = 'none';
+
+        btnChat.onclick = () => toggleChat();
+
+        // Enable chat by default
+        chatContainer.style.display = 'block';
+        btnChat.classList.add('active');
 
         if (proxyToggle) {
             const proxyParam = params.get('proxy');
@@ -219,7 +227,17 @@ function loadTwitch(channel) {
     const url = proxyToggle?.classList.contains('active')
         ? `https://twitch.leelive2021.workers.dev/?channel=${encodeURIComponent(channel)}`
         : `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${window.location.hostname}`;
+
+    // Always update chat src if it's twitch
+    chatFrame.src = `https://www.twitch.tv/embed/${encodeURIComponent(channel)}/chat?parent=${window.location.hostname}&darkpopout`;
+
     loadGame(url);
+}
+
+function toggleChat() {
+    const isVisible = chatContainer.style.display !== 'none';
+    chatContainer.style.display = isVisible ? 'none' : 'block';
+    btnChat.classList.toggle('active', !isVisible);
 }
 
 function loadProvider(pid, silent = false) {

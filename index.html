@@ -161,8 +161,6 @@
     <script src="scripts/cloaking.js" defer></script>
     <script src="scripts/quotes.js" defer></script>
     <script>
-        // Apply settings immediately to prevent theme flash if possible, 
-        // though deferred scripts will handle the full application.
         try {
             const stored = localStorage.getItem('void_settings');
             if (stored) {
@@ -180,11 +178,8 @@
 </head>
 
 <body>
-    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LMBC27Z" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    <!-- First Visit Cloak -->
     <div id="fv-cloak" class="neterror">
         <div id="main-frame-error" class="interstitial-wrapper">
             <div id="main-content">
@@ -212,7 +207,6 @@
                 const origin = window.location.hostname || "This site";
                 document.getElementById("origin-text").textContent = origin;
 
-                // Immediate cloak check to prevent flash
                 try {
                     const STORAGE_KEY = 'phantom_fv';
                     const hasBypassed = localStorage.getItem(STORAGE_KEY);
@@ -224,26 +218,22 @@
                         if (overlay) overlay.style.display = 'block';
                         document.title = origin;
 
-                        // Remove favicon for fake error page
                         document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
                         const link = document.createElement('link');
                         link.rel = 'icon';
                         link.href = 'data:,';
                         document.head.appendChild(link);
 
-                        // Hide loading screen immediately if possible
                         const style = document.createElement('style');
                         style.innerHTML = '#loading-screen { display: none !important; }';
                         document.head.appendChild(style);
 
-                        // Set up bypass on reload button
                         document.getElementById('reload-button').onclick = function () {
                             localStorage.setItem(STORAGE_KEY, 'true');
                             overlay.style.display = 'none';
                             document.getElementById('main-frame').src = 'index2.html';
-                            document.title = 'Phantom Unblocked'; // Reset title
+                            document.title = 'Phantom Unblocked';
 
-                            // Restore favicon
                             document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
                             const link = document.createElement('link');
                             link.rel = 'icon';
@@ -251,7 +241,6 @@
                             document.head.appendChild(link);
                         };
                     } else {
-                        // If no cloak, load main content immediately
                         document.getElementById('main-frame').src = 'index2.html';
                     }
                 } catch (e) { }
@@ -259,7 +248,7 @@
         </script>
     </div>
 
-    <!-- Loading Screen -->
+
     <div id="loading-screen" class="loading-screen">
         <div class="loading-logo">
             <i class="fa-solid fa-ghost"></i>
@@ -269,7 +258,7 @@
         <div class="loading-text">Loading...</div>
     </div>
 
-    <!-- Launch Sc reen -->
+
     <div id="launch-screen" class="launch-screen hidden">
         <div class="loading-logo">
             <i class="fa-solid fa-ghost"></i>

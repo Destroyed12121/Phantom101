@@ -25,9 +25,14 @@
 
         <div class="player-container">
             <div class="player-frame-wrapper" id="frame-wrapper">
-                <iframe class="player-frame" id="game-frame" allowfullscreen></iframe>
-                <video class="player-frame" id="video-frame" style="display:none;" controls autoplay
-                    playsinline></video>
+                <div class="player-frame-content">
+                    <iframe class="player-frame" id="game-frame" allowfullscreen></iframe>
+                    <video class="player-frame" id="video-frame" style="display:none;" controls autoplay
+                        playsinline></video>
+                </div>
+                <div class="player-chat-container" id="chat-container" style="display:none;">
+                    <iframe id="chat-frame" src="" height="100%" width="100%"></iframe>
+                </div>
             </div>
 
             <div class="player-controls" id="controls">
@@ -43,6 +48,10 @@
                         <span class="player-control-label">Proxy</span>
                     </label>
                 </div>
+
+                <button class="btn btn-secondary" id="btn-chat" style="display:none;">
+                    <i class="fa-solid fa-comment"></i> Chat
+                </button>
 
                 <button class="btn btn-secondary" id="btn-download" style="display:none;">
                     <i class="fa-solid fa-download"></i> Download

@@ -31,11 +31,31 @@
 .player-frame-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 56.25%;
-    /* 16:9  */
+    /* Remove padding-top for flex layout */
     background: var(--bg);
     z-index: 5;
     overflow: hidden;
+    display: flex;
+}
+
+.player-frame-content {
+    position: relative;
+    flex: 1;
+    padding-top: 56.25%;
+    /* 16:9 ratio for the player */
+}
+
+.player-chat-container {
+    width: 340px;
+    height: auto;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    transition: width 0.3s ease;
+}
+
+#chat-frame {
+    border: none;
+    background: transparent;
 }
 
 /* Theater Mode */
@@ -68,15 +88,27 @@ body.theater-active .player-container {
     border-radius: 0;
     background: var(--bg);
     box-shadow: none;
+    display: flex;
+    flex-direction: column;
 }
 
 body.theater-active .player-frame-wrapper {
     padding-top: 0;
-    height: 100%;
+    height: 0;
+    /* Grow takes over */
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+body.theater-active .player-frame-content {
+    padding-top: 0;
+    height: 100%;
+}
+
+body.theater-active .player-chat-container {
+    height: 100%;
 }
 
 /* Theater Mode Overlays */
@@ -255,4 +287,26 @@ body.theater-active .player-info>* {
 .btn {
     position: relative;
     z-index: 101;
+}
+.btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+
+.btn.active i {
+    color: var(--bg);
+}
+
+@media (max-width: 900px) {
+    .player-frame-wrapper {
+        flex-direction: column;
+    }
+
+    .player-chat-container {
+        width: 100% !important;
+        height: 400px !important;
+        border-left: none;
+        border-top: 1px solid var(--border);
+    }
 }
