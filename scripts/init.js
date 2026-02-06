@@ -44,7 +44,7 @@ const ProxyInit = {
                 window.Notify.info("Initializing", "Starting proxy service...");
             }
 
-           if (!window.BareMux) {
+            if (!window.BareMux) {
                 let attempts = 0;
                 while (!window.BareMux && attempts < 20) {
                     await new Promise(r => setTimeout(r, 100));
