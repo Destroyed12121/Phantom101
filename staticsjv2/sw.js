@@ -83,27 +83,20 @@ const ADBLOCK = {
     ]
 };
 
-// Pre-compile regexes for adblocking (order matters: escape before globbing)
-const AD_REGEXES = ADBLOCK.blocked.map(pattern => {
-    const regexPattern = pattern
-        .replace(/\./g, '\\.')      // Escape dots first
-        .replace(/\?/g, '\\?')      // Escape question marks
-        .replace(/\*/g, '.*');      // Then replace glob * with regex .*
-    return new RegExp('^' + regexPattern + '$', 'i');
-});
-
 function isAdBlocked(url) {
     const urlStr = url.toString();
-    for (const regex of AD_REGEXES) {
+    for (const pattern of ADBLOCK.blocked) {
+        let regexPattern = pattern
+            .replace(/\*/g, '.*')
+            .replace(/\./g, '\\.')
+            .replace(/\?/g, '\\?');
+        const regex = new RegExp('^' + regexPattern + '$', 'i');
         if (regex.test(urlStr)) {
             return true;
         }
     }
     return false;
 }
-
-// Guard to prevent execution in incorrect contexts (like embed.html)
-
 
 const swPath = self.location.pathname;
 const basePath = swPath.substring(0, swPath.lastIndexOf('/') + 1);
@@ -142,7 +135,6 @@ const PING_TIMEOUT = 3000;
 
 let resolveConfigReady;
 const configReadyPromise = new Promise(resolve => resolveConfigReady = resolve);
-let checkTimeout = null;
 
 async function pingServer(url) {
     return new Promise((resolve) => {
@@ -245,15 +237,13 @@ self.addEventListener("message", ({ data }) => {
             wispConfig.servers = data.servers;
             console.log("SW: Received servers", data.servers.length);
             if (wispConfig.autoswitch) {
-                if (checkTimeout) clearTimeout(checkTimeout);
-                checkTimeout = setTimeout(proactiveServerCheck, 500);
+                setTimeout(proactiveServerCheck, 500);
             }
         }
         if (typeof data.autoswitch !== 'undefined') {
             wispConfig.autoswitch = data.autoswitch;
             if (wispConfig.autoswitch && wispConfig.servers?.length > 0) {
-                if (checkTimeout) clearTimeout(checkTimeout);
-                checkTimeout = setTimeout(proactiveServerCheck, 500);
+                setTimeout(proactiveServerCheck, 500);
             }
         }
         if (wispConfig.wispurl && resolveConfigReady) {

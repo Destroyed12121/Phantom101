@@ -5,80 +5,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browser</title>
-    <script>
-        (function () {
-            let basePath = '';
-            try {
-                if (location.protocol !== 'about:' && location.hostname !== '') {
-                    basePath = location.href.substring(0, location.href.lastIndexOf('/') + 1);
-                } else {
-                    if (document.referrer && document.referrer.includes('/staticsjv2/')) {
-                        const refUrl = new URL(document.referrer);
-                        basePath = refUrl.href.substring(0, refUrl.href.lastIndexOf('/') + 1);
-                    }
-                    if (!basePath && window.opener) {
-                        try {
-                            const openerHref = window.opener.location.href;
-                            if (openerHref && !openerHref.startsWith('about:')) {
-                                if (openerHref.includes('/staticsjv2/')) {
-                                    basePath = openerHref.substring(0, openerHref.lastIndexOf('/') + 1);
-                                } else {
-                                    basePath = openerHref.substring(0, openerHref.lastIndexOf('/') + 1) + 'staticsjv2/';
-                                }
-                            }
-                        } catch (e) { }
-                    }
-                    if (!basePath && window.parent !== window) {
-                        try {
-                            const parentHref = window.parent.location.href;
-                            if (parentHref && !parentHref.startsWith('about:')) {
-                                if (parentHref.includes('/staticsjv2/')) {
-                                    basePath = parentHref.substring(0, parentHref.lastIndexOf('/') + 1);
-                                } else {
-                                    basePath = parentHref.substring(0, parentHref.lastIndexOf('/') + 1) + 'staticsjv2/';
-                                }
-                            }
-                        } catch (e) { }
-                    }
-                }
-            } catch (e) { }
-
-            if (basePath) {
-                const base = document.createElement('base');
-                base.href = basePath;
-                document.head.appendChild(base);
-                window.STATICSJ_BASE_PATH = basePath;
-            }
-        })();
-    </script>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <!-- Load config first -->
-    <script src="../config.js" defer></script>
-    <script src="../scripts/settings.js" defer></script>
-
-    <!-- Stylesheets -->
+    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
+    <script type="module">
+        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
+        window.BareMux = BareMux;
+    </script>
+    <script src="../config.js"></script>
+    <script src="../scripts/settings.js"></script>
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/background.css">
     <link rel="stylesheet" href="style.css">
 
-    <!-- Background (non-blocking) -->
-    <script src="../scripts/background.js" defer></script>
-
-    <!-- Scramjet - must load before BareMux for controller -->
-    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
-
-    <script type="module">
-        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
-        window.BareMux = BareMux;
-        window.dispatchEvent(new Event('baremux-ready'));
-    </script>
-
+    <script src="../scripts/background.js"></script>
+    <script src="../scripts/notifications.js"></script>
     <script src="./script.js" defer></script>
+    <style>
+
+    </style>
 </head>
 
 <body>
+    <!-- Home Button -->
+
+
     <div id="app"></div>
 
     <div class="wisp-settings-modal hidden" id="wisp-settings-modal">

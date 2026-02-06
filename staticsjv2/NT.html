@@ -10,7 +10,21 @@
   <script src="../scripts/settings.js"></script>
   <script src="../scripts/background.js"></script>
   <script src="../scripts/quotes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs" type="module"></script>
+  <script type="module">
+    import { BareMuxConnection } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
 
+    if (!window.BareMuxConnection) {
+      window.BareMuxConnection = BareMuxConnection;
+      // Init connection for background proxying
+      (async () => {
+        const connection = new BareMuxConnection("./bareworker.js");
+        const wispUrl = (window.SITE_CONFIG && window.SITE_CONFIG.defaultWisp) || "wss://glseries.net/wisp/";
+        await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispUrl }]);
+        console.log("NT.html: Proxy connection initialized for backgrounds.");
+      })();
+    }
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');

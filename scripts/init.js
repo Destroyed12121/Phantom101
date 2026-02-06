@@ -1,4 +1,4 @@
-// proxy
+// proxy init
 
 const ProxyInit = {
     DEFAULT_WISP: window.SITE_CONFIG?.defaultWisp || "wss://glseries.net/wisp/",
@@ -20,11 +20,9 @@ const ProxyInit = {
     async findBest() {
         const current = localStorage.getItem("proxServer") || this.DEFAULT_WISP;
 
-        // Fast check current server first
         const check = await this.ping(current, 800);
         if (check.success) return current;
 
-        // Only search for best if current is dead
         if (localStorage.getItem('wispAutoswitch') === 'false' || !this.WISP_SERVERS.length) return current;
 
         const results = await Promise.all(this.WISP_SERVERS.map(s => this.ping(s.url, 1500)));
@@ -34,30 +32,30 @@ const ProxyInit = {
 
     async init() {
         try {
-            // Start initialization immediately
+            if (document.readyState !== 'complete') {
+                await new Promise(r => window.addEventListener('load', r, { once: true }));
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            const best = await this.findBest();
+            localStorage.setItem("proxServer", best);
+
             if (window.Notify) {
                 window.Notify.info("Initializing", "Starting proxy service...");
             }
 
-            // Fast wait for libraries
-            if (!window.BareMux || typeof $scramjetLoadController === 'undefined') {
+           if (!window.BareMux) {
                 let attempts = 0;
-                while ((!window.BareMux || typeof $scramjetLoadController === 'undefined') && attempts < 50) {
+                while (!window.BareMux && attempts < 20) {
                     await new Promise(r => setTimeout(r, 100));
                     attempts++;
                 }
             }
-
             if (!window.BareMux || typeof $scramjetLoadController === 'undefined') {
-                throw new Error("Proxy dependencies missing");
+                console.log("Proxy: Base libraries not found, will retry on demand");
+                return;
             }
 
-            // 1. Start Independent Tasks in Parallel
-
-            // Task A: Wisp Selection
-            const wispTask = this.findBest();
-
-            // Task B: Scramjet Initialization
             const { ScramjetController } = $scramjetLoadController();
             const scramjet = new ScramjetController({
                 prefix: this.BASE_PATH + "scramjet/",
@@ -67,80 +65,34 @@ const ProxyInit = {
                     sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
                 }
             });
-            const scramjetTask = scramjet.init();
+            await scramjet.init();
 
-            // Task C: Service Worker Registration
-            const swTask = (async () => {
-                if ('serviceWorker' in navigator) {
-                    const reg = await navigator.serviceWorker.register(this.BASE_PATH + "sw.js", { scope: this.BASE_PATH });
-                    await navigator.serviceWorker.ready;
-                    return reg;
-                }
-                return null;
-            })();
-
-            // 2. Await Critical Data (Wisp)
-            const best = await wispTask;
-            localStorage.setItem("proxServer", best);
-            console.log("Proxy: Using Wisp Server", best);
-
-            // 3. Configure SW (needs Wisp)
-            const reg = await swTask;
-            if (reg && reg.active) {
+            if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.register(this.BASE_PATH + "sw.js", { scope: this.BASE_PATH });
                 const config = {
                     type: "config",
                     wispurl: best,
                     servers: [...this.WISP_SERVERS, ...JSON.parse(localStorage.getItem('customWisps') || '[]')],
                     autoswitch: localStorage.getItem('wispAutoswitch') !== 'false'
                 };
-                reg.active.postMessage(config);
+
+                const send = () => reg.active?.postMessage(config);
+                send(); setTimeout(send, 500);
+
+                const conn = new BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
+                await conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: best }]);
+
+                if (window.Notify) window.Notify.success("Ready", "Proxy service initialized");
             }
-
-            // 4. Setup Transport (needs Wisp)
-            const conn = new window.BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
-            const transportTask = conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: best }]);
-
-            // 5. Complete Final Waits
-            await Promise.all([scramjetTask, transportTask]);
-
-            if (window.Notify) window.Notify.success("Ready", "Proxy service initialized");
-            console.log("Proxy: Init complete");
-
         } catch (e) {
-            console.error("Proxy Init Error:", e);
-            if (window.Notify) window.Notify.error("Failed", "Proxy error: " + (e.message || "Unknown error"));
+            console.error(e);
+            if (window.Notify) window.Notify.error("Failed", e.message);
         }
     }
 };
 
 ProxyInit.init();
 
-// Register Offline Service Worker (Root)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-        .then(reg => console.log('Offline SW registered'))
-        .catch(err => console.error('Offline SW failed', err));
-}
-
-// Offline Banner Logic
-window.addEventListener('load', () => {
-    const banner = document.getElementById('offline-banner');
-    if (!banner) return;
-
-    function updateOnlineStatus() {
-        if (navigator.onLine) {
-            banner.classList.remove('show');
-        } else {
-            banner.classList.add('show');
-            setTimeout(() => banner.classList.remove('show'), 5000); // Auto-hide after 5s
-        }
-    }
-
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-});
-
-// Global link interceptor for loading screen
 (function () {
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
