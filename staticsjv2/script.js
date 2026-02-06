@@ -4,7 +4,6 @@ const DEFAULT_WISP = SITE_CONFIG.defaultWisp || "wss://glseries.net/wisp/";
 const WISP_SERVERS = SITE_CONFIG.wispServers || [];
 
 // state
-const BareMux = window.BareMux || { BareMuxConnection: class { setTransport() { } } };
 let sharedScramjet = null;
 let sharedConnection = null;
 let sharedConnectionReady = false;
@@ -14,6 +13,17 @@ let sharedConnectionPromise = null;
 let tabs = [];
 let activeTabId = null;
 let nextTabId = 1;
+
+// Promise to wait for BareMux
+let bareMuxReadyResolve;
+const bareMuxReady = new Promise(resolve => {
+    bareMuxReadyResolve = resolve;
+    if (window.BareMux) {
+        resolve();
+    } else {
+        window.addEventListener('baremux-ready', () => resolve(), { once: true });
+    }
+});
 
 // =====================================================
 // WISP SERVER MANAGEMENT
@@ -100,7 +110,18 @@ async function initWispAutoswitch() {
 // =====================================================
 
 const getBasePath = () => {
-    // robustly determine path even in about:blank or blob: contexts
+    // Priority 1: Use pre-computed path from index.html if available
+    if (window.STATICSJ_BASE_PATH) {
+        // Ensure the path is relative (strip origin if present)
+        try {
+            const url = new URL(window.STATICSJ_BASE_PATH);
+            return url.pathname.endsWith('/') ? url.pathname : url.pathname + '/';
+        } catch {
+            return window.STATICSJ_BASE_PATH.endsWith('/') ? window.STATICSJ_BASE_PATH : window.STATICSJ_BASE_PATH + '/';
+        }
+    }
+
+    // Priority 2: Robustly determine path from script src (works in about:blank if script has full URL)
     try {
         const scripts = document.querySelectorAll('script');
         for (const script of scripts) {
@@ -112,7 +133,7 @@ const getBasePath = () => {
         }
     } catch { }
 
-    // Fallback logic
+    // Priority 3: Use document.baseURI in about:blank contexts
     let path = location.pathname;
     if (location.protocol === 'about:' || location.hostname === '') {
         try {
@@ -167,8 +188,15 @@ async function getSharedConnection() {
     if (sharedConnectionPromise) return sharedConnectionPromise;
 
     sharedConnectionPromise = (async () => {
+        // Wait for BareMux to be ready
+        await bareMuxReady;
+
+        if (!window.BareMux) {
+            throw new Error('BareMux not loaded');
+        }
+
         const wispUrl = localStorage.getItem("proxServer") ?? DEFAULT_WISP;
-        const connection = new BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
+        const connection = new window.BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
         await connection.setTransport(
             "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
             [{ wisp: wispUrl }]
@@ -260,6 +288,17 @@ const notify = (type, title, msg) => window.Notify?.[type](title, msg);
 
 async function init() {
     try {
+        // Wait for BareMux first
+        notify('info', 'Initializing', 'Starting proxy service...');
+
+        await bareMuxReady;
+
+        if (!window.BareMux) {
+            notify('error', 'Error', 'Failed to load proxy libraries. Please refresh.');
+            console.error('BareMux not available after ready event');
+            return;
+        }
+
         initializeBrowserUI();
 
         // Start parallel setup
@@ -279,9 +318,11 @@ async function init() {
             history.replaceState(null, null, location.pathname);
         }
 
+        notify('success', 'Ready', 'Proxy service initialized');
         console.log("Browser: All backend systems ready.");
     } catch (err) {
         console.error("Init Error:", err);
+        notify('error', 'Error', 'Failed to initialize: ' + (err.message || 'Unknown error'));
     }
 }
 

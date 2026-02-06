@@ -83,12 +83,12 @@ const ADBLOCK = {
     ]
 };
 
-// Pre-compile regexes
+// Pre-compile regexes for adblocking (order matters: escape before globbing)
 const AD_REGEXES = ADBLOCK.blocked.map(pattern => {
     const regexPattern = pattern
-        .replace(/\*/g, '.*')
-        .replace(/\./g, '\\.')
-        .replace(/\?/g, '\\?');
+        .replace(/\./g, '\\.')      // Escape dots first
+        .replace(/\?/g, '\\?')      // Escape question marks
+        .replace(/\*/g, '.*');      // Then replace glob * with regex .*
     return new RegExp('^' + regexPattern + '$', 'i');
 });
 

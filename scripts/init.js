@@ -105,8 +105,8 @@ const ProxyInit = {
             }
 
             // 4. Setup Transport (needs Wisp)
-            const conn = new BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
-            const transportTask = conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: best }]);
+            const conn = new window.BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
+            const transportTask = conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: best }]);
 
             // 5. Complete Final Waits
             await Promise.all([scramjetTask, transportTask]);
