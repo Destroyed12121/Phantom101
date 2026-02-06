@@ -66,22 +66,37 @@
     // Returns: { success: false, reason: 'killed' } if popup was closed by extension (like Securly)
     const tryPopup = (url) => {
         return new Promise((resolve) => {
-            const win = window.open('about:blank', '_blank');
+            const s = window.Settings?.getAll() || {};
+            const mode = s.cloakMode || 'about:blank';
+            let win;
+            let blobUrl = null;
+
+            if (mode === 'blob') {
+                const content = getPopupContent(url);
+                const blob = new Blob([content], { type: 'text/html' });
+                blobUrl = URL.createObjectURL(blob);
+                win = window.open(blobUrl, '_blank');
+            } else {
+                win = window.open('about:blank', '_blank');
+            }
 
             // Popup completely blocked by browser
             if (!win) {
+                if (blobUrl) URL.revokeObjectURL(blobUrl);
                 resolve({ success: false, reason: 'blocked' });
                 return;
             }
 
-            // Write the actual content to popup
-            try {
-                win.document.write(getPopupContent(url));
-                win.document.close();
-            } catch (e) {
-                try { win.close(); } catch { }
-                resolve({ success: false, reason: 'killed' });
-                return;
+            // Write content for about:blank mode
+            if (mode !== 'blob') {
+                try {
+                    win.document.write(getPopupContent(url));
+                    win.document.close();
+                } catch (e) {
+                    try { win.close(); } catch { }
+                    resolve({ success: false, reason: 'killed' });
+                    return;
+                }
             }
 
             // Use a single timeout to avoid background throttling (which causes a 5s delay).
@@ -91,10 +106,12 @@
 
             setTimeout(() => {
                 if (win.closed) {
+                    if (blobUrl) URL.revokeObjectURL(blobUrl);
                     resolve({ success: false, reason: 'killed' });
                 } else {
                     resolve({ success: true });
                     redirectOriginal(); // Instant redirect
+                    if (blobUrl) setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
                 }
             }, timeoutMs);
         });
@@ -104,6 +121,7 @@
     const loadInTab = () => {
         const iframe = document.getElementById('main-frame');
         if (iframe && !iframe.src) iframe.src = 'index2.html';
+        if (window.hideLoading) window.hideLoading();
         apply();
     };
 
@@ -112,6 +130,7 @@
         const ls = document.getElementById('launch-screen');
         if (ls) {
             ls.classList.remove('hidden');
+            if (window.hideLoading) window.hideLoading();
             document.getElementById('launch-button').onclick = onLaunch;
         }
     };
@@ -133,6 +152,9 @@
             // Popup was blocked (window.open returned null)
             // Show click-to-launch - user gesture might bypass popup blocker
             if (hideOverlay) hideOverlay();
+            if (window.Notify) {
+                window.Notify.info('Popups Blocked', 'Please enable popups for this site to use cloaking.');
+            }
 
             showLaunchScreen(async () => {
                 document.getElementById('launch-screen').classList.add('hidden');
@@ -163,7 +185,7 @@
         if (urlParams.has('fake')) {
             showLaunchScreen(async () => {
                 document.getElementById('launch-screen').classList.add('hidden');
-                if (s.cloakMode === 'about:blank') {
+                if (s.cloakMode === 'about:blank' || s.cloakMode === 'blob') {
                     const result = await tryPopup(window.location.href.split('?')[0]);
                     if (result.success) return; // redirectOriginal was called
                 }
@@ -189,7 +211,7 @@
                         localStorage.setItem(fvKey, '1');
                         document.removeEventListener('keydown', onKey);
 
-                        if (s.cloakMode === 'about:blank') {
+                        if (s.cloakMode === 'about:blank' || s.cloakMode === 'blob') {
                             await attemptCloakedLaunch(window.location.href, () => {
                                 overlay.style.display = 'none';
                             });
@@ -206,7 +228,7 @@
         }
 
         // Normal visit - not first time, no fake mode
-        if (window.top === window.self && s.cloakMode === 'about:blank') {
+        if (window.top === window.self && (s.cloakMode === 'about:blank' || s.cloakMode === 'blob')) {
             await attemptCloakedLaunch(window.location.href);
             return;
         }

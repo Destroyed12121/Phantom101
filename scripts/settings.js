@@ -5,18 +5,19 @@
     const STORAGE_KEY = 'void_settings';
 
     const getDefaults = () => {
-        return window.SITE_CONFIG?.defaults || {
-            cloakMode: 'none',
-            cloakRotation: false,
-            cloakInterval: 5000,
-            panicKey: 'x',
-            panicModifiers: ['ctrl', 'shift'],
-            panicUrl: 'https://classroom.google.com',
-            maxMovieRating: 'R',
+        const d = window.SITE_CONFIG?.defaults || {};
+        return {
+            cloakMode: d.cloakMode || 'about:blank',
+            cloakRotation: d.cloakRotation || false,
+            cloakInterval: d.cloakInterval || 5000,
+            panicKey: d.panicKey || 'x',
+            panicModifiers: d.panicModifiers || ['ctrl', 'shift'],
+            panicUrl: d.panicUrl || 'https://classroom.google.com',
+            maxMovieRating: d.maxMovieRating || 'R',
             offlineGames: [],
-            gameLibrary: 'multi',
-            leaveConfirmation: false,
-            historyEnabled: true
+            gameLibrary: d.gameLibrary || 'multi',
+            leaveConfirmation: d.leaveConfirmation || false,
+            historyEnabled: d.historyEnabled !== false
         };
     };
 

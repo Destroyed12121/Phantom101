@@ -10,6 +10,9 @@ window.SITE_CONFIG = {
         "added continue watching and recently played",
         "added music miniplayer",
         "added minor offline support to allow playing games without wifi",
+        "made loading screen not show during click to launch",
+        "fixxed blob tab launching",
+        "refined proxy",
         "optimized page code slightly",
         "fixed minor bugs",
 
