@@ -100,12 +100,21 @@ async function initWispAutoswitch() {
 // =====================================================
 
 const getBasePath = () => {
-    // If about:blank or similar, try to recover or default
+    // Attempt to determine base path from location or baseURI
+    let path = location.pathname;
+
+    // In about:blank or srcdoc, location.pathname is often blank or 'srcdoc'
     if (location.protocol === 'about:' || location.hostname === '') {
-        // Fallback for weird contexts if possible, though SW won't work here.
-        return './';
+        try {
+            // Try to deduce from baseURI if set (e.g. by <base> tag or inheritance)
+            const url = new URL(document.baseURI);
+            path = url.pathname;
+        } catch {
+            return './'; // Last resort
+        }
     }
-    const path = location.pathname.replace(/[^/]*$/, '');
+
+    path = path.replace(/[^/]*$/, '');
     return path.endsWith('/') ? path : path + '/';
 };
 
@@ -172,7 +181,7 @@ async function registerServiceWorker() {
 
         // Race ready against timeout to prevent hanging the entire init
         const readyPromise = navigator.serviceWorker.ready;
-        const timeoutPromise = new Promise(r => setTimeout(() => r('timeout'), 2000));
+        const timeoutPromise = new Promise(r => setTimeout(() => r('timeout'), 1000));
 
         const result = await Promise.race([readyPromise, timeoutPromise]);
         if (result === 'timeout') {
