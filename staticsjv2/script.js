@@ -1,9 +1,7 @@
-// config source
 const SITE_CONFIG = window.SITE_CONFIG || {};
 const DEFAULT_WISP = SITE_CONFIG.defaultWisp || "wss://glseries.net/wisp/";
 const WISP_SERVERS = SITE_CONFIG.wispServers || [];
 
-// state
 const BareMux = window.BareMux || { BareMuxConnection: class { setTransport() { } } };
 let sharedScramjet = null;
 let sharedConnection = null;
@@ -13,9 +11,6 @@ let tabs = [];
 let activeTabId = null;
 let nextTabId = 1;
 
-// =====================================================
-// WISP SERVER MANAGEMENT
-// =====================================================
 
 function getStoredWisps() {
     try { return JSON.parse(localStorage.getItem('customWisps') ?? '[]'); }
@@ -58,7 +53,6 @@ async function findBestWispServer() {
     const servers = getAllWispServers();
     const currentUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
 
-    // Ping all in parallel with a shorter timeout
     const results = await Promise.all(servers.map(s => pingWispServer(s.url, 1500)));
     const best = results.filter(r => r.success).sort((a, b) => a.latency - b.latency)[0];
 
@@ -70,7 +64,7 @@ async function initWispAutoswitch() {
 
     const currentUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
 
-    // Use a very short timeout for the initial check to see if we're good
+    
     const currentHealth = await pingWispServer(currentUrl, 800);
 
     if (currentHealth.success) {
@@ -93,9 +87,6 @@ async function initWispAutoswitch() {
     }
 }
 
-// =====================================================
-// PROXY INITIALIZATION
-// =====================================================
 
 const getBasePath = () => {
     const path = location.pathname.replace(/[^/]*$/, '');
@@ -123,7 +114,7 @@ async function getSharedScramjet() {
             ['scramjet-data', 'scrambase', 'ScramjetData'].forEach(db => {
                 try { indexedDB.deleteDatabase(db); } catch { }
             });
-            sharedScramjet = null; // Retry once
+            sharedScramjet = null;
             return getSharedScramjet();
         }
         throw err;
@@ -172,55 +163,41 @@ async function registerServiceWorker() {
         } else if (e.data.type === 'wispError') {
             notify('error', 'Proxy Error', e.data.message);
         } else if (e.data.type === 'navigate') {
-            // Handle navigation requests from NT.html (new tab page)
-            const tab = getActiveTab();
-            if (tab && e.data.url) {
-                tab.loading = true;
-                tab.userSkipped = false;
-                showIframeLoading(true, e.data.url);
-                updateLoadingBar(tab, 10);
-                tab.frame.go(e.data.url);
-            }
+            handleSubmit(e.data.url);
         } else if (e.data.type === 'resource-loaded') {
-            const tab = getActiveTab();
-            if (tab && tab.loading) {
-                // Real progress: increment on every resource
-                const isError = e.data.status >= 400;
-                // Idea 4: Error Braking - slower progress on failures
-                const increment = isError ? 0.5 : 2.5;
-                tab.progress = Math.min(96, tab.progress + increment);
-                updateLoadingBar(tab, tab.progress);
-            }
+            // Update all loading tabs, not just active one
+            tabs.forEach(tab => {
+                if (tab.loading) {
+                    const isError = e.data.status >= 400;
+                    const increment = isError ? 0.5 : 2.5;
+                    tab.progress = Math.min(96, tab.progress + increment);
+
+                    if (tab.id === activeTabId) {
+                        updateLoadingBar(tab, tab.progress);
+                    }
+
+                    // Auto-complete if progress is high enough and it's 200/304
+                    if (tab.progress >= 95 && (e.data.status === 200 || e.data.status === 304)) {
+                        if (tab.finishTimer) clearTimeout(tab.finishTimer);
+                        tab.finishTimer = setTimeout(() => completeLoading(tab), 1500);
+                    }
+                }
+            });
         }
     });
 
     reg.update();
 }
 
-// =====================================================
-// UI & BROWSER LOGIC
-// =====================================================
-
 const getActiveTab = () => tabs.find(t => t.id === activeTabId);
 const notify = (type, title, msg) => window.Notify?.[type](title, msg);
-
-// =====================================================
-// MAIN & INITIALIZATION
-// =====================================================
-
 async function init() {
     try {
         initializeBrowserUI();
 
-        // Start parallel setup
-        const swPromise = registerServiceWorker();
-        const connectionPromise = getSharedConnection();
-        const wispPromise = initWispAutoswitch();
-
-        // Wait for essential systems
-        await Promise.all([swPromise, connectionPromise, wispPromise]);
-
-        // Final steps
+        await registerServiceWorker();
+        await initWispAutoswitch();
+        await getSharedConnection();
         await getSharedScramjet();
         await createTab(true);
 
@@ -233,6 +210,23 @@ async function init() {
     } catch (err) {
         console.error("Init Error:", err);
     }
+}
+
+function handleSubmit(url) {
+    const tab = getActiveTab();
+    if (!tab) return;
+
+    let input = url ?? document.getElementById("address-bar").value.trim();
+    if (!input) return;
+
+    if (!input.startsWith('http') && !input.startsWith('about:')) {
+        input = input.includes('.') && !input.includes(' ') ? `https://${input}` : `https://search.brave.com/search?q=${encodeURIComponent(input)}`;
+    }
+
+    tab.loading = true;
+    tab.userSkipped = false;
+    showIframeLoading(true, input);
+    tab.frame.go(input);
 }
 
 function initializeBrowserUI() {
@@ -263,7 +257,6 @@ function initializeBrowserUI() {
             </div>
         </div>`;
 
-    // Re-attach UI listeners
     document.getElementById('back-btn').onclick = () => getActiveTab()?.frame?.back();
     document.getElementById('fwd-btn').onclick = () => getActiveTab()?.frame?.forward();
     document.getElementById('reload-btn').onclick = () => getActiveTab()?.frame?.reload();
@@ -301,7 +294,6 @@ function initializeBrowserUI() {
 }
 
 async function createTab(makeActive = true) {
-    // If scramjet isn't ready, wait for it or use a placeholder
     if (!sharedScramjet) {
         console.log("Tab: Waiting for Scramjet...");
         await getSharedScramjet();
@@ -343,20 +335,17 @@ async function createTab(makeActive = true) {
         tab.skipTimeout = setTimeout(() => {
             if (tab.loading && tab.id === activeTabId) document.getElementById('skip-btn')?.style.setProperty('display', 'inline-block');
         }, 500);
+
+        if (tab.safetyTimeout) clearTimeout(tab.safetyTimeout);
+        tab.safetyTimeout = setTimeout(() => completeLoading(tab), 15000);
     });
 
     frame.frame.addEventListener('load', () => {
-        tab.loading = false;
-        clearTimeout(tab.skipTimeout);
-        if (tab.id === activeTabId) {
-            showIframeLoading(false);
-            tab.userSkipped = false;
-        }
+        completeLoading(tab);
         try { if (frame.frame.contentWindow.document.title) tab.title = frame.frame.contentWindow.document.title; } catch { }
         if (frame.frame.contentWindow.location.href.includes('NT.html')) { tab.title = "New Tab"; tab.url = ""; tab.favicon = null; }
         updateTabsUI();
         updateAddressBar();
-        updateLoadingBar(tab, 100);
     });
 
     tabs.push(tab);
@@ -371,7 +360,6 @@ function showIframeLoading(show, url = '') {
     if (!loader) return;
 
     const tab = getActiveTab();
-    // Persistent Skip: If user skipped once on this tab, never show loading again
     if (show && tab && tab.userSkipped) return;
 
     loader.style.display = show ? "flex" : "none";
@@ -380,6 +368,24 @@ function showIframeLoading(show, url = '') {
         document.getElementById("loading-url").textContent = url || "Loading content...";
         document.getElementById("skip-btn").style.display = 'none';
     }
+}
+
+function completeLoading(tab) {
+    if (!tab) return;
+    if (!tab.loading) return;
+
+    tab.loading = false;
+    tab.progress = 100;
+
+    if (tab.skipTimeout) clearTimeout(tab.skipTimeout);
+    if (tab.finishTimer) clearTimeout(tab.finishTimer);
+    if (tab.safetyTimeout) clearTimeout(tab.safetyTimeout);
+
+    if (tab.id === activeTabId) {
+        showIframeLoading(false);
+        updateLoadingBar(tab, 100);
+    }
+    updateTabsUI();
 }
 
 function switchTab(tabId) {
@@ -398,6 +404,11 @@ function closeTab(tabId) {
     if (idx === -1) return;
 
     const tab = tabs[idx];
+
+    if (tab.skipTimeout) clearTimeout(tab.skipTimeout);
+    if (tab.finishTimer) clearTimeout(tab.finishTimer);
+    if (tab.safetyTimeout) clearTimeout(tab.safetyTimeout);
+
     if (tab.frame?.frame) tab.frame.frame.remove();
     tabs.splice(idx, 1);
 
@@ -434,20 +445,7 @@ function updateAddressBar() {
     if (bar && tab) bar.value = (tab.url && !tab.url.includes("NT.html")) ? tab.url : "";
 }
 
-function handleSubmit(url) {
-    const tab = getActiveTab();
-    let input = url ?? document.getElementById("address-bar").value.trim();
-    if (!input) return;
 
-    if (!input.startsWith('http')) {
-        input = input.includes('.') && !input.includes(' ') ? `https://${input}` : `https://search.brave.com/search?q=${encodeURIComponent(input)}`;
-    }
-    tab.loading = true;
-    // Removed userSkipped reset to keep skip persistent for the tab
-    showIframeLoading(true, input);
-    // Let urlchange listener handle the progress logic
-    tab.frame.go(input);
-}
 
 function updateLoadingBar(tab, percent) {
     if (tab.id !== activeTabId) return;
@@ -476,47 +474,40 @@ function updateLoadingBar(tab, percent) {
     }
 }
 
-//settings
-// settings
+
 function openSettings() {
     const modal = document.getElementById('wisp-settings-modal');
+    if (!modal) return;
+
     modal.classList.remove('hidden');
     document.getElementById('close-wisp-modal').onclick = () => modal.classList.add('hidden');
     document.getElementById('save-custom-wisp').onclick = saveCustomWisp;
 
-
-    // Tab switching
-    const tabs = modal.querySelectorAll('.nav-tab');
+    const navTabs = modal.querySelectorAll('.nav-tab');
     const panels = modal.querySelectorAll('.settings-panel');
     const title = document.getElementById('modal-title');
     const footer = document.getElementById('settings-footer');
 
-    tabs.forEach(tab => {
+    navTabs.forEach(tab => {
         tab.onclick = () => {
-            // Only Proxy tab remains relevant for now (or if we keep tabs but remove Appearance content)
-            // If the user wants to remove the selector, we assume checking if "Appearance" tab should be hidden or removed
-            // But the HTML might still have the tab button. 
-            // Let's just hide the appearance tab functionality or keep it as a stub if needed?
-            // The prompt said "delete the backgrounds selector".
-            // I will remove the logic that switches to it if I can, or just empty the appearance panel logic.
-
-            tabs.forEach(t => t.classList.remove('active'));
+            navTabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
+
             const target = tab.dataset.tab;
-            document.getElementById(`${target}-panel`).classList.add('active');
+            const targetPanel = document.getElementById(`${target}-panel`);
+            if (targetPanel) targetPanel.classList.add('active');
 
             if (target === 'proxy') {
                 title.innerHTML = '<i class="fa-solid fa-server"></i> Proxy Settings';
-                footer.textContent = 'Lower ping = faster browsing';
+                if (footer) footer.textContent = 'Lower ping = faster browsing';
+            } else if (target === 'appearance') {
+                title.innerHTML = '<i class="fa-solid fa-palette"></i> Appearance';
+                if (footer) footer.textContent = 'Customize your experience';
             }
         };
     });
 
-    // Force switch to proxy tab and hide appearance tab if possible (via CSS or removal)
-    // For now, removing the logic that sets Appearance title/footer.
-
-    renderServerList();
     renderServerList();
 }
 
@@ -544,7 +535,6 @@ function renderServerList() {
         checkServerHealth(server.url, item);
     });
 
-    // Toggle
     const isAutoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
     const toggle = document.createElement('div');
     toggle.className = 'wisp-option';
@@ -583,12 +573,13 @@ window.deleteCustomWisp = (url) => {
 async function checkServerHealth(url, el) {
     const dot = el.querySelector('.status-indicator');
     const txt = el.querySelector('.ping-text');
-    const start = Date.now();
-    try {
-        await fetch(url.replace('wss://', 'https://').replace('/wisp/', '/health'), { method: 'HEAD', mode: 'no-cors' });
+
+    const result = await pingWispServer(url, 2500);
+
+    if (result.success) {
         dot.classList.add('status-success');
-        txt.textContent = `${Date.now() - start}ms`;
-    } catch {
+        txt.textContent = `${result.latency}ms`;
+    } else {
         dot.classList.add('status-error');
         txt.textContent = 'Offline';
     }
@@ -603,9 +594,6 @@ function setWisp(url) {
     setTimeout(() => location.reload(), 500);
 }
 
-// =====================================================
-// MAIN
-// =====================================================
 
 
 window.addEventListener('message', (e) => {

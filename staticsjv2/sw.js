@@ -83,17 +83,23 @@ const ADBLOCK = {
     ]
 };
 
+const ADRULES = ADBLOCK.blocked.map(pattern => {
+    try {
+        const regexPattern = pattern
+            .replace(/\./g, '\\.')
+            .replace(/\?/g, '\\?')
+            .replace(/\*/g, '.*');
+        return new RegExp('^' + regexPattern + '$', 'i');
+    } catch (e) {
+        console.error("Invalid adblock pattern:", pattern, e);
+        return null;
+    }
+}).filter(Boolean);
+
 function isAdBlocked(url) {
     const urlStr = url.toString();
-    for (const pattern of ADBLOCK.blocked) {
-        let regexPattern = pattern
-            .replace(/\*/g, '.*')
-            .replace(/\./g, '\\.')
-            .replace(/\?/g, '\\?');
-        const regex = new RegExp('^' + regexPattern + '$', 'i');
-        if (regex.test(urlStr)) {
-            return true;
-        }
+    for (const regex of ADRULES) {
+        if (regex.test(urlStr)) return true;
     }
     return false;
 }
@@ -182,25 +188,29 @@ function updateServerHealth(url, success) {
 function switchToServer(url, latency = null, reason = 'Connection unstable') {
     if (url === wispConfig.wispurl) return;
 
-    console.log(`SW: Switching from ${wispConfig.wispurl} to ${url}`);
+    if (wispConfig.wispurl) {
+        console.log(`SW: Switching from ${wispConfig.wispurl} to ${url}`);
+    } else {
+        console.log(`SW: Initial server set to ${url}`);
+    }
+
     wispConfig.wispurl = url;
     currentServerStartTime = Date.now();
+
+    // Reset client to force new connection on next request
+    scramjet.client = null;
 
     self.clients.matchAll().then(clients => {
         clients.forEach(client => {
             client.postMessage({
                 type: 'wispChanged',
                 url: url,
-                name: wispConfig.servers.find(s => s.url === url)?.name || 'Unknown Server',
+                name: wispConfig.servers.find(s => s.url === url)?.name || 'New Server',
                 latency: latency,
                 reason: reason
             });
         });
     });
-
-    if (scramjet && scramjet.client) {
-        scramjet.client = null;
-    }
 }
 
 async function proactiveServerCheck() {
@@ -208,6 +218,7 @@ async function proactiveServerCheck() {
 
     const currentUrl = wispConfig.wispurl;
 
+    // Sort servers to prioritize checking current server or others
     const results = await Promise.all(
         wispConfig.servers.map(s => pingServer(s.url))
     );
@@ -215,13 +226,19 @@ async function proactiveServerCheck() {
     results.forEach(r => updateServerHealth(r.url, r.success));
 
     const currentHealth = serverHealth.get(currentUrl);
-    if (currentHealth && currentHealth.consecutiveFailures > 0) {
-        const bestWorking = results
-            .filter(r => r.success && r.url !== currentUrl)
-            .sort((a, b) => a.latency - b.latency)[0];
+    // If current is bad, or if there's a significantly better one (latency improvement > 40%)
+    const bestWorking = results
+        .filter(r => r.success)
+        .sort((a, b) => a.latency - b.latency)[0];
 
-        if (bestWorking) {
-            switchToServer(bestWorking.url, bestWorking.latency, "Previous server was unresponsive");
+    if (bestWorking && bestWorking.url !== currentUrl) {
+        const currentResult = results.find(r => r.url === currentUrl);
+        const shouldSwitch = !currentResult?.success ||
+            (currentResult.latency > 1500) ||
+            (currentResult.latency > 500 && bestWorking.latency < currentResult.latency * 0.5);
+
+        if (shouldSwitch) {
+            switchToServer(bestWorking.url, bestWorking.latency, !currentResult?.success ? "Previous server was unresponsive" : "Found significantly faster server");
         }
     }
 }
