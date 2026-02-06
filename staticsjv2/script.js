@@ -8,6 +8,8 @@ const BareMux = window.BareMux || { BareMuxConnection: class { setTransport() { 
 let sharedScramjet = null;
 let sharedConnection = null;
 let sharedConnectionReady = false;
+let sharedScramjetPromise = null;
+let sharedConnectionPromise = null;
 
 let tabs = [];
 let activeTabId = null;
@@ -58,16 +60,8 @@ async function findBestWispServer() {
     const servers = getAllWispServers();
     const currentUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
 
-    // Ping in chunks to avoid browser connection limits
-    const CHUNK_SIZE = 5;
-    let results = [];
-
-    for (let i = 0; i < servers.length; i += CHUNK_SIZE) {
-        const chunk = servers.slice(i, i + CHUNK_SIZE);
-        const chunkResults = await Promise.all(chunk.map(s => pingWispServer(s.url, 1500)));
-        results = results.concat(chunkResults);
-    }
-
+    // Ping all in parallel with a shorter timeout
+    const results = await Promise.all(servers.map(s => pingWispServer(s.url, 1500)));
     const best = results.filter(r => r.success).sort((a, b) => a.latency - b.latency)[0];
 
     return best ? best.url : currentUrl;
@@ -110,34 +104,29 @@ const getBasePath = () => {
     return path.endsWith('/') ? path : path + '/';
 };
 
-let scramjetRetries = 0;
-let scramjetInitPromise = null;
-
 async function getSharedScramjet() {
     if (sharedScramjet) return sharedScramjet;
-    if (scramjetInitPromise) return scramjetInitPromise;
+    if (sharedScramjetPromise) return sharedScramjetPromise;
 
-    scramjetInitPromise = (async () => {
+    sharedScramjetPromise = (async () => {
         const { ScramjetController } = $scramjetLoadController();
-        const controller = new ScramjetController({
+        const instance = new ScramjetController({
             prefix: getBasePath() + "scramjet/",
             files: {
-                wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm",
+                wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
                 all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
                 sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
             }
         });
 
         try {
-            await controller.init();
-            sharedScramjet = controller;
-            scramjetInitPromise = null;
-            return controller;
+            await instance.init();
+            sharedScramjet = instance;
+            return instance;
         } catch (err) {
-            scramjetInitPromise = null;
-            if (scramjetRetries < 3 && err.message && (err.message.includes('IDBDatabase') || err.message.includes('object stores'))) {
-                scramjetRetries++;
-                console.warn(`Clearing IndexedDB due to error (Retry ${scramjetRetries}/3)...`);
+            sharedScramjetPromise = null; // Allow retry
+            if (err.message && (err.message.includes('IDBDatabase') || err.message.includes('object stores'))) {
+                console.warn('Clearing IndexedDB due to error...');
                 ['scramjet-data', 'scrambase', 'ScramjetData'].forEach(db => {
                     try { indexedDB.deleteDatabase(db); } catch { }
                 });
@@ -147,28 +136,26 @@ async function getSharedScramjet() {
         }
     })();
 
-    return scramjetInitPromise;
+    return sharedScramjetPromise;
 }
-
-let connectionInitPromise = null;
 
 async function getSharedConnection() {
     if (sharedConnectionReady) return sharedConnection;
-    if (connectionInitPromise) return connectionInitPromise;
+    if (sharedConnectionPromise) return sharedConnectionPromise;
 
-    connectionInitPromise = (async () => {
+    sharedConnectionPromise = (async () => {
         const wispUrl = localStorage.getItem("proxServer") ?? DEFAULT_WISP;
-        sharedConnection = new BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
-        await sharedConnection.setTransport(
+        const connection = new BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
+        await connection.setTransport(
             "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
             [{ wisp: wispUrl }]
         );
+        sharedConnection = connection;
         sharedConnectionReady = true;
-        connectionInitPromise = null;
-        return sharedConnection;
+        return connection;
     })();
 
-    return connectionInitPromise;
+    return sharedConnectionPromise;
 }
 
 async function registerServiceWorker() {
@@ -186,19 +173,11 @@ async function registerServiceWorker() {
 
     const send = () => {
         const sw = reg.active || navigator.serviceWorker?.controller;
-        if (sw) {
-            sw.postMessage(config);
-        } else {
-            // Wait for controller if not ready
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                navigator.serviceWorker.controller?.postMessage(config);
-            }, { once: true });
-        }
+        if (sw) sw.postMessage(config);
     };
 
     send();
-    // Backup send
-    setTimeout(send, 1000);
+    setTimeout(send, 500);
 
     navigator.serviceWorker.addEventListener('message', (e) => {
         if (e.data.type === 'wispChanged') {
@@ -206,22 +185,24 @@ async function registerServiceWorker() {
             notify('info', 'Proxy Auto-switched', `Switched to ${e.data.name}. ${e.data.reason || 'Connection unstable.'}`);
         } else if (e.data.type === 'wispError') {
             notify('error', 'Proxy Error', e.data.message);
-        } else if (e.data.type === 'resource-loaded' || e.data.type === 'batch-resource-loaded') {
+        } else if (e.data.type === 'navigate') {
+            // Handle navigation requests from NT.html (new tab page)
+            const tab = getActiveTab();
+            if (tab && e.data.url) {
+                tab.loading = true;
+                tab.userSkipped = false;
+                showIframeLoading(true, e.data.url);
+                updateLoadingBar(tab, 10);
+                tab.frame.go(e.data.url);
+            }
+        } else if (e.data.type === 'resource-loaded') {
             const tab = getActiveTab();
             if (tab && tab.loading) {
-                // Handle both single and batched messages
-                const resources = e.data.type === 'batch-resource-loaded' ? e.data.resources : [{ status: e.data.status }];
-
-                let totalIncrement = 0;
-                resources.forEach(res => {
-                    const isError = res.status >= 400;
-                    totalIncrement += isError ? 0.5 : 2.5;
-                });
-
-                // Cap increment per batch to avoid jumpiness
-                totalIncrement = Math.min(totalIncrement, 20);
-
-                tab.progress = Math.min(96, tab.progress + totalIncrement);
+                // Real progress: increment on every resource
+                const isError = e.data.status >= 400;
+                // Idea 4: Error Braking - slower progress on failures
+                const increment = isError ? 0.5 : 2.5;
+                tab.progress = Math.min(96, tab.progress + increment);
                 updateLoadingBar(tab, tab.progress);
             }
         }
@@ -254,13 +235,8 @@ async function init() {
         await Promise.all([swPromise, connectionPromise, wispPromise]);
 
         // Final steps
-        // Final steps
         await getSharedScramjet();
-
-        // Restore session or create new tab
-        if (!await restoreSession()) {
-            await createTab(true);
-        }
+        await createTab(true);
 
         if (window.location.hash) {
             handleSubmit(decodeURIComponent(window.location.hash.substring(1)));
@@ -270,51 +246,6 @@ async function init() {
         console.log("Browser: All backend systems ready.");
     } catch (err) {
         console.error("Init Error:", err);
-    }
-}
-async function restoreSession() {
-    try {
-        const saved = JSON.parse(localStorage.getItem('browser_tabs') || '[]');
-        if (saved.length === 0) return false;
-
-        // Sequential restore to avoid overwhelming the proxy
-        for (const t of saved) {
-            await createTab(false, t.url, t.title, t.favicon);
-        }
-
-        // Restore active tab by index, not ID (IDs are regenerated)
-        const activeIndex = parseInt(localStorage.getItem('browser_active_tab_index') || '0');
-        if (tabs[activeIndex]) {
-            switchTab(tabs[activeIndex].id);
-        } else if (tabs.length > 0) {
-            switchTab(tabs[0].id);
-        }
-        return true;
-    } catch (e) {
-        console.error("Session restore failed:", e);
-        return false;
-    }
-}
-
-function saveSession() {
-    try {
-        const state = tabs.map(t => ({
-            url: t.url,
-            title: t.title,
-            favicon: t.favicon
-        }));
-        localStorage.setItem('browser_tabs', JSON.stringify(state));
-
-        // Save index, as IDs are not persistent across reloads
-        const activeIndex = tabs.findIndex(t => t.id === activeTabId);
-        localStorage.setItem('browser_active_tab_index', activeIndex >= 0 ? activeIndex : 0);
-    } catch (e) {
-        if (e.name === 'QuotaExceededError') {
-            console.warn("Session save failed: Storage quota exceeded");
-            // Optional: Try to clear old data or just fail silently
-        } else {
-            console.error("Session save error:", e);
-        }
     }
 }
 
@@ -383,38 +314,42 @@ function initializeBrowserUI() {
     updateTabsUI();
 }
 
-async function createTab(makeActive = true, url = "NT.html", title = "New Tab", favicon = null) {
+async function createTab(makeActive = true) {
     // If scramjet isn't ready, wait for it or use a placeholder
-    if (!sharedScramjet) {
-        console.log("Tab: Waiting for Scramjet...");
-        await getSharedScramjet();
+    try {
+        if (!sharedScramjet) {
+            console.log("Tab: Waiting for Scramjet...");
+            await getSharedScramjet();
+        }
+    } catch (err) {
+        console.error("Tab: Failed to init Scramjet", err);
+        notify('error', 'Initialization Error', 'Failed to start proxy engine. Please reload.');
+        return null;
     }
 
     const frame = sharedScramjet.createFrame();
     const tab = {
         id: nextTabId++,
-        title: title,
-        url: url,
+        title: "New Tab",
+        url: "NT.html",
         frame,
         loading: false,
-        loading: false,
-        favicon: favicon,
+        favicon: null,
         userSkipped: false,
         progress: 0
     };
 
-    // Use frame.go for proxying, direct src for internal pages
-    if (url === "NT.html" || url === "" || url === "about:blank") {
-        frame.frame.src = url;
-    } else {
-        // Must delay slightly to ensure frame is attached or go() might fail on some implementations
-        setTimeout(() => frame.go(url), 10);
-    }
+    frame.frame.src = "NT.html";
+
+
+    // Cleanup reference
+    tab.cleanup = () => {
+        // If frame exposes a cleanup/destroy method, call it here.
+        // Since we remove the DOM element in closeTab, we just need to ensure no listeners leak.
+        tab.frame = null;
+    };
 
     frame.addEventListener("urlchange", (e) => {
-        // Prevent recursive loop if the update comes from the same url
-        if (tab.url === e.url) return;
-
         tab.url = e.url;
         tab.loading = true;
         try {
@@ -425,8 +360,6 @@ async function createTab(makeActive = true, url = "NT.html", title = "New Tab", 
             tab.title = "Browsing";
             tab.favicon = null;
         }
-
-        saveSession(); // Persist on nav
 
         if (tab.id === activeTabId) showIframeLoading(true, tab.url);
         updateTabsUI();
@@ -449,15 +382,13 @@ async function createTab(makeActive = true, url = "NT.html", title = "New Tab", 
             tab.userSkipped = false;
         }
         try { if (frame.frame.contentWindow.document.title) tab.title = frame.frame.contentWindow.document.title; } catch { }
-        try { if (frame.frame.contentWindow.location.href.includes('NT.html')) { tab.title = "New Tab"; tab.url = ""; tab.favicon = null; } } catch { }
+        if (frame.frame.contentWindow.location.href.includes('NT.html')) { tab.title = "New Tab"; tab.url = ""; tab.favicon = null; }
         updateTabsUI();
         updateAddressBar();
         updateLoadingBar(tab, 100);
     });
 
     tabs.push(tab);
-    saveSession();
-
     const container = document.getElementById("iframe-container");
     if (container) container.appendChild(frame.frame);
     if (makeActive) switchTab(tab.id);
@@ -488,9 +419,7 @@ function switchTab(tabId) {
     if (tab) showIframeLoading(tab.loading, tab.url);
 
     updateTabsUI();
-    updateTabsUI();
     updateAddressBar();
-    saveSession();
 }
 
 function closeTab(tabId) {
@@ -498,25 +427,16 @@ function closeTab(tabId) {
     if (idx === -1) return;
 
     const tab = tabs[idx];
-    if (tab.frame) {
-        // Try to properly destroy frame if method exists, otherwise remove element
-        if (tab.frame.destroy) tab.frame.destroy();
-        else if (tab.frame.frame) tab.frame.frame.remove();
-        tab.frame = null; // Clear reference
-    }
+    if (tab.cleanup) tab.cleanup();
+    if (tab.frame?.frame) tab.frame.frame.remove();
     tabs.splice(idx, 1);
 
     if (activeTabId === tabId) {
-        if (tabs.length > 0) {
-            switchTab(tabs[Math.max(0, idx - 1)].id);
-        } else {
-            // Don't reload, just make a new tab
-            createTab(true);
-        }
+        if (tabs.length > 0) switchTab(tabs[Math.max(0, idx - 1)].id);
+        else window.location.reload();
     } else {
         updateTabsUI();
     }
-    saveSession();
 }
 
 function updateTabsUI() {
@@ -550,10 +470,9 @@ function handleSubmit(url) {
     if (!input) return;
 
     if (!input.startsWith('http')) {
-        input = input.includes('.') && !input.includes(' ') ? `https://${input}` : `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+        input = input.includes('.') && !input.includes(' ') ? `https://${input}` : `https://search.brave.com/search?q=${encodeURIComponent(input)}`;
     }
     tab.loading = true;
-    updateLoadingBar(tab, 0); // Reset bar correctly on start
     // Removed userSkipped reset to keep skip persistent for the tab
     showIframeLoading(true, input);
     // Let urlchange listener handle the progress logic
@@ -580,8 +499,10 @@ function updateLoadingBar(tab, percent) {
 
     if (percent === 100) {
         container?.classList.remove('active');
-        // No auto-reset to 0 here to prevent flickering. 
-        // We reset to 0 when a new load starts.
+        bar._cleanup = setTimeout(() => {
+            bar.style.width = "0%";
+            bar._cleanup = null;
+        }, 200);
     }
 }
 
@@ -607,8 +528,6 @@ function openSettings() {
             // But the HTML might still have the tab button. 
             // Let's just hide the appearance tab functionality or keep it as a stub if needed?
             // The prompt said "delete the backgrounds selector".
-            // I will remove the logic that switches to it if I can, or just empty the appearance panel logic.
-
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
@@ -622,10 +541,6 @@ function openSettings() {
         };
     });
 
-    // Force switch to proxy tab and hide appearance tab if possible (via CSS or removal)
-    // For now, removing the logic that sets Appearance title/footer.
-
-    renderServerList();
     renderServerList();
 }
 
@@ -644,27 +559,11 @@ function renderServerList() {
         item.innerHTML = `
             <div class="wisp-option-header">
                 <div class="wisp-option-name">${server.name}${isActive ? ' <i class="fa-solid fa-check"></i>' : ''}</div>
-                <div class="server-status"><span class="ping-text">...</span><div class="status-indicator"></div>${isCustom ? `<button class="delete-wisp-btn"><i class="fa-solid fa-trash"></i></button>` : ''}</div>
+                <div class="server-status"><span class="ping-text">...</span><div class="status-indicator"></div>${isCustom ? `<button class="delete-wisp-btn" onclick="deleteCustomWisp('${server.url}')"><i class="fa-solid fa-trash"></i></button>` : ''}</div>
             </div>
             <div class="wisp-option-url">${server.url}</div>`;
 
-
-
-        item.onclick = (e) => {
-            // Avoid triggering if delete button was clicked
-            if (e.target.closest('.delete-wisp-btn')) return;
-            setWisp(server.url);
-        };
-
-        // Secure event listener attachment
-        if (isCustom) {
-            const delBtn = item.querySelector('.delete-wisp-btn');
-            if (delBtn) delBtn.onclick = (e) => {
-                e.stopPropagation();
-                deleteCustomWisp(server.url);
-            };
-        }
-
+        item.onclick = () => setWisp(server.url);
         list.appendChild(item);
         checkServerHealth(server.url, item);
     });
@@ -692,7 +591,7 @@ function saveCustomWisp() {
     const customWisps = getStoredWisps();
     if ([...WISP_SERVERS, ...customWisps].some(w => w.url === url)) return notify('warning', 'Exists', 'Server already exists');
 
-    customWisps.push({ name: `Custom ${customWisps.length + 1} `, url });
+    customWisps.push({ name: `Custom ${customWisps.length + 1}`, url });
     localStorage.setItem('customWisps', JSON.stringify(customWisps));
     setWisp(url);
 }
@@ -712,37 +611,20 @@ async function checkServerHealth(url, el) {
     try {
         await fetch(url.replace('wss://', 'https://').replace('/wisp/', '/health'), { method: 'HEAD', mode: 'no-cors' });
         dot.classList.add('status-success');
-        txt.textContent = `${Date.now() - start} ms`;
+        txt.textContent = `${Date.now() - start}ms`;
     } catch {
         dot.classList.add('status-error');
         txt.textContent = 'Offline';
     }
 }
 
-async function setWisp(url) {
+function setWisp(url) {
     localStorage.setItem('proxServer', url);
-
-    // 1. Update Service Worker
     const controller = navigator.serviceWorker?.controller;
     if (controller) {
         controller.postMessage({ type: 'config', wispurl: url });
     }
-
-    // 2. Update Main Thread Transport
-    if (sharedConnection) {
-        try {
-            await sharedConnection.setTransport(
-                "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
-                [{ wisp: url }]
-            );
-            notify('success', 'Proxy Updated', 'Switched server without reload.');
-        } catch (e) {
-            console.error("Transport update failed:", e);
-            notify('error', 'Update Failed', 'Could not switch transport.');
-        }
-    }
-
-    renderServerList();
+    setTimeout(() => location.reload(), 500);
 }
 
 // =====================================================
@@ -756,10 +638,4 @@ window.addEventListener('message', (e) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if we are in the main browser context (have #app) 
-    // to avoid conflict with embed.html or other partial views
-    if (document.getElementById('app')) {
-        init();
-    }
-});
+document.addEventListener('DOMContentLoaded', init);

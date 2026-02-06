@@ -44,7 +44,7 @@ const ADBLOCK = {
         "*.openx.com*",
         "*.indexexchange.com*",
         "*.casalemedia.com*",
-        "*.indexexchange.com*",
+        "*.indexexchange.com*", // Spread out
         "*.adcolony.com*",
         "*.chartboost.com*",
         "*.unityads.unity3d.com*",
@@ -80,33 +80,21 @@ const ADBLOCK = {
         "*quantserve.com*",
         "*krxd.net*",
         "*demdex.net*"
-    ],
-    regexCache: [],
-    exactCache: new Set()
+    ]
 };
 
-// Pre-compile regexes for performance
-(function compileAdBlock() {
-    for (const pattern of ADBLOCK.blocked) {
-        if (!pattern.includes('*') && !pattern.includes('?')) {
-            ADBLOCK.exactCache.add(pattern);
-        } else {
-            let regexPattern = pattern
-                .replace(/\./g, '\\.')
-                .replace(/\*/g, '.*')
-                .replace(/\?/g, '\\?');
-            ADBLOCK.regexCache.push(new RegExp('^' + regexPattern + '$', 'i'));
-        }
-    }
-})();
+// Pre-compile regexes
+const AD_REGEXES = ADBLOCK.blocked.map(pattern => {
+    const regexPattern = pattern
+        .replace(/\*/g, '.*')
+        .replace(/\./g, '\\.')
+        .replace(/\?/g, '\\?');
+    return new RegExp('^' + regexPattern + '$', 'i');
+});
 
 function isAdBlocked(url) {
     const urlStr = url.toString();
-    // 1. Fast path: Exact match
-    if (ADBLOCK.exactCache.has(urlStr)) return true;
-
-    // 2. Slow path: Regex
-    for (const regex of ADBLOCK.regexCache) {
+    for (const regex of AD_REGEXES) {
         if (regex.test(urlStr)) {
             return true;
         }
@@ -114,13 +102,16 @@ function isAdBlocked(url) {
     return false;
 }
 
+// Guard to prevent execution in incorrect contexts (like embed.html)
+
+
 const swPath = self.location.pathname;
 const basePath = swPath.substring(0, swPath.lastIndexOf('/') + 1);
 self.basePath = self.basePath || basePath;
 
 self.$scramjet = {
     files: {
-        wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm",
+        wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
         sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js",
     }
 };
@@ -150,54 +141,8 @@ const MAX_RETRIES = 3;
 const PING_TIMEOUT = 3000;
 
 let resolveConfigReady;
-const BATCH_INTERVAL = 100; // ms
-let messageQueue = [];
-let batchTimeout = null;
-
-function flushMessageQueue() {
-    if (messageQueue.length === 0) return;
-    const queueToSend = [...messageQueue];
-    messageQueue = [];
-
-    self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-            // Batch messages into a single postMessage if possible, or just send array
-            // To keep compatibility with existing listener, we'll send them individually but in a tight loop
-            // OR change the protocol. For now, let's keep protocol but debounce the IPC call frequency
-            // Actually, sending massive amount of messages is utilizing the thread.
-            // Let's change the strategy: Update progress significantly less often.
-            // But we need the URLs. 
-            // Better: Send a "batch-resource-loaded" message
-            client.postMessage({
-                type: 'batch-resource-loaded',
-                resources: queueToSend
-            });
-        });
-    });
-}
-
-function queueResourceLoading(url, status) {
-    messageQueue.push({ url, status });
-    if (!batchTimeout) {
-        batchTimeout = setTimeout(() => {
-            flushMessageQueue();
-            batchTimeout = null;
-        }, BATCH_INTERVAL);
-    }
-}
-
-
-const configReadyPromise = new Promise(resolve => {
-    resolveConfigReady = resolve;
-    // Fallback: If no config received within 3 seconds, proceed with defaults to prevent blocking
-    setTimeout(() => {
-        if (resolveConfigReady) {
-            console.warn("SW: Config timeout, proceeding with defaults");
-            resolve();
-            resolveConfigReady = null;
-        }
-    }, 3000);
-});
+const configReadyPromise = new Promise(resolve => resolveConfigReady = resolve);
+let checkTimeout = null;
 
 async function pingServer(url) {
     return new Promise((resolve) => {
@@ -279,9 +224,6 @@ async function proactiveServerCheck() {
 
     const currentHealth = serverHealth.get(currentUrl);
     if (currentHealth && currentHealth.consecutiveFailures > 0) {
-        // Re-check config after async operation to prevent race conditions
-        if (!wispConfig.autoswitch || wispConfig.wispurl !== currentUrl) return;
-
         const bestWorking = results
             .filter(r => r.success && r.url !== currentUrl)
             .sort((a, b) => a.latency - b.latency)[0];
@@ -303,13 +245,15 @@ self.addEventListener("message", ({ data }) => {
             wispConfig.servers = data.servers;
             console.log("SW: Received servers", data.servers.length);
             if (wispConfig.autoswitch) {
-                setTimeout(proactiveServerCheck, 500);
+                if (checkTimeout) clearTimeout(checkTimeout);
+                checkTimeout = setTimeout(proactiveServerCheck, 500);
             }
         }
         if (typeof data.autoswitch !== 'undefined') {
             wispConfig.autoswitch = data.autoswitch;
             if (wispConfig.autoswitch && wispConfig.servers?.length > 0) {
-                setTimeout(proactiveServerCheck, 500);
+                if (checkTimeout) clearTimeout(checkTimeout);
+                checkTimeout = setTimeout(proactiveServerCheck, 500);
             }
         }
         if (wispConfig.wispurl && resolveConfigReady) {
@@ -330,6 +274,7 @@ self.addEventListener("message", ({ data }) => {
 self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
         if (isAdBlocked(event.request.url)) {
+            console.log("SW: Blocked ad request:", event.request.url);
             return new Response(new ArrayBuffer(0), { status: 204 });
         }
 
@@ -350,18 +295,9 @@ scramjet.addEventListener("request", async (e) => {
         }
 
         if (!scramjet.client) {
-            // Use a promise lock to prevent parallel re-initialization (Thundering Herd)
-            if (!self.clientInitPromise) {
-                self.clientInitPromise = (async () => {
-                    if (!self.sharedConnection) {
-                        self.sharedConnection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-                    }
-                    await self.sharedConnection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispConfig.wispurl }]);
-                    scramjet.client = new BareMux.BareClient();
-                    self.clientInitPromise = null;
-                })();
-            }
-            await self.clientInitPromise;
+            const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
+            await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispConfig.wispurl }]);
+            scramjet.client = new BareMux.BareClient();
         }
 
         let lastErr;
@@ -379,11 +315,16 @@ scramjet.addEventListener("request", async (e) => {
                     duplex: "half",
                 });
 
-                // Real resource tracking for loading bar - Batched
-                queueResourceLoading(e.url, response.status);
-
-                // CRITICAL FIX: Mark server as healthy on success
-                updateServerHealth(wispConfig.wispurl, true);
+                // Real resource tracking for loading bar
+                self.clients.matchAll().then(clients => {
+                    clients.forEach(client => {
+                        client.postMessage({
+                            type: 'resource-loaded',
+                            url: e.url,
+                            status: response.status
+                        });
+                    });
+                });
 
                 return response;
             } catch (err) {
@@ -394,9 +335,7 @@ scramjet.addEventListener("request", async (e) => {
                     errMsg.includes("handshake") ||
                     errMsg.includes("reset");
 
-                if (!isRetryable || i === MAX_RETRIES) break;
-                // Allow non-GET retries ONLY for connection handshake/reset errors
-                if (e.method !== 'GET' && !errMsg.includes("handshake") && !errMsg.includes("reset") && !errMsg.includes("eof")) break;
+                if (!isRetryable || i === MAX_RETRIES || e.method !== 'GET') break;
 
                 console.warn(`Scramjet retry ${i + 1}/${MAX_RETRIES} for ${e.url} due to: ${err.message}`);
                 await new Promise(r => setTimeout(r, 500 * (i + 1)));
@@ -410,18 +349,17 @@ scramjet.addEventListener("request", async (e) => {
 
             // Only switch if server has been unstable for a while
             if (currentHealth && currentHealth.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-                // Use parallel pings to find the best server efficiently
-                const otherServers = wispConfig.servers.filter(s => s.url !== wispConfig.wispurl);
-                try {
-                    const pingResults = await Promise.all(otherServers.map(s => pingServer(s.url)));
-                    const best = pingResults.filter(r => r.success).sort((a, b) => a.latency - b.latency)[0];
-
-                    if (best) {
-                        console.log(`SW: Auto-switching to ${best.url} due to failures on current server`);
-                        switchToServer(best.url, best.latency);
+                for (const server of wispConfig.servers) {
+                    if (server.url === wispConfig.wispurl) continue;
+                    const serverH = serverHealth.get(server.url);
+                    if (!serverH || serverH.consecutiveFailures < MAX_CONSECUTIVE_FAILURES) {
+                        const pingResult = await pingServer(server.url);
+                        if (pingResult.success) {
+                            console.log(`SW: Auto-switching to ${server.url} due to failures on current server`);
+                            switchToServer(server.url, pingResult.latency);
+                            break;
+                        }
                     }
-                } catch (err) {
-                    console.error("SW: Failed to fallback", err);
                 }
             }
         }

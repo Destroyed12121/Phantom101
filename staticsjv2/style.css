@@ -130,7 +130,7 @@ body.phantom-bg-active .tabs {
     transition: all 0.15s;
     font-size: 14px;
     flex-shrink: 0;
-    /* margin-top: 4px; Removed for better alignment */
+    margin-top: 4px;
 }
 
 .new-tab:hover {
