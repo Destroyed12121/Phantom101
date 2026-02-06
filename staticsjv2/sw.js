@@ -44,7 +44,7 @@ const ADBLOCK = {
         "*.openx.com*",
         "*.indexexchange.com*",
         "*.casalemedia.com*",
-        "*.indexexchange.com*",
+        "*.indexexchange.com*", // Spread out
         "*.adcolony.com*",
         "*.chartboost.com*",
         "*.unityads.unity3d.com*",
@@ -80,23 +80,20 @@ const ADBLOCK = {
         "*quantserve.com*",
         "*krxd.net*",
         "*demdex.net*"
-    ],
-    compiled: []
+    ]
 };
-
-// Pre-compile regexes
-ADBLOCK.compiled = ADBLOCK.blocked.map(pattern => {
-    const regexPattern = pattern
-        .replace(/\./g, '\\.')
-        .replace(/\?/g, '\\?')
-        .replace(/\*/g, '.*');
-    return new RegExp('^' + regexPattern + '$', 'i');
-});
 
 function isAdBlocked(url) {
     const urlStr = url.toString();
-    for (const regex of ADBLOCK.compiled) {
-        if (regex.test(urlStr)) return true;
+    for (const pattern of ADBLOCK.blocked) {
+        let regexPattern = pattern
+            .replace(/\*/g, '.*')
+            .replace(/\./g, '\\.')
+            .replace(/\?/g, '\\?');
+        const regex = new RegExp('^' + regexPattern + '$', 'i');
+        if (regex.test(urlStr)) {
+            return true;
+        }
     }
     return false;
 }
@@ -201,9 +198,8 @@ function switchToServer(url, latency = null, reason = 'Connection unstable') {
         });
     });
 
-    if (scramjet) {
+    if (scramjet && scramjet.client) {
         scramjet.client = null;
-        scramjet._clientPromise = null;
     }
 }
 
@@ -288,14 +284,11 @@ scramjet.addEventListener("request", async (e) => {
             return new Response("Wisp URL not configured", { status: 500 });
         }
 
-        if (!scramjet._clientPromise) {
-            scramjet._clientPromise = (async () => {
-                const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-                await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispConfig.wispurl }]);
-                return new BareMux.BareClient();
-            })();
+        if (!scramjet.client) {
+            const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
+            await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispConfig.wispurl }]);
+            scramjet.client = new BareMux.BareClient();
         }
-        scramjet.client = await scramjet._clientPromise;
 
         let lastErr;
 
