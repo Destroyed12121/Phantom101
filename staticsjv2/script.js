@@ -100,6 +100,11 @@ async function initWispAutoswitch() {
 // =====================================================
 
 const getBasePath = () => {
+    // If about:blank or similar, try to recover or default
+    if (location.protocol === 'about:' || location.hostname === '') {
+        // Fallback for weird contexts if possible, though SW won't work here.
+        return './';
+    }
     const path = location.pathname.replace(/[^/]*$/, '');
     return path.endsWith('/') ? path : path + '/';
 };
@@ -161,54 +166,67 @@ async function getSharedConnection() {
 async function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
 
-    const reg = await navigator.serviceWorker.register(getBasePath() + 'sw.js', { scope: getBasePath() });
-    await navigator.serviceWorker.ready;
+    try {
+        const swUrl = getBasePath() + 'sw.js';
+        const reg = await navigator.serviceWorker.register(swUrl, { scope: getBasePath() });
 
-    const config = {
-        type: "config",
-        wispurl: localStorage.getItem("proxServer") ?? DEFAULT_WISP,
-        servers: getAllWispServers(),
-        autoswitch: localStorage.getItem('wispAutoswitch') !== 'false'
-    };
+        // Race ready against timeout to prevent hanging the entire init
+        const readyPromise = navigator.serviceWorker.ready;
+        const timeoutPromise = new Promise(r => setTimeout(() => r('timeout'), 2000));
 
-    const send = () => {
-        const sw = reg.active || navigator.serviceWorker?.controller;
-        if (sw) sw.postMessage(config);
-    };
-
-    send();
-    setTimeout(send, 500);
-
-    navigator.serviceWorker.addEventListener('message', (e) => {
-        if (e.data.type === 'wispChanged') {
-            localStorage.setItem("proxServer", e.data.url);
-            notify('info', 'Proxy Auto-switched', `Switched to ${e.data.name}. ${e.data.reason || 'Connection unstable.'}`);
-        } else if (e.data.type === 'wispError') {
-            notify('error', 'Proxy Error', e.data.message);
-        } else if (e.data.type === 'navigate') {
-            // Handle navigation requests from NT.html (new tab page)
-            const tab = getActiveTab();
-            if (tab && e.data.url) {
-                tab.loading = true;
-                tab.userSkipped = false;
-                showIframeLoading(true, e.data.url);
-                updateLoadingBar(tab, 10);
-                tab.frame.go(e.data.url);
-            }
-        } else if (e.data.type === 'resource-loaded') {
-            const tab = getActiveTab();
-            if (tab && tab.loading) {
-                // Real progress: increment on every resource
-                const isError = e.data.status >= 400;
-                // Idea 4: Error Braking - slower progress on failures
-                const increment = isError ? 0.5 : 2.5;
-                tab.progress = Math.min(96, tab.progress + increment);
-                updateLoadingBar(tab, tab.progress);
-            }
+        const result = await Promise.race([readyPromise, timeoutPromise]);
+        if (result === 'timeout') {
+            console.warn("SW: Ready signal timed out, proceeding anyway.");
+        } else {
+            console.log("SW: Ready");
         }
-    });
 
-    reg.update();
+        const config = {
+            type: "config",
+            wispurl: localStorage.getItem("proxServer") ?? DEFAULT_WISP,
+            servers: getAllWispServers(),
+            autoswitch: localStorage.getItem('wispAutoswitch') !== 'false'
+        };
+
+        const send = () => {
+            const sw = reg.active || navigator.serviceWorker?.controller;
+            if (sw) sw.postMessage(config);
+        };
+
+        send();
+        setTimeout(send, 500);
+
+        navigator.serviceWorker.addEventListener('message', (e) => {
+            if (e.data.type === 'wispChanged') {
+                localStorage.setItem("proxServer", e.data.url);
+                notify('info', 'Proxy Auto-switched', `Switched to ${e.data.name}. ${e.data.reason || 'Connection unstable.'}`);
+            } else if (e.data.type === 'wispError') {
+                notify('error', 'Proxy Error', e.data.message);
+            } else if (e.data.type === 'navigate') {
+                const tab = getActiveTab();
+                if (tab && e.data.url) {
+                    tab.loading = true;
+                    tab.userSkipped = false;
+                    showIframeLoading(true, e.data.url);
+                    updateLoadingBar(tab, 10);
+                    tab.frame.go(e.data.url);
+                }
+            } else if (e.data.type === 'resource-loaded') {
+                const tab = getActiveTab();
+                if (tab && tab.loading) {
+                    const isError = e.data.status >= 400;
+                    const increment = isError ? 0.5 : 2.5;
+                    tab.progress = Math.min(96, tab.progress + increment);
+                    updateLoadingBar(tab, tab.progress);
+                }
+            }
+        });
+
+        reg.update();
+    } catch (err) {
+        console.error("SW: Registration failed", err);
+        // Do not throw, allow the browser to attempt working without SW (though proxying will likely fail)
+    }
 }
 
 // =====================================================

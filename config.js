@@ -52,7 +52,8 @@ window.SITE_CONFIG = {
     // *** for strikethrough
     // ** for bold
     todos: [
-      "*** make the default song be lebron***",
+        "fix blob tab",
+      "***make the default song be lebron***",
         "***add continue watching and recently played***",
         "***fix proxy constantly asking skip?***",
         "***fix loading times***",
