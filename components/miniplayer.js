@@ -72,6 +72,10 @@ class MiniPlayer {
                     this.state.isReady = ae.isReady || false;
                     this.syncVisibility();
                     this.updateUI();
+                    // Sync progress immediately
+                    if (ae.currentTime !== undefined && ae.duration !== undefined) {
+                        this.updateProgress(ae.currentTime, ae.duration);
+                    }
                 }
             }
         };

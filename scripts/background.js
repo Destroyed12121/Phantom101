@@ -129,9 +129,9 @@
 
         getProxyPath() {
             const path = window.location.pathname;
-            if (path.includes('/staticsjv2/')) return 'bg-proxy.html';
-            if (path.includes('/pages/')) return '../staticsjv2/bg-proxy.html';
-            return 'staticsjv2/bg-proxy.html';
+            // The proxies folder is at the root
+            if (path.includes('/staticsjv2/') || path.includes('/pages/')) return '../scripts/bg-proxy.html';
+            return 'scripts/bg-proxy.html';
         },
 
         async waitForReady(timeout = 5000) {

@@ -410,7 +410,9 @@ class AudioEngine {
         const save = {
             currentTrack: this.state.currentTrack,
             currentTime: this.state.currentTime,
+            duration: this.state.duration,
             isPlaying: this.state.isPlaying,
+            source: this.state.source,
             playlist: this.state.playlist,
             originalPlaylist: this.state.originalPlaylist,
             index: this.state.index,
