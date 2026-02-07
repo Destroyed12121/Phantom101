@@ -17,7 +17,8 @@ class SmartSwitcher {
     clear() { clearTimeout(this.tm); this.tm = null; }
     start() { this.clear(); this.tm = setTimeout(() => this.fail(), 15000); }
     fail() {
-        if (type === 'video') return; // Don't fail-check search results/youtube
+        const isYT = currentUrl && (currentUrl.includes('youtube.com') || currentUrl.includes('youtube-nocookie.com'));
+        if (type === 'video' || isYT) return; // Don't fail-check search results/youtube
         if (++this.retry >= 3) return window.Notify?.error('Error', 'All providers failed');
         window.Notify?.info('Switching', 'Slow source, trying next...');
         if (type === 'game') this.toggleProxy(); else this.next();
@@ -42,8 +43,9 @@ function init() {
         btnChat.classList.add('active');
 
         if (proxyToggle) {
+            proxyToggle.classList.add('active');
             const proxyParam = params.get('proxy');
-            if (proxyParam === 'true') proxyToggle.classList.add('active');
+            if (proxyParam === 'false') proxyToggle.classList.remove('active');
             proxyToggle.onclick = () => {
                 proxyToggle.classList.toggle('active');
                 switcher.retry = 0;

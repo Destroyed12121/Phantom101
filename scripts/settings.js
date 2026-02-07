@@ -7,17 +7,11 @@
     const getDefaults = () => {
         const d = window.SITE_CONFIG?.defaults || {};
         return {
-            cloakMode: d.cloakMode || 'about:blank',
-            cloakRotation: d.cloakRotation || false,
-            cloakInterval: d.cloakInterval || 5000,
-            panicKey: d.panicKey || 'x',
-            panicModifiers: d.panicModifiers || ['ctrl', 'shift'],
-            panicUrl: d.panicUrl || 'https://classroom.google.com',
-            maxMovieRating: d.maxMovieRating || 'R',
+            ...d,
             offlineGames: [],
-            gameLibrary: d.gameLibrary || 'multi',
-            leaveConfirmation: d.leaveConfirmation || false,
-            historyEnabled: d.historyEnabled !== false
+            customCloaks: [],
+            customBackgrounds: [],
+            customWisps: [],
         };
     };
 

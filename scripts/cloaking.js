@@ -239,8 +239,11 @@
 
     window.Cloaking = { init, apply, startRotation, stopRotation, tryPopup, loadInTab };
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(init, 100));
-    else setTimeout(init, 100);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     window.addEventListener('settings-changed', (e) => {
         apply();

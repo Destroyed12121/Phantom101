@@ -41,24 +41,29 @@
                 <button class="close-btn" id="close-wisp-modal"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div class="settings-nav-tabs">
-                <button class="nav-tab active" data-tab="proxy"><i class="fa-solid fa-server"></i> Proxy</button>
-            </div>
 
             <div class="settings-content">
                 <div id="proxy-panel" class="settings-panel active">
                     <div class="section-title"><i class="fa-solid fa-cloud"></i> Select Server</div>
                     <div class="server-list" id="server-list"></div>
+
                     <div class="section-title"><i class="fa-solid fa-plus-circle"></i> Custom Server</div>
-                    <div class="custom-input-group">
+                    <div class="custom-input-group" style="margin-bottom: 20px;">
                         <input type="text" id="custom-wisp-input" placeholder="wss://your-wisp-server.com/wisp/">
                         <button id="save-custom-wisp"><i class="fa-solid fa-plus"></i></button>
                     </div>
+
+                    <div class="section-title"><i class="fa-solid fa-bolt"></i> Transport Method</div>
+                    <select id="transport-select" class="input select" style="margin-bottom: 20px;">
+                        <option value="epoxy">Epoxy (Faster)</option>
+                        <option value="libcurl">Libcurl (Compatible)</option>
+                    </select>
                 </div>
+
             </div>
 
             <div class="settings-footer" id="settings-footer">
-                Lower ping = faster browsing
+                Lower ping = faster loading
             </div>
         </div>
     </div>

@@ -3,30 +3,20 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.1.1",
+    version: "1.1.2",
 
     changelog: [
         "v1.1.2:",
         "added twitch chat to twitch",
         "added continue watching and recently played",
         "added music miniplayer",
-        "added minor offline support to allow playing games without wifi",
+        "refined proxy - added libcurl and more",
+        "added proxy settings to settings page",
+        "added small offline support to allow playing games without wifi",
         "made loading screen not show during click to launch",
-        "fixxed blob tab launching",
-        "refined proxy",
+        "fixed blob tab launching",
         "optimized page code slightly",
         "fixed minor bugs",
-
-        "v1.1.1:",
-        "Youtube and Twitch added in Watch page",
-        "fixxed aboutblank opening - should now open correctly when securly is on",
-        "fixxed music.",
-        "changed proxy to make skip show less",
-        "improved loading times",
-        "fixed tv shows",
-        "fixxed twitch",
-        "lots of minor changes"
-
 
     ],
 
@@ -57,7 +47,7 @@ window.SITE_CONFIG = {
     // ** for bold
     todos: [
         "fix blob tab",
-      "***make the default song be lebron***",
+        "***make the default song be lebron***",
         "***add continue watching and recently played***",
         "***fix proxy constantly asking skip?***",
         "***fix loading times***",
@@ -65,7 +55,7 @@ window.SITE_CONFIG = {
         "***fix tv shows endpoints for player.html***",
         "***fixxed aboutblank opening while securly is on (previously if popups were off it would load intab instead of clickto launch now it will use clicktolaunch unless popups are blocked)***",
         "***add a miniplayer for music***",
-  ],
+    ],
     defaultWisp: "wss://glseries.net/wisp/",
     wispServers: [
         { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
@@ -105,6 +95,12 @@ window.SITE_CONFIG = {
         surfaceColor: '#0f0f0f',
         secondaryColor: '#2e2e33',
         textColor: '#e4e4e7',
+        searchEngine: 'https://www.bing.com/search?q=',
+        transport: 'epoxy',
+        wispAutoswitch: true,
+        proxServer: 'wss://glseries.net/wisp/',
+        historyEnabled: true,
+        autoSwitchProviders: true,
     },
 
     themePresets: {
@@ -119,12 +115,12 @@ window.SITE_CONFIG = {
         flame: { name: 'Flame', bg: { type: 'color', value: '#0c0202' }, surface: '#1c0a0a', surfaceHover: '#451a03', surfaceActive: '#9a3412', secondary: '#1c0a0a', border: '#451a03', borderLight: '#9a3412', text: '#fff7ed', textSec: '#fdba74', textDim: '#ea580c', accent: '#f59e0b' }
     },
 
-    backgroundPresets: [
+    backgroundPresets: [ //active: true }, makes background the default
         { id: 'none', name: 'None (Theme Default)', type: 'none' },
         { id: 'Night sky', name: 'Night sky', type: 'image', url: 'https://images.pexels.com/photos/5675745/pexels-photo-5675745.jpeg', overlay: 0.3 },
         { id: 'winter-mountains', name: 'Winter mountains', type: 'image', url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg', overlay: 0.3 },
         { id: 'f1 car', name: 'F1 Car', type: 'image', url: 'https://images.pexels.com/photos/14401632/pexels-photo-14401632.jpeg', overlay: 0.3 },
-        { id: 'moon-landing', name: 'Moon Landing', type: 'image', url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg', overlay: 0.3, objectPosition: 'top left', active: true },
+        { id: 'moon-landing', name: 'Moon Landing', type: 'image', url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg', overlay: 0.3, objectPosition: 'top left' },
         { id: 'turtle', name: 'Turtle', type: 'image', url: 'https://images.unsplash.com/photo-1501791187590-9ef2612ba1eb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', overlay: 0.3 },
         { id: 'road', name: 'Road', type: 'image', url: 'https://images.unsplash.com/photo-1508233620467-f79f1e317a05', overlay: 0.3 },
         { id: 'railroad', name: 'Railroad', type: 'image', url: 'https://images.unsplash.com/photo-1505832018823-50331d70d237', overlay: 0.3 },
@@ -146,8 +142,6 @@ window.SITE_CONFIG = {
         { name: "Gmail", icon: "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico", title: "Gmail" },
         { name: "YouTube", icon: "https://www.youtube.com/favicon.ico", title: "YouTube" },
         { name: "Powerschool", icon: "https://waverlyk12.powerschool.com/favicon.ico", title: "Grades and Attendance" },
-        { name: "nothing", icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", title: "\u200B" },
+        { name: "nothing", icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", title: "​" },
     ]
 }
-
-

@@ -34,7 +34,6 @@ const ProxyInit = {
         try {
             if (document.readyState !== 'complete') {
                 await new Promise(r => window.addEventListener('load', r, { once: true }));
-                await new Promise(r => setTimeout(r, 500));
             }
 
             const best = await this.findBest();

@@ -205,7 +205,7 @@
     <select id="engine">
       <option value="https://search.brave.com/search?q=">Brave</option>
       <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
-      <option value="https://www.google.com/search?q=">Google</option>
+      <option value="https://www.bing.com/search?q=">Bing</option>
     </select>
   </form>
 
@@ -283,10 +283,18 @@
     setInterval(updateClock, 1000);
 
     // Search
+    const engineSelect = $('#engine');
+    const savedEngine = localStorage.getItem('searchEngine');
+    if (savedEngine) engineSelect.value = savedEngine;
+
+    engineSelect.onchange = () => {
+      localStorage.setItem('searchEngine', engineSelect.value);
+    };
+
     $('#searchForm').onsubmit = e => {
       e.preventDefault();
       const q = $('#searchInput').value.trim();
-      if (q) nav($('#engine').value + encodeURIComponent(q));
+      if (q) nav(engineSelect.value + encodeURIComponent(q));
     };
 
     // Shortcuts

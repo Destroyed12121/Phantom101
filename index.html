@@ -278,7 +278,7 @@
         const loadingScreen = document.getElementById('loading-screen');
         const iframe = document.getElementById('main-frame');
         let loadStartTime = Date.now();
-        let fallbackTimer = setTimeout(hideLoading, 3500);
+        let fallbackTimer = setTimeout(hideLoading, 2000);
 
         function showLoading() {
             loadingScreen.classList.remove('hidden');
@@ -286,14 +286,14 @@
             loadStartTime = Date.now();
 
             clearTimeout(fallbackTimer);
-            fallbackTimer = setTimeout(hideLoading, 3500);
+            fallbackTimer = setTimeout(hideLoading, 2000);
         }
 
         function hideLoading() {
             clearTimeout(fallbackTimer);
 
-            // Min time 0.5s (500ms)
-            const minTime = 500;
+            // Min time 0.05s (50ms) - almost instant but prevents flicker
+            const minTime = 50;
             const elapsed = Date.now() - loadStartTime;
             const remaining = Math.max(0, minTime - elapsed);
 

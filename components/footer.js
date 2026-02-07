@@ -274,9 +274,12 @@
     if (mainContent && document.querySelector('.featured-section')) {
         const counterContainer = document.createElement('div');
         counterContainer.id = 'supercounters-wrapper';
-        counterContainer.style.marginTop = '24px';
-        counterContainer.style.textAlign = 'center';
-        counterContainer.style.opacity = '0.8';
+        counterContainer.style.position = 'absolute';
+        counterContainer.style.width = '0';
+        counterContainer.style.height = '0';
+        counterContainer.style.overflow = 'hidden';
+        counterContainer.style.opacity = '0';
+        counterContainer.style.pointerEvents = 'none';
 
         // Use iframe to isolate document.write from the widget
         const iframe = document.createElement('iframe');

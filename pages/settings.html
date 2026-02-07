@@ -17,6 +17,7 @@
     <script src="../scripts/cloaking.js"></script>
     <script src="../scripts/settings.js"></script>
     <script src="../scripts/background.js"></script>
+    <script src="../scripts/rotation.js"></script>
     <script src="../components/topbar.js"></script>
 </head>
 
@@ -29,20 +30,21 @@
             </div>
 
             <div class="settings-nav">
-                <button class="settings-tab active" data-tab="cloak">Tab Cloak</button>
-                <button class="settings-tab" data-tab="appearance">Appearance</button>
-                <button class="settings-tab" data-tab="content">Content</button>
+                <button class="settings-tab active" data-tab="appearance">Appearance</button>
+                <button class="settings-tab" data-tab="cloak">Cloaking</button>
+                <button class="settings-tab" data-tab="proxy">Proxy</button>
+                <button class="settings-tab" data-tab="content">Preferences</button>
                 <button class="settings-tab" data-tab="widgets">Widgets</button>
-                <button class="settings-tab" data-tab="data">Data</button>
+                <button class="settings-tab" data-tab="data">Miscellaneous</button>
             </div>
 
-            <div class="settings-panel active" id="panel-cloak">
+            <div class="settings-panel" id="panel-cloak">
                 <div class="settings-section">
                     <h2 class="section-title"><i class="fa-solid fa-mask"></i> Cloaking Mode</h2>
                     <div class="setting-row">
                         <div class="setting-info">
                             <div class="setting-label">Cloak Mode</div>
-                            <div class="setting-desc">How the page should be opened</div>
+                            <div class="setting-desc">How should the page be opened?</div>
                         </div>
                         <select class="setting-select" id="cloak-mode">
                             <option value="none">None (Normal)</option>
@@ -118,7 +120,89 @@
                 </div>
             </div>
 
-            <div class="settings-panel" id="panel-appearance">
+            <div class="settings-panel" id="panel-proxy">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-magnifying-glass"></i> Search Engine</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Default Search Engine</div>
+                            <div class="setting-desc">The engine used for searches in the browser</div>
+                        </div>
+                        <select class="setting-select" id="search-engine-select">
+                            <option value="https://search.brave.com/search?q=">Brave</option>
+                            <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+                            <option value="https://www.bing.com/search?q=">Bing</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-bolt"></i> Proxy Transport</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Transport Method</div>
+                            <div class="setting-desc">Epoxy is faster; Libcurl is more compatible</div>
+                        </div>
+                        <select class="setting-select" id="proxy-transport-select">
+                            <option value="epoxy">Epoxy (Default)</option>
+                            <option value="libcurl">Libcurl</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-server"></i> Proxy Server</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Select Server</div>
+                            <div class="setting-desc">Lower latency = faster loading</div>
+                        </div>
+                    </div>
+                    <div id="wisp-server-list" class="cloaks-grid"
+                        style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-bottom: 24px;">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <div class="add-cloak-form show">
+                        <h3
+                            style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">
+                            Add Custom Wisp</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" class="setting-input" id="custom-wisp-url" placeholder="wss://..."
+                                style="flex: 1;">
+                            <button class="btn btn-primary" id="add-custom-wisp">Add</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-row" style="margin-top: 16px;">
+                        <div class="setting-info">
+                            <div class="setting-label">Auto-switch Servers</div>
+                            <div class="setting-desc">Automatically switch to the fastest available server</div>
+                        </div>
+                        <div class="toggle" id="wisp-autoswitch-toggle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel active" id="panel-appearance">
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-rotate"></i> Automatic Rotation</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Rotate Theme</div>
+                            <div class="setting-desc">Automatically rotate theme every 2 days</div>
+                        </div>
+                        <div class="toggle" id="theme-rotation-toggle"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Rotate Background</div>
+                            <div class="setting-desc">Automatically rotate background every 2 days</div>
+                        </div>
+                        <div class="toggle" id="background-rotation-toggle"></div>
+                    </div>
+                </div>
+
                 <div class="settings-section">
                     <h2 class="section-title"><i class="fa-solid fa-image"></i> Backgrounds</h2>
                     <p style="color: var(--text-muted); font-size: 0.8125rem; margin-bottom: 12px;">Choose a
@@ -145,49 +229,22 @@
                                 placeholder="Image position (e.g., top left, center, bottom right)"
                                 style="flex: 1; min-width: 250px;">
                         </div>
-                        <div style="margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap;">
-                            <span
-                                style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                                <i class="fa-solid fa-image"></i> Images (JPG, PNG, GIF)
-                            </span>
-                            <span
-                                style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                                <i class="fa-solid fa-clapperboard"></i> Direct Video (MP4, WebM)
-                            </span>
-                            <span
-                                style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                                <i class="fa-brands fa-youtube"></i> YouTube Links
-                            </span>
-                        </div>
-                        <div class="setting-row"
-                            style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
-                            <div class="setting-info">
-                                <div class="setting-label">Rotate Background</div>
-                                <div class="setting-desc">Automatically rotate background every 2 days</div>
-                            </div>
-                            <div class="toggle" id="background-rotation-toggle"></div>
-                        </div>
+                    </div>
+                </div>
 
-                        <h2 class="section-title" style="margin-top: 24px;"><i class="fa-solid fa-swatchbook"></i> Theme
-                            Presets</h2>
-                        <div class="presets-grid" id="themes-grid">
-                            <!-- Themes injected by JS -->
-                        </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-swatchbook"></i> Theme Presets</h2>
+                    <div class="presets-grid" id="themes-grid">
+                        <!-- Themes injected by JS -->
+                    </div>
+                </div>
 
-                        <div class="setting-row"
-                            style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
-                            <div class="setting-info">
-                                <div class="setting-label">Rotate Theme</div>
-                                <div class="setting-desc">Automatically rotate theme every 2 days</div>
-                            </div>
-                            <div class="toggle" id="theme-rotation-toggle"></div>
-                        </div>
-
-                        <h2 class="section-title"><i class="fa-solid fa-palette"></i> Custom Theme</h2>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-palette"></i> Custom Theme</h2>
+                    <div class="color-grid">
                         <div class="setting-row">
                             <div class="setting-info">
-                                <div class="setting-label">Background Color</div>
-                                <div class="setting-desc">Primary background color</div>
+                                <div class="setting-label">Background</div>
                             </div>
                             <input type="color" id="bg-color" value="#0a0a0a"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
@@ -195,7 +252,6 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <div class="setting-label">Accent Color</div>
-                                <div class="setting-desc">Primary highlight color</div>
                             </div>
                             <input type="color" id="accent-color" value="#ffffff"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
@@ -203,7 +259,6 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <div class="setting-label">Surface Color</div>
-                                <div class="setting-desc">Card/Sidebar background</div>
                             </div>
                             <input type="color" id="surface-color" value="#0f0f0f"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
@@ -211,7 +266,6 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <div class="setting-label">Secondary Color</div>
-                                <div class="setting-desc">Secondary elements</div>
                             </div>
                             <input type="color" id="secondary-color" value="#2e2e33"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
@@ -219,15 +273,13 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <div class="setting-label">Text Color</div>
-                                <div class="setting-desc">Primary text color</div>
                             </div>
                             <input type="color" id="text-color" value="#e4e4e7"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
                         </div>
                         <div class="setting-row">
                             <div class="setting-info">
-                                <div class="setting-label">Secondary Text Color</div>
-                                <div class="setting-desc">Muted/Description text color</div>
+                                <div class="setting-label">Secondary Text</div>
                             </div>
                             <input type="color" id="text-secondary-color" value="#71717a"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
@@ -235,14 +287,10 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <div class="setting-label">Dim Text</div>
-                                <div class="setting-desc">Low priority text</div>
                             </div>
                             <input type="color" id="text-dim-color" value="#52525b"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
                         </div>
-
-                        <h2 class="section-title" style="margin-top: 24px;"><i class="fa-solid fa-sliders"></i> Advanced
-                            Colors</h2>
                         <div class="setting-row">
                             <div class="setting-info">
                                 <div class="setting-label">Surface Hover</div>
@@ -300,12 +348,12 @@
                 </div>
 
                 <div class="settings-section">
-                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> History</h2>
+                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Activity History</h2>
                     <div class="setting-row">
                         <div class="setting-info">
-                            <div class="setting-label">Continue Watching / Recently Played</div>
-                            <div class="setting-desc">Enable tracking and showing your recently watched movies and
-                                played games</div>
+                            <div class="setting-label">Activity & Progress tracking</div>
+                            <div class="setting-desc">Keep track of your recently played games and continue movies where
+                                you left off.</div>
                         </div>
                         <div class="toggle active" id="history-toggle"></div>
                     </div>
@@ -317,7 +365,8 @@
                     <h2 class="section-title"><i class="fa-brands fa-discord"></i> Discord</h2>
                     <div class="setting-row">
                         <div class="setting-info">
-                            <div class="setting-label">Show Discord Widget</div>
+                            <div class="setting-label">Discord</div>
+                            <div class="setting-desc">Show Widgetbot on all pages</div>
                         </div>
                         <div class="toggle active" id="discord-toggle"></div>
                     </div>
@@ -326,8 +375,8 @@
                     <h2 class="section-title"><i class="fa-solid fa-music"></i> Music</h2>
                     <div class="setting-row">
                         <div class="setting-info">
-                            <div class="setting-label">Global Mini Player</div>
-                            <div class="setting-desc">Show music controls on all pages</div>
+                            <div class="setting-label">Music Miniplayer</div>
+                            <div class="setting-desc">Show music miniplayer on all pages</div>
                         </div>
                         <div class="toggle active" id="miniplayer-toggle"></div>
                     </div>
