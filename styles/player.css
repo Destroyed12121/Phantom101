@@ -1,7 +1,3 @@
-/* ============================================
-   PLAYER PAGE STYLES
-   ============================================ */
-
 .player-page {
     min-height: 100vh;
     padding: 70px 20px 40px;
@@ -12,13 +8,46 @@
     background: transparent;
 }
 
+.player-ambiance {
+    position: fixed;
+    top: -10%;
+    left: -10%;
+    width: 120vw;
+    height: 120vh;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 2s ease;
+    will-change: opacity, transform;
+    overflow: hidden;
+    mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 100%);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 80%);
+}
+
+.ambiance-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.player-ambiance {
+    background-size: cover;
+    background-position: center;
+}
+
+.player-ambiance.active {
+    opacity: 0.45;
+    /* STRENGTH */
+    filter: blur(33px) saturate(67%) brightness(0.16);
+}
+
 .player-container {
     width: 100%;
     max-width: 1200px;
-    background: var(--surface);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
+    background: rgba(18, 18, 18, 0.45);
+    backdrop-filter: blur(40px) saturate(140%);
+    -webkit-backdrop-filter: blur(40px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-xl);
     display: flex;
     flex-direction: column;
@@ -31,18 +60,34 @@
 .player-frame-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 56.25%;
-    /* 16:9  */
     background: var(--bg);
     z-index: 5;
     overflow: hidden;
+    display: flex;
 }
 
-/* Theater Mode */
+.player-frame-content {
+    position: relative;
+    flex: 1;
+    padding-top: 56.25%;
+}
+
+.player-chat-container {
+    width: 340px;
+    height: auto;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    transition: width 0.3s ease;
+}
+
+#chat-frame {
+    border: none;
+    background: transparent;
+}
+
 body.theater-active {
     background: var(--bg) !important;
     overflow: hidden;
-    /* Prevent scrolling */
 }
 
 body.theater-active #site-footer {
@@ -51,7 +96,6 @@ body.theater-active #site-footer {
 
 body.theater-active .topbar {
     transform: translateY(-100%);
-    /* Hide topbar */
     transition: transform 0.3s ease;
 }
 
@@ -68,18 +112,28 @@ body.theater-active .player-container {
     border-radius: 0;
     background: var(--bg);
     box-shadow: none;
+    display: flex;
+    flex-direction: column;
 }
 
 body.theater-active .player-frame-wrapper {
     padding-top: 0;
-    height: 100%;
+    height: 0;
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
 }
 
-/* Theater Mode Overlays */
+body.theater-active .player-frame-content {
+    padding-top: 0;
+    height: 100%;
+}
+
+body.theater-active .player-chat-container {
+    height: 100%;
+}
+
 body.theater-active .player-controls,
 body.theater-active .player-info {
     position: absolute;
@@ -91,7 +145,6 @@ body.theater-active .player-info {
     transition: opacity 0.5s ease;
 }
 
-/* Hide when idle */
 body.theater-active.user-idle .player-controls,
 body.theater-active.user-idle .player-info {
     opacity: 0;
@@ -102,26 +155,19 @@ body.theater-active.user-idle {
     cursor: none;
 }
 
-/* Stack styling */
 body.theater-active .player-controls {
     bottom: 0;
     padding-bottom: 30px;
-    /* Add some padding for the fade */
     background: linear-gradient(to top, var(--bg) 0%, rgba(var(--bg-rgb), 0.9) 40%, rgba(var(--bg-rgb), 0.6) 80%, transparent 100%);
     padding-top: 60px;
-    /* Extend gradient upwards */
     align-items: flex-end;
-    /* Align items to bottom */
     pointer-events: none;
-    /* Allow clicks to pass through to controls */
 }
 
 body.theater-active .player-info {
     bottom: 90px;
-    /* Stack slightly above controls */
     top: auto;
     background: transparent;
-    /* Remove separate background to avoid "cut out" look */
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
     pointer-events: none;
     padding-bottom: 0;
@@ -135,15 +181,11 @@ body.theater-active .player-info>* {
     pointer-events: auto;
 }
 
-/* Re-enable clicks on the actual interactive elements */
 body.theater-active .player-controls>*,
 body.theater-active .player-info>* {
     pointer-events: auto;
 }
 
-/* ============================================
-    FRAME
-    ============================================ */
 .player-frame {
     position: absolute;
     top: 0;
@@ -152,15 +194,10 @@ body.theater-active .player-info>* {
     height: 100% !important;
     border: none;
     z-index: 6;
-    /* Video above background */
     background: transparent;
     object-fit: contain;
-    /* Ensure video keeps ratio but fills space */
 }
 
-/* ============================================
-   UI COMPONENTS
-   ============================================ */
 .player-controls {
     padding: 16px 24px;
     display: flex;
@@ -177,7 +214,6 @@ body.theater-active .player-info>* {
     padding: 24px;
     background: transparent;
     border-top: none;
-    /* Visually separate if needed */
     transition: background 0.2s, opacity 0.2s;
 }
 
@@ -203,7 +239,6 @@ body.theater-active .player-info>* {
     opacity: 0.8;
 }
 
-/* Movie Controls */
 .player-movie-controls {
     display: none;
     gap: 12px;
@@ -234,7 +269,6 @@ body.theater-active .player-info>* {
     color: var(--text);
 }
 
-/* Provider Select styling remains */
 .provider-select {
     padding: 8px 12px;
     background: var(--surface);
@@ -251,8 +285,30 @@ body.theater-active .player-info>* {
     border-color: var(--border-light);
 }
 
-/* Ensure buttons are clickable */
 .btn {
     position: relative;
     z-index: 101;
+}
+
+.btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+
+.btn.active i {
+    color: var(--bg);
+}
+
+@media (max-width: 900px) {
+    .player-frame-wrapper {
+        flex-direction: column;
+    }
+
+    .player-chat-container {
+        width: 100% !important;
+        height: 400px !important;
+        border-left: none;
+        border-top: 1px solid var(--border);
+    }
 }

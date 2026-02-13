@@ -1,4 +1,5 @@
-const YT_KEY = '2c202bc3d7msh4897b5b2a7d3f0cp15a754jsn568117aaec11';
+// Cloudflare Worker URL for YouTube Search (free, no quota limits)
+const YT_SEARCH_URL = 'https://ytsearch.leelive2021.workers.dev/';
 
 let currentPlatform = 'youtube';
 const grid = document.getElementById('media-grid');
@@ -24,16 +25,11 @@ function showDefaultStreamers() {
     if (!grid) return;
     grid.innerHTML = "";
     const streamers = [
-        'Clix', 'Jynxzi', 'Lacy', 'Flight23White', 'peterbot247official', 'CaseOh_',
+        'Clix', 'Jynxzi', 'Lacy', 'Flight23White', 'aussieantics', 'peterbot247official', 'CaseOh_',
         'KaiCenat', 'StableRonaldo', 'Marlon', 'PlaqueboyMax',
         'AdinRoss', 'IShowSpeed', 'Skeppy', 'AsianGuyStream',
-        'Mongraal', 'SypherPK', 'NickEh30', 'Tfue', 'Ninja',
-        'xQc', 'Sketch', 'DukeDennis',
-        'Fanum', 'Agent00', 'ImDavisss', 'Silky',
-        'Ray', 'Fousey', 'Vitaly', 'Sneako',
-        'Shroud', 'Tarik', 'TenZ', 'Asmongold', 'HasanAbi',
-        'Mizkif', 'Pokimane', 'Ludwig', 'Summit1g',
-        'TypicalGamer', 'Bugha', 'FaZeRug'
+        'Mongraal', 'SypherPK', 'NickEh30', 'Tfue', 'Ninja', 'xQc', 'Sketch', 'DukeDennis',
+        'Fanum', 'Agent00', 'TenZ', 'TypicalGamer', 'Bugha', 'FaZeRug'
     ];
 
     streamers.forEach(channel => {
@@ -59,33 +55,64 @@ async function searchYouTube(query) {
     // Show skeletons
     grid.innerHTML = Array(12).fill('<div class="media-card"><div class="skeleton" style="width:100%;height:100%;"></div></div>').join('');
 
-    const url = `https://youtube-api-full.p.rapidapi.com/api/search/videos?query=${encodeURIComponent(query)}&maxResults=20`;
+    let videos = [];
+    let fromCache = false;
 
-    try {
-        const response = await fetch(url, {
-            headers: { 'X-RapidAPI-Key': YT_KEY, 'X-RapidAPI-Host': 'youtube-api-full.p.rapidapi.com' }
-        });
-        const result = await response.json();
-        const videos = result.data?.items || [];
-
-        grid.innerHTML = "";
-        videos.forEach(item => {
-            const vId = item.id.videoId || item.id;
-            const title = item.snippet.title;
-            const channel = item.snippet.channelTitle;
-            const thumb = item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium.url;
-
-            const card = createMediaCard(thumb, title, channel, () => {
-                const embedUrl = `https://www.youtube-nocookie.com/embed/${vId}?autoplay=1`;
-                playMedia(title, embedUrl, null, thumb);
-            });
-            grid.appendChild(card);
-        });
-        if (statusText) statusText.textContent = "";
-    } catch (e) {
-        if (statusText) statusText.textContent = "Search Error";
-        grid.innerHTML = '<div class="error-msg">Failed to load content.</div>';
+    // Check cache for default Fortnite query
+    if (query.toLowerCase() === 'fortnite') {
+        const cached = localStorage.getItem('fortnite_default_cache');
+        if (cached) {
+            try {
+                const data = JSON.parse(cached);
+                // 2 days = 172800000 ms
+                if (Date.now() - data.timestamp < 172800000) {
+                    videos = data.items;
+                    fromCache = true;
+                    if (statusText) statusText.textContent = "";
+                }
+            } catch (e) {
+                console.warn("Invalid cache", e);
+            }
+        }
     }
+
+    if (!fromCache) {
+        const url = `${YT_SEARCH_URL}?q=${encodeURIComponent(query)}`;
+
+        try {
+            const response = await fetch(url);
+            const result = await response.json();
+            videos = result.data?.items || [];
+
+            // Save to cache if this was the default Fortnite query
+            if (query.toLowerCase() === 'fortnite' && videos.length > 0) {
+                localStorage.setItem('fortnite_default_cache', JSON.stringify({
+                    timestamp: Date.now(),
+                    items: videos
+                }));
+            }
+        } catch (e) {
+            if (statusText) statusText.textContent = "Search Error";
+            grid.innerHTML = '<div class="error-msg">Failed to load content.</div>';
+            return;
+        }
+    }
+
+    grid.innerHTML = "";
+    videos.forEach(item => {
+        const vId = item.id.videoId || item.id;
+        const title = item.snippet.title;
+        const channel = item.snippet.channelTitle;
+        const thumb = item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium.url;
+
+        const card = createMediaCard(thumb, title, channel, () => {
+            const embedUrl = `https://www.youtube-nocookie.com/embed/${vId}?autoplay=1`;
+            playMedia(title, embedUrl, null, thumb);
+        });
+        grid.appendChild(card);
+    });
+
+    if (statusText) statusText.textContent = "";
 }
 
 function searchTwitch(query) {
@@ -163,7 +190,7 @@ function loadContinueWatching() {
 
     history.forEach(item => {
         // Exclude movies and tv shows from the watch page
-        if (item.type === 'movie' || item.type === 'tv') return;
+        if (item.type === 'movie' || item.type === 'tv' || item.type === 'game') return;
         // Exclude twitch
         if (item.type === 'twitch' || item.url.includes('source=twitch')) return;
 

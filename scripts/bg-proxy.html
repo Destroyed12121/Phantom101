@@ -16,7 +16,7 @@
 
 <body>
     <script>
-        // Lightweight background image proxy
+        // background image proxy
         // This page is loaded in an invisible iframe by background.js
         // It proxies image requests and sends them back via postMessage
 
@@ -43,7 +43,8 @@
                 const basePath = location.pathname.replace(/[^/]*$/, '') + '/';
                 const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
 
-                connectionInstance = new BareMux.BareMuxConnection(basePath + "bareworker.js");
+                // Path updated to point to staticsjv2/bareworker.js
+                connectionInstance = new BareMux.BareMuxConnection("../staticsjv2/bareworker.js");
                 await connectionInstance.setTransport(
                     "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
                     [{ wisp: wispUrl }]

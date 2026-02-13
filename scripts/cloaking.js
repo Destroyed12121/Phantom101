@@ -31,8 +31,19 @@
             setFavicon(p.icon || p.favicon);
         } else {
             const s = window.Settings?.getAll() || {};
-            setTitle(s.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle);
-            setFavicon(s.tabFavicon || window.SITE_CONFIG?.defaults?.tabFavicon);
+            const presets = getPresets();
+            const selectedPresetName = s.selectedCloakPreset;
+            
+            // Find preset by name
+            const preset = presets.find(pr => pr.name === selectedPresetName);
+            if (preset) {
+                setTitle(preset.title);
+                setFavicon(preset.icon || preset.favicon);
+            } else {
+                // Fallback to defaults
+                setTitle(window.SITE_CONFIG?.defaults?.tabTitle || 'Phantom Unblocked');
+                setFavicon(window.SITE_CONFIG?.defaults?.tabFavicon || '/favicon.svg');
+            }
         }
     };
 
@@ -55,8 +66,22 @@
 
     const getPopupContent = (url) => {
         const s = window.Settings?.getAll() || {};
-        const title = s.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
-        const icon = s.tabFavicon || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
+        const presets = getPresets();
+        const selectedPresetName = s.selectedCloakPreset;
+        
+        let title = 'Google';
+        let icon = 'https://www.google.com/favicon.ico';
+        
+        // Find preset by name
+        const preset = presets.find(pr => pr.name === selectedPresetName);
+        if (preset) {
+            title = preset.title || title;
+            icon = preset.icon || preset.favicon || icon;
+        } else {
+            // Fallback to defaults
+            title = window.SITE_CONFIG?.defaults?.tabTitle || title;
+            icon = window.SITE_CONFIG?.defaults?.tabFavicon || icon;
+        }
         return `<!DOCTYPE html><html><head><title>${title}</title><link rel="icon" href="${icon}"><style>* {margin:0;padding:0;height:100%;overflow:hidden;} iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${url}"></iframe></body></html>`;
     };
 
@@ -66,22 +91,37 @@
     // Returns: { success: false, reason: 'killed' } if popup was closed by extension (like Securly)
     const tryPopup = (url) => {
         return new Promise((resolve) => {
-            const win = window.open('about:blank', '_blank');
+            const s = window.Settings?.getAll() || {};
+            const mode = s.cloakMode || 'about:blank';
+            let win;
+            let blobUrl = null;
+
+            if (mode === 'blob') {
+                const content = getPopupContent(url);
+                const blob = new Blob([content], { type: 'text/html' });
+                blobUrl = URL.createObjectURL(blob);
+                win = window.open(blobUrl, '_blank');
+            } else {
+                win = window.open('about:blank', '_blank');
+            }
 
             // Popup completely blocked by browser
             if (!win) {
+                if (blobUrl) URL.revokeObjectURL(blobUrl);
                 resolve({ success: false, reason: 'blocked' });
                 return;
             }
 
-            // Write the actual content to popup
-            try {
-                win.document.write(getPopupContent(url));
-                win.document.close();
-            } catch (e) {
-                try { win.close(); } catch { }
-                resolve({ success: false, reason: 'killed' });
-                return;
+            // Write content for about:blank mode
+            if (mode !== 'blob') {
+                try {
+                    win.document.write(getPopupContent(url));
+                    win.document.close();
+                } catch (e) {
+                    try { win.close(); } catch { }
+                    resolve({ success: false, reason: 'killed' });
+                    return;
+                }
             }
 
             // Use a single timeout to avoid background throttling (which causes a 5s delay).
@@ -91,10 +131,12 @@
 
             setTimeout(() => {
                 if (win.closed) {
+                    if (blobUrl) URL.revokeObjectURL(blobUrl);
                     resolve({ success: false, reason: 'killed' });
                 } else {
                     resolve({ success: true });
                     redirectOriginal(); // Instant redirect
+                    if (blobUrl) setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
                 }
             }, timeoutMs);
         });
@@ -104,6 +146,7 @@
     const loadInTab = () => {
         const iframe = document.getElementById('main-frame');
         if (iframe && !iframe.src) iframe.src = 'index2.html';
+        if (window.hideLoading) window.hideLoading();
         apply();
     };
 
@@ -112,6 +155,7 @@
         const ls = document.getElementById('launch-screen');
         if (ls) {
             ls.classList.remove('hidden');
+            if (window.hideLoading) window.hideLoading();
             document.getElementById('launch-button').onclick = onLaunch;
         }
     };
@@ -133,6 +177,9 @@
             // Popup was blocked (window.open returned null)
             // Show click-to-launch - user gesture might bypass popup blocker
             if (hideOverlay) hideOverlay();
+            if (window.Notify) {
+                window.Notify.info('Popups Blocked', 'Please enable popups for this site to use cloaking.');
+            }
 
             showLaunchScreen(async () => {
                 document.getElementById('launch-screen').classList.add('hidden');
@@ -163,7 +210,7 @@
         if (urlParams.has('fake')) {
             showLaunchScreen(async () => {
                 document.getElementById('launch-screen').classList.add('hidden');
-                if (s.cloakMode === 'about:blank') {
+                if (s.cloakMode === 'about:blank' || s.cloakMode === 'blob') {
                     const result = await tryPopup(window.location.href.split('?')[0]);
                     if (result.success) return; // redirectOriginal was called
                 }
@@ -189,7 +236,7 @@
                         localStorage.setItem(fvKey, '1');
                         document.removeEventListener('keydown', onKey);
 
-                        if (s.cloakMode === 'about:blank') {
+                        if (s.cloakMode === 'about:blank' || s.cloakMode === 'blob') {
                             await attemptCloakedLaunch(window.location.href, () => {
                                 overlay.style.display = 'none';
                             });
@@ -206,7 +253,7 @@
         }
 
         // Normal visit - not first time, no fake mode
-        if (window.top === window.self && s.cloakMode === 'about:blank') {
+        if (window.top === window.self && (s.cloakMode === 'about:blank' || s.cloakMode === 'blob')) {
             await attemptCloakedLaunch(window.location.href);
             return;
         }
@@ -217,8 +264,11 @@
 
     window.Cloaking = { init, apply, startRotation, stopRotation, tryPopup, loadInTab };
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(init, 100));
-    else setTimeout(init, 100);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     window.addEventListener('settings-changed', (e) => {
         apply();

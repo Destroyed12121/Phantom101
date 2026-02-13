@@ -248,6 +248,7 @@ class PhantomChat {
                 this.state.conversations = saved.conversations || [];
                 this.state.currentId = saved.currentId;
                 Object.assign(this.state.config, saved.config);
+                this.state.config.mode = 'text'; // Always default to text on reload
             }
         } catch { }
 
@@ -445,36 +446,35 @@ class PhantomChat {
 
         // 1. Protect block math $$...$$
         content = content.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
-            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            const placeholder = `PHANTOMMATHBLOCK${placeholderCount++}X`;
             mathBlocks.push({ placeholder, content: match });
             return placeholder;
         });
 
         // 2. Protect environments \begin{...}...\end{...}
         content = content.replace(/\\begin\{([a-z*]+)\}[\s\S]+?\\end\{\1\}/g, (match) => {
-            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            const placeholder = `PHANTOMMATHBLOCK${placeholderCount++}X`;
             mathBlocks.push({ placeholder, content: match });
             return placeholder;
         });
 
         // 3. Protect \[...\]
         content = content.replace(/\\\[([\s\S]+?)\\\]/g, (match) => {
-            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            const placeholder = `PHANTOMMATHBLOCK${placeholderCount++}X`;
             mathBlocks.push({ placeholder, content: match });
             return placeholder;
         });
 
         // 4. Protect \(...\)
         content = content.replace(/\\\(([\s\S]+?)\\\)/g, (match) => {
-            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            const placeholder = `PHANTOMMATHBLOCK${placeholderCount++}X`;
             mathBlocks.push({ placeholder, content: match });
             return placeholder;
         });
 
         // 5. Protect inline math $...$
-        // We do this after block math to avoid catching $$ as two empty $ $
         content = content.replace(/\$([^\$\n]+?)\$/g, (match) => {
-            const placeholder = `_MATH_BLOCK_${placeholderCount++}_`;
+            const placeholder = `PHANTOMMATHBLOCK${placeholderCount++}X`;
             mathBlocks.push({ placeholder, content: match });
             return placeholder;
         });

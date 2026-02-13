@@ -1,4 +1,10 @@
-// proxy
+/**
+ * Phantom Unblocked - Core Initialization
+ * Copyright (C) 2026 Phantom Unblocked.
+ * Licensed under the PolyForm Noncommercial License 1.0.0.
+ */
+
+// proxy init
 
 const ProxyInit = {
     DEFAULT_WISP: window.SITE_CONFIG?.defaultWisp || "wss://glseries.net/wisp/",
@@ -20,11 +26,9 @@ const ProxyInit = {
     async findBest() {
         const current = localStorage.getItem("proxServer") || this.DEFAULT_WISP;
 
-        // Fast check current server first
         const check = await this.ping(current, 800);
         if (check.success) return current;
 
-        // Only search for best if current is dead
         if (localStorage.getItem('wispAutoswitch') === 'false' || !this.WISP_SERVERS.length) return current;
 
         const results = await Promise.all(this.WISP_SERVERS.map(s => this.ping(s.url, 1500)));
@@ -34,11 +38,8 @@ const ProxyInit = {
 
     async init() {
         try {
-            // Delay initialization slightly to prioritize core UI
             if (document.readyState !== 'complete') {
                 await new Promise(r => window.addEventListener('load', r, { once: true }));
-                // wait another 500ms for animations/etc
-                await new Promise(r => setTimeout(r, 500));
             }
 
             const best = await this.findBest();
@@ -48,7 +49,6 @@ const ProxyInit = {
                 window.Notify.info("Initializing", "Starting proxy service...");
             }
 
-            // Lazy wait for libraries if they're coming from broad scripts
             if (!window.BareMux) {
                 let attempts = 0;
                 while (!window.BareMux && attempts < 20) {
@@ -98,32 +98,6 @@ const ProxyInit = {
 
 ProxyInit.init();
 
-// Register Offline Service Worker (Root)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-        .then(reg => console.log('Offline SW registered'))
-        .catch(err => console.error('Offline SW failed', err));
-}
-
-// Offline Banner Logic
-window.addEventListener('load', () => {
-    const banner = document.getElementById('offline-banner');
-    if (!banner) return;
-
-    function updateOnlineStatus() {
-        if (navigator.onLine) {
-            banner.classList.remove('show');
-        } else {
-            banner.classList.add('show');
-            setTimeout(() => banner.classList.remove('show'), 5000); // Auto-hide after 5s
-        }
-    }
-
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-});
-
-// Global link interceptor for loading screen
 (function () {
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');

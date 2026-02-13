@@ -1,28 +1,40 @@
+/**
+ * Phantom Unblocked - A feature-rich unblocked games platform.
+ * Copyright (C) 2026 Phantom.
+ * Licensed under the PolyForm Noncommercial License 1.0.0.
+ */
+
 // site config
 
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.1.1",
+    version: "1.1.2",
 
     changelog: [
-        "v1.1.2:",
-        "added continue watching and recently played",
+        "made a worker for youtube search**",
         "added music miniplayer",
-        "added minor offline support to allow playing games without wifi",
+        "reorganized settings page",
+        "added a custom online counter",
+        "fixxed games sorting and added trending option",
+        "added saving for custom themes",
+        "refined proxy - added libcurl support and more",
+        "added proxy settings to settings page",
+        "added small offline support to allow playing games without wifi",
+        "made loading screen not show during click to launch",
+        "**Added Autoupdating links in Credits**",
+        "fixed blob tab launching",
+        "**Join the Discord Lil Bro**",
+        "added announcements back",
+        "maybe fixxed miniplayer forcing you to go to a new song to work",
+        "added announcement source selector",
+        "Added ambiance to movies and games and such (might remove)",
+        "added twitch chat to twitch",
+        "added continue watching and recently played",
         "optimized page code slightly",
-        "fixed minor bugs",
-
-        "v1.1.1:",
-        "Youtube and Twitch added in Watch page",
-        "fixxed aboutblank opening - should now open correctly when securly is on",
-        "fixxed music.",
-        "changed proxy to make skip show less",
-        "improved loading times",
-        "fixed tv shows",
-        "fixxed twitch",
-        "lots of minor changes"
-
+        "fixxed/updated ugs games",
+        "updated license",
+        "many small changes and fixxes",
 
     ],
 
@@ -52,7 +64,14 @@ window.SITE_CONFIG = {
     // *** for strikethrough
     // ** for bold
     todos: [
-      "*** make the default song be lebron***",
+        "***add custom users counter***",
+        "***add more sources for movies and fix autoswitch***",
+        "***make ambiance be on by default***",
+        "***make ai chat icons be bigger***",
+        "***make ai chat text backgrounds more visible***",
+        "***fixed ai chat latex***",
+        "***fix blob tab***",
+        "***make the default song be lebron***",
         "***add continue watching and recently played***",
         "***fix proxy constantly asking skip?***",
         "***fix loading times***",
@@ -60,10 +79,11 @@ window.SITE_CONFIG = {
         "***fix tv shows endpoints for player.html***",
         "***fixxed aboutblank opening while securly is on (previously if popups were off it would load intab instead of clickto launch now it will use clicktolaunch unless popups are blocked)***",
         "***add a miniplayer for music***",
-  ],
+    ],
     defaultWisp: "wss://glseries.net/wisp/",
     wispServers: [
-        { name: "GLSeries Wisp", url: "wss://glseries.net/wisp/" },
+        { name: "GLSeries's Wisp", url: "wss://glseries.net/wisp/" },
+        { name: "Anura's Wisp", url: "wss://anura.mercurywork.shop/" },
         { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/" },
     ],
 
@@ -76,8 +96,7 @@ window.SITE_CONFIG = {
     firstVisitCloak: false, //fake error page
     defaults: {
         cloakMode: "about:blank",
-        tabTitle: "You've already responded",
-        tabFavicon: "https://ssl.gstatic.com/docs/spreadsheets/forms/forms_icon_2023q4.ico",
+        selectedCloakPreset: "Quiz",
         cloakRotation: false,
         cloakInterval: 5000,
         panicKey: "x",
@@ -89,7 +108,7 @@ window.SITE_CONFIG = {
         miniplayer: true,
         leaveConfirmation: false,
         showChangelogOnUpdate: true,
-        themeRotation: true,
+        themeRotation: false,
         lastThemeRotation: 0,
         backgroundRotation: true,
         lastBackgroundRotation: 0,
@@ -100,6 +119,18 @@ window.SITE_CONFIG = {
         surfaceColor: '#0f0f0f',
         secondaryColor: '#2e2e33',
         textColor: '#e4e4e7',
+        searchEngine: 'https://www.bing.com/search?q=',
+        transport: 'epoxy',
+        wispAutoswitch: true,
+        proxServer: 'wss://glseries.net/wisp/',
+        historyEnabled: true,
+        autoSwitchProviders: true,
+        autoLaunch: true, // i forgot what this does 
+    },
+
+    announcement: {
+        useCDN: false,
+        message: "",
     },
 
     themePresets: {
@@ -107,20 +138,17 @@ window.SITE_CONFIG = {
         midnight: { name: 'Midnight', bg: { type: 'color', value: '#000000' }, surface: '#050505', surfaceHover: '#111111', surfaceActive: '#1a1a1a', secondary: '#111111', border: '#1a1a1a', borderLight: '#111111', text: '#ededed', textSec: '#a3a3a3', textDim: '#737373', accent: '#d4d4d4' },
         abyss: { name: 'Abyss', bg: { type: 'color', value: '#020617' }, surface: '#0f172a', surfaceHover: '#1e293b', surfaceActive: '#334155', secondary: '#1e293b', border: '#1e293b', borderLight: '#1e293b', text: '#f1f5f9', textSec: '#94a3b8', textDim: '#64748b', accent: '#38bdf8' },
         phantom: { name: 'Phantom', bg: { type: 'color', value: '#0f0a14' }, surface: '#1a0f24', surfaceHover: '#2e1a40', surfaceActive: '#4c2a5c', secondary: '#2e1a40', border: '#2e1a40', borderLight: '#2e1a40', text: '#f3e8ff', textSec: '#d8b4fe', textDim: '#c084fc', accent: '#c084fc' },
-        rosepine: { name: 'Rose Pine', bg: { type: 'color', value: '#191724' }, surface: '#1f1d2e', surfaceHover: '#26233a', surfaceActive: '#524f67', secondary: '#26233a', border: '#26233a', borderLight: '#1f1d2e', text: '#e0def4', textSec: '#908caa', textDim: '#6e6a86', accent: '#ebbcba' },
-        ocean: { name: 'Oceanic', bg: { type: 'color', value: '#011627' }, surface: '#0b2942', surfaceHover: '#1d3b53', surfaceActive: '#2d4b63', secondary: '#0b2942', border: '#1d3b53', borderLight: '#0b2942', text: '#d6deeb', textSec: '#5f7e97', textDim: '#011627', accent: '#7fdbca' },
-        forest: { name: 'Forest', bg: { type: 'color', value: '#020d06' }, surface: '#051a0d', surfaceHover: '#0a2e17', surfaceActive: '#0f4221', secondary: '#051a0d', border: '#0a2e17', borderLight: '#051a0d', text: '#ecfdf5', textSec: '#6ee7b7', textDim: '#064e3b', accent: '#10b981' },
-        crimson: { name: 'Crimson', bg: { type: 'color', value: '#1a0505' }, surface: '#230a0a', surfaceHover: '#7b0a0aff', surfaceActive: '#7f1d1d', secondary: '#230a0a', border: '#480f0fff', borderLight: '#230a0a', text: '#fef2f2', textSec: '#fecaca', textDim: '#450a0a', accent: '#ef4444' },
-        flame: { name: 'Flame', bg: { type: 'color', value: '#0c0202' }, surface: '#1c0a0a', surfaceHover: '#451a03', surfaceActive: '#9a3412', secondary: '#1c0a0a', border: '#451a03', borderLight: '#9a3412', text: '#fff7ed', textSec: '#fdba74', textDim: '#ea580c', accent: '#f59e0b' }
+        catppuccin: { name: 'Catppuccin', bg: { type: 'color', value: '#1e1e2e' }, surface: '#181825', surfaceHover: '#313244', surfaceActive: '#45475a', secondary: '#181825', border: '#313244', borderLight: '#313244', text: '#cdd6f4', textSec: '#a6adc8', textDim: '#7f849c', accent: '#cba6f7' },
+        ocean: { name: 'Oceanic', bg: { type: 'color', value: '#011627' }, surface: '#0B1823', surfaceHover: '#1d3b53', surfaceActive: '#2d4b63', secondary: '#0b2942', border: '#1d3b53', borderLight: '#0b2942', text: '#d6deeb', textSec: '#5f7e97', textDim: '#011627', accent: '#7fdbca' },
     },
 
-    backgroundPresets: [
+    backgroundPresets: [ //active: true }, makes background the default
         { id: 'none', name: 'None (Theme Default)', type: 'none' },
         { id: 'Night sky', name: 'Night sky', type: 'image', url: 'https://images.pexels.com/photos/5675745/pexels-photo-5675745.jpeg', overlay: 0.3 },
         { id: 'winter-mountains', name: 'Winter mountains', type: 'image', url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg', overlay: 0.3 },
         { id: 'f1 car', name: 'F1 Car', type: 'image', url: 'https://images.pexels.com/photos/14401632/pexels-photo-14401632.jpeg', overlay: 0.3 },
-        { id: 'moon-landing', name: 'Moon Landing', type: 'image', url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg', overlay: 0.3, objectPosition: 'top left', active: true },
-        { id: 'turtle', name: 'Turtle', type: 'image', url: 'https://images.unsplash.com/photo-1501791187590-9ef2612ba1eb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', overlay: 0.3 },
+        { id: 'moon-landing', name: 'Moon Landing', type: 'image', url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg', overlay: 0.3, objectPosition: 'top left' },
+        { id: 'turtle', name: 'Turtle', type: 'image', url: 'https://images.unsplash.com/photo-1501791187590-9ef2612ba1eb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', overlay: 0.3, active: true },
         { id: 'road', name: 'Road', type: 'image', url: 'https://images.unsplash.com/photo-1508233620467-f79f1e317a05', overlay: 0.3 },
         { id: 'railroad', name: 'Railroad', type: 'image', url: 'https://images.unsplash.com/photo-1505832018823-50331d70d237', overlay: 0.3 },
         { id: 'mountain', name: 'Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/clay-banks-u27Rrbs9Dwc-unsplash.jpg', overlay: 0.3 },
@@ -141,8 +169,6 @@ window.SITE_CONFIG = {
         { name: "Gmail", icon: "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico", title: "Gmail" },
         { name: "YouTube", icon: "https://www.youtube.com/favicon.ico", title: "YouTube" },
         { name: "Powerschool", icon: "https://waverlyk12.powerschool.com/favicon.ico", title: "Grades and Attendance" },
-        { name: "nothing", icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", title: "\u200B" },
+        { name: "nothing", icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", title: "​" },
     ]
 }
-
-

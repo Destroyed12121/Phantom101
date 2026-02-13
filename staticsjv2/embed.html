@@ -135,19 +135,8 @@
     <script type="module">
         import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
         window.BareMux = BareMux;
-
-        // Load script.js after BareMux is available
-        const loadScripts = async () => {
-            await new Promise(resolve => {
-                const script = document.createElement('script');
-                script.src = "./script.js";
-                script.onload = resolve;
-                document.head.appendChild(script);
-            });
-        };
-
-        // Signal that scripts are loaded
-        window.scriptsLoaded = loadScripts();
+        // scriptsLoaded signal removed as we don't load script.js
+        window.scriptsLoaded = Promise.resolve(); 
     </script>
 </head>
 
@@ -191,7 +180,7 @@
             const { ScramjetController } = $scramjetLoadController();
 
             scramjetInstance = new ScramjetController({
-                prefix: basePath + "scramjet",
+                prefix: basePath + "scramjet/",
                 files: {
                     wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
                     all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",

@@ -176,10 +176,19 @@ class AudioEngine {
                     if (this.audio) this.audio.play();
                 } else if (this.player) {
                     const reload = () => {
-                        const query = `${this.state.currentTrack.trackName} ${this.state.currentTrack.artistName} audio`;
-                        this._searchAndPlay(query);
+                        if (this.state.currentTrack.videoId) {
+                            this._loadVideo(this.state.currentTrack.videoId);
+                        } else {
+                            const query = `${this.state.currentTrack.trackName} ${this.state.currentTrack.artistName} audio`;
+                            this._searchAndPlay(query);
+                        }
+
                         if (this.state.currentTime > 0) {
-                            this.queue.push(() => this.player.seekTo(this.state.currentTime));
+                            this.queue.push(() => {
+                                if (this.player && this.player.seekTo) {
+                                    this.player.seekTo(this.state.currentTime);
+                                }
+                            });
                         }
                     };
 
@@ -187,6 +196,7 @@ class AudioEngine {
                         this.queue.push(reload);
                     } else {
                         const ytState = this.player.getPlayerState();
+                        // -1 (unstarted), 5 (cued), 0 (ended), undefined (fresh)
                         if (ytState === -1 || ytState === 5 || ytState === 0 || ytState === undefined) {
                             reload();
                         } else {
@@ -384,6 +394,11 @@ class AudioEngine {
     }
 
     _loadVideo(id) {
+        if (this.state.currentTrack) {
+            this.state.currentTrack.videoId = id;
+            this.saveState();
+        }
+
         if (this.playerReady && this.player.loadVideoById) {
             this.player.loadVideoById(id);
         } else {
@@ -410,7 +425,9 @@ class AudioEngine {
         const save = {
             currentTrack: this.state.currentTrack,
             currentTime: this.state.currentTime,
+            duration: this.state.duration,
             isPlaying: this.state.isPlaying,
+            source: this.state.source,
             playlist: this.state.playlist,
             originalPlaylist: this.state.originalPlaylist,
             index: this.state.index,

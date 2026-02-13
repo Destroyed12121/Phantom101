@@ -228,15 +228,20 @@ input.bar::placeholder {
 
 /* Loading Bar */
 .loading-bar-container {
-    height: 2px;
-    background: transparent;
+    height: 3px;
+    background: var(--border);
+    overflow: hidden;
+}
+
+.loading-bar-container.active {
+    background: var(--border);
 }
 
 .loading-bar {
     height: 100%;
     width: 0%;
-    background: var(--text);
-    transition: width 0.4s ease, opacity 0.15s;
+    background: var(--accent);
+    transition: width 0.3s ease, opacity 0.2s;
 }
 
 /* Iframe */
@@ -353,16 +358,6 @@ input.bar::placeholder {
         transform: rotate(360deg);
     }
 }
-
-.spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
 
 /* Settings Modal */
 .wisp-settings-modal {

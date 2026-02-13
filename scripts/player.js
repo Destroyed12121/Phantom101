@@ -1,41 +1,62 @@
 const params = new URLSearchParams(window.location.search);
 const type = params.get('type'), id = params.get('id'), title = params.get('title'), urlParam = params.get('url'), season = params.get('season'), episode = params.get('episode'), source = params.get('source');
-const frame = document.getElementById('game-frame'), titleEl = document.getElementById('player-title'), descEl = document.getElementById('player-desc'), quoteEl = document.getElementById('player-quote'), proxyToggle = document.getElementById('proxy-toggle');
 
 const PROVIDERS = [
     { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}', tv: 'https://player.vidify.top/embed/tv/{id}/{season}/{episode}' } },
     { id: 'vidfast', name: 'Vidfast', urls: { movie: 'https://vidfast.to/embed/movie/{id}', tv: 'https://vidfast.to/embed/tv/{id}/{season}/{episode}' } },
-    { id: 'vidsrc_su', name: 'VidSrc (SU)', urls: { movie: 'https://vidsrc-embed.su/embed/movie?tmdb={id}', tv: 'https://vidsrc-embed.su/embed/tv?tmdb={id}&s={season}&e={episode}' } },
-    { id: 'vidsrc', name: 'VidSrc', urls: { movie: 'https://vidsrc.to/embed/movie/{id}', tv: 'https://vidsrc.to/embed/tv/{id}/{season}/{episode}' } }
-];
+    { id: 'vidsrc_su', name: 'VidSrc', urls: { movie: 'https://vidsrc-embed.su/embed/movie?tmdb={id}', tv: 'https://vidsrc-embed.su/embed/tv?tmdb={id}&s={season}&e={episode}' } },
+    ];
 
-let currentUrl = '', curProvIdx = 0;
-
-class SmartSwitcher {
-    constructor() { this.retry = 0; frame.onload = () => (this.clear(), console.log('Loaded')); }
-    clear() { clearTimeout(this.tm); this.tm = null; }
-    start() { this.clear(); this.tm = setTimeout(() => this.fail(), 15000); }
-    fail() {
-        if (type === 'video') return; // Don't fail-check search results/youtube
-        if (++this.retry >= 3) return window.Notify?.error('Error', 'All providers failed');
-        window.Notify?.info('Switching', 'Slow source, trying next...');
-        if (type === 'game') this.toggleProxy(); else this.next();
-    }
-    next() { curProvIdx = (curProvIdx + 1) % PROVIDERS.length; const s = document.getElementById('provider-select'); if (s) s.value = PROVIDERS[curProvIdx].id; loadProvider(PROVIDERS[curProvIdx].id, true); }
-    toggleProxy() { if (proxyToggle) { proxyToggle.classList.toggle('active'); source === 'twitch' ? loadTwitch(id) : (type === 'game' ? loadGame(currentUrl, true) : loadProvider(PROVIDERS[curProvIdx].id, true)); } }
+if (typeof window.PROVIDERS === 'undefined') {
+    window.PROVIDERS = PROVIDERS;
 }
-const switcher = new SmartSwitcher();
+
+const isPlayerPage = document.getElementById('game-frame') !== null;
+
+if (isPlayerPage) {
+    const frame = document.getElementById('game-frame'), titleEl = document.getElementById('player-title'), descEl = document.getElementById('player-desc'), quoteEl = document.getElementById('player-quote'), proxyToggle = document.getElementById('proxy-toggle');
+    const chatContainer = document.getElementById('chat-container'), chatFrame = document.getElementById('chat-frame'), btnChat = document.getElementById('btn-chat');
+
+    let currentUrl = '', curProvIdx = 0;
+
+    class SmartSwitcher {
+        constructor() { this.retry = 0; if (frame) frame.onload = () => (this.clear(), console.log('Loaded')); }
+        clear() { clearTimeout(this.tm); this.tm = null; }
+        start() { this.clear(); this.tm = setTimeout(() => this.fail(), 15000); }
+        fail() {
+            const isYT = currentUrl && (currentUrl.includes('youtube.com') || currentUrl.includes('youtube-nocookie.com'));
+            if (type === 'video' || isYT) return; // Don't check search results/youtube
+            if (++this.retry >= 3) return window.Notify?.error('Error', 'All providers failed');
+            window.Notify?.info('Switching', 'Slow source, trying next...');
+            if (type === 'game') this.toggleProxy(); else this.next();
+        }
+        next() {
+            curProvIdx = (curProvIdx + 1) % PROVIDERS.length;
+            const s = document.getElementById('provider-select');
+            if (s) s.value = PROVIDERS[curProvIdx].id;
+            loadProvider(PROVIDERS[curProvIdx].id, true);
+        }
+        toggleProxy() { if (proxyToggle) { proxyToggle.classList.toggle('active'); source === 'twitch' ? loadTwitch(id) : (type === 'game' ? loadGame(currentUrl, true) : loadProvider(PROVIDERS[curProvIdx].id, true)); } }
+    }
+    const switcher = new SmartSwitcher();
 
 function init() {
     titleEl.textContent = title || (type === 'tv' ? `S${season} E${episode}` : (type === 'game' ? 'Game' : 'Movie'));
     if (source === 'twitch') {
         document.getElementById('movie-controls').style.display = 'flex';
+        btnChat.style.display = 'flex';
         const provGroup = document.querySelector('.player-control-group');
         if (provGroup) provGroup.style.display = 'none';
 
+        btnChat.onclick = () => toggleChat();
+
+        chatContainer.style.display = 'block';
+        btnChat.classList.add('active');
+
         if (proxyToggle) {
+            proxyToggle.classList.add('active');
             const proxyParam = params.get('proxy');
-            if (proxyParam === 'true') proxyToggle.classList.add('active');
+            if (proxyParam === 'false') proxyToggle.classList.remove('active');
             proxyToggle.onclick = () => {
                 proxyToggle.classList.toggle('active');
                 switcher.retry = 0;
@@ -50,7 +71,13 @@ function init() {
         document.getElementById('movie-controls').style.display = 'flex';
         const sel = document.getElementById('provider-select');
         PROVIDERS.forEach(p => sel.add(new Option(p.name, p.id)));
-        sel.onchange = () => (switcher.retry = 0, loadProvider(sel.value));
+        sel.onchange = () => {
+            const idx = PROVIDERS.findIndex(p => p.id === sel.value);
+            if (idx !== -1) curProvIdx = idx;
+            switcher.retry = 0;
+            window.Notify?.info('Source Changed', `Now using ${PROVIDERS[idx].name}`);
+            loadProvider(sel.value);
+        };
         if (proxyToggle) {
             proxyToggle.onclick = () => {
                 proxyToggle.classList.toggle('active');
@@ -58,36 +85,32 @@ function init() {
                 loadProvider(PROVIDERS[curProvIdx].id);
             };
         }
-        loadProvider(PROVIDERS[0].id);
+        // Load default provider from settings or use first provider
+        const userDefaultProvider = window.Settings?.get('defaultProvider');
+        const defaultProvider = userDefaultProvider && PROVIDERS.find(p => p.id === userDefaultProvider) ? userDefaultProvider : PROVIDERS[0].id;
+        const defaultIdx = PROVIDERS.findIndex(p => p.id === defaultProvider);
+        if (defaultIdx !== -1) curProvIdx = defaultIdx;
+        if (sel) sel.value = defaultProvider;
+        loadProvider(defaultProvider);
     }
     const q = window.Quotes ? window.Quotes.getRandom() : '';
     descEl.textContent = (type !== 'game' ? (JSON.parse(sessionStorage.getItem('currentMovie') || '{}').overview || 'No description') : '');
     if (quoteEl) quoteEl.textContent = q;
 
+    // Ambiance Toggle Support
+    const ambianceBtn = document.getElementById('btn-ambiance');
+    if (ambianceBtn) {
+        ambianceBtn.onclick = () => {
+            const isActive = window.Ambiance?.toggle();
+            ambianceBtn.classList.toggle('active', isActive);
+        };
+        // Set initial state visual
+        if (localStorage.getItem('phantom_ambiance_enabled') !== 'false') {
+            ambianceBtn.classList.add('active');
+        }
+    }
+
     saveWatchProgress();
-}
-
-function saveWatchProgress() {
-    // We treat everything here as "Watching" since player.js is the player
-    // Use URL params to reconstruct the state
-    if (source === 'twitch' || type === 'twitch') return;
-    if (window.Settings && window.Settings.get('historyEnabled') === false) return;
-
-    const currentImg = params.get('img');
-
-    const item = {
-        title: title || (source === 'twitch' ? id : 'Unknown'),
-        url: window.location.href,
-        type: type || 'video',
-        timestamp: Date.now(),
-        img: currentImg
-    };
-
-    const history = JSON.parse(localStorage.getItem('continue_watching') || '[]');
-    // Filter out same url or same title/id
-    const newHistory = [item, ...history.filter(h => h.url !== item.url && h.title !== item.title)].slice(0, 10);
-
-    localStorage.setItem('continue_watching', JSON.stringify(newHistory));
 }
 
 const videoFrame = document.getElementById('video-frame');
@@ -121,6 +144,9 @@ async function loadGame(url, silent = false) {
     currentUrl = url;
     if (!silent) switcher.retry = 0;
     switcher.start();
+
+    const gameImg = params.get('img');
+    if (gameImg) window.Ambiance?.setSource(gameImg);
 
     // Reset visibility
     frame.style.display = 'block';
@@ -162,6 +188,8 @@ async function loadGame(url, silent = false) {
         videoFrame.ontimeupdate = () => {
             updateHistoryProgress(videoFrame.currentTime, videoFrame.duration);
         };
+        // Use native video for ambiance if available
+        window.Ambiance?.setSource(videoFrame);
     } else if (url.includes('#') || url.includes('staticsjv2/') || url.includes('youtube.com') || url.includes('youtube-nocookie.com') || url.includes('workers.dev')) {
         let finalUrl = url;
         const isYT = url.includes('youtube.com') || url.includes('youtube-nocookie.com');
@@ -178,6 +206,9 @@ async function loadGame(url, silent = false) {
         }
 
         frame.src = finalUrl;
+
+        // For iframes, use thumbnail as source
+        window.Ambiance?.setSource(params.get('img'));
 
         if (isYT) {
             // Wait for API and frame to be ready
@@ -219,7 +250,17 @@ function loadTwitch(channel) {
     const url = proxyToggle?.classList.contains('active')
         ? `https://twitch.leelive2021.workers.dev/?channel=${encodeURIComponent(channel)}`
         : `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${window.location.hostname}`;
+
+    // Always update chat src if it's twitch
+    chatFrame.src = `https://www.twitch.tv/embed/${encodeURIComponent(channel)}/chat?parent=${window.location.hostname}&darkpopout`;
+
     loadGame(url);
+}
+
+function toggleChat() {
+    const isVisible = chatContainer.style.display !== 'none';
+    chatContainer.style.display = isVisible ? 'none' : 'block';
+    btnChat.classList.toggle('active', !isVisible);
 }
 
 function loadProvider(pid, silent = false) {
@@ -229,17 +270,23 @@ function loadProvider(pid, silent = false) {
     switcher.start();
     let u = (type === 'movie' ? p.urls.movie : p.urls.tv).replace('{id}', id).replace('{tmdb_id}', id).replace('{season}', season).replace('{episode}', episode);
 
-    // Resume for providers
     const saved = getSavedProgress();
     if (saved && saved.currentTime > 0) {
         const separator = u.includes('?') ? '&' : '?';
-        // Most generic players use start or t
         const param = pid === 'vidify' ? 't' : 'start';
         u += `${separator}${param}=${Math.floor(saved.currentTime)}`;
     }
 
     if (proxyToggle?.classList.contains('active')) u = `../staticsjv2/embed.html#${u}`;
-    currentUrl = u; frame.src = u;
+
+    // Proper reload: clear src first, then set new URL
+    currentUrl = u;
+    const oldSrc = frame.src;
+    frame.src = 'about:blank';
+    setTimeout(() => { frame.src = u; }, 10);
+
+    const imgVal = params.get('img');
+    if (imgVal) window.Ambiance?.setSource(imgVal);
 }
 
 function updateHistoryProgress(currentTime, duration, mediaIdOverride = null) {
@@ -271,7 +318,13 @@ function updateHistoryProgress(currentTime, duration, mediaIdOverride = null) {
 document.getElementById('btn-reload').onclick = () => {
     window.Notify?.info('Reloading', 'Refreshing content...');
     switcher.retry = 0;
-    type === 'game' ? loadGame(currentUrl) : loadProvider(PROVIDERS[curProvIdx].id);
+    if (type === 'game' || type === 'video' || source === 'twitch') {
+        loadGame(currentUrl);
+    } else {
+        const oldSrc = frame.src;
+        frame.src = 'about:blank';
+        setTimeout(() => { frame.src = oldSrc; }, 10);
+    }
 };
 document.getElementById('btn-fullscreen').onclick = () => {
     window.Notify?.info('Fullscreen', 'Entering fullscreen mode...');
@@ -304,7 +357,7 @@ const resetIdleTimer = () => {
         if (document.body.classList.contains('theater-active')) {
             document.body.classList.add('user-idle');
         }
-    }, 3000); // 3 seconds of inactivity
+    }, 3000);
 };
 
 ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(e => {
@@ -341,4 +394,5 @@ window.addEventListener('message', (event) => {
     }
 });
 
-init();
+    init();
+}

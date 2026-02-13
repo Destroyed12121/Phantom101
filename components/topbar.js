@@ -44,7 +44,7 @@
             { name: 'Music', icon: 'music', link: 'pages/music.html', },
             { name: 'Movies', icon: 'film', link: 'pages/movies.html' },
             { name: 'Games', icon: 'gamepad-2', link: 'pages/games.html' },
-            { name: 'Watch', icon: 'play', link: 'pages/watch.html' },
+            { name: 'Watch', icon: 'play', link: 'pages/watch.html', badge: 'NEW!' },
             { name: 'Search', icon: 'search', link: 'staticsjv2/index.html' },
             { name: 'AI Chat', icon: 'bot', link: 'pages/chat.html' },
             { separator: true },

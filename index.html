@@ -7,12 +7,11 @@
     <title>Phantom Unblocked</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
-    
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
             w[l] = w[l] || []; w[l].push({
@@ -155,13 +154,12 @@
         }
     </style>
     <script src="config.js" defer></script>
+    <script src="scripts/notifications.js" defer></script>
     <script src="scripts/settings.js" defer></script>
     <script src="scripts/background.js" defer></script>
     <script src="scripts/cloaking.js" defer></script>
     <script src="scripts/quotes.js" defer></script>
     <script>
-        // Apply settings immediately to prevent theme flash if possible, 
-        // though deferred scripts will handle the full application.
         try {
             const stored = localStorage.getItem('void_settings');
             if (stored) {
@@ -179,11 +177,8 @@
 </head>
 
 <body>
-    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LMBC27Z" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    <!-- First Visit Cloak -->
     <div id="fv-cloak" class="neterror">
         <div id="main-frame-error" class="interstitial-wrapper">
             <div id="main-content">
@@ -211,7 +206,6 @@
                 const origin = window.location.hostname || "This site";
                 document.getElementById("origin-text").textContent = origin;
 
-                // Immediate cloak check to prevent flash
                 try {
                     const STORAGE_KEY = 'phantom_fv';
                     const hasBypassed = localStorage.getItem(STORAGE_KEY);
@@ -223,26 +217,22 @@
                         if (overlay) overlay.style.display = 'block';
                         document.title = origin;
 
-                        // Remove favicon for fake error page
                         document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
                         const link = document.createElement('link');
                         link.rel = 'icon';
                         link.href = 'data:,';
                         document.head.appendChild(link);
 
-                        // Hide loading screen immediately if possible
                         const style = document.createElement('style');
                         style.innerHTML = '#loading-screen { display: none !important; }';
                         document.head.appendChild(style);
 
-                        // Set up bypass on reload button
                         document.getElementById('reload-button').onclick = function () {
                             localStorage.setItem(STORAGE_KEY, 'true');
                             overlay.style.display = 'none';
                             document.getElementById('main-frame').src = 'index2.html';
-                            document.title = 'Phantom Unblocked'; // Reset title
+                            document.title = 'Phantom Unblocked';
 
-                            // Restore favicon
                             document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
                             const link = document.createElement('link');
                             link.rel = 'icon';
@@ -250,7 +240,6 @@
                             document.head.appendChild(link);
                         };
                     } else {
-                        // If no cloak, load main content immediately
                         document.getElementById('main-frame').src = 'index2.html';
                     }
                 } catch (e) { }
@@ -258,7 +247,7 @@
         </script>
     </div>
 
-    <!-- Loading Screen -->
+
     <div id="loading-screen" class="loading-screen">
         <div class="loading-logo">
             <i class="fa-solid fa-ghost"></i>
@@ -268,7 +257,7 @@
         <div class="loading-text">Loading...</div>
     </div>
 
-    <!-- Launch Sc reen -->
+
     <div id="launch-screen" class="launch-screen hidden">
         <div class="loading-logo">
             <i class="fa-solid fa-ghost"></i>
@@ -288,7 +277,7 @@
         const loadingScreen = document.getElementById('loading-screen');
         const iframe = document.getElementById('main-frame');
         let loadStartTime = Date.now();
-        let fallbackTimer = setTimeout(hideLoading, 3500);
+        let fallbackTimer = setTimeout(hideLoading, 2000);
 
         function showLoading() {
             loadingScreen.classList.remove('hidden');
@@ -296,14 +285,14 @@
             loadStartTime = Date.now();
 
             clearTimeout(fallbackTimer);
-            fallbackTimer = setTimeout(hideLoading, 3500);
+            fallbackTimer = setTimeout(hideLoading, 2000);
         }
 
         function hideLoading() {
             clearTimeout(fallbackTimer);
 
-            // Min time 0.5s (500ms)
-            const minTime = 500;
+            // Min time 0.05s (50ms) - almost instant but prevents flicker
+            const minTime = 50;
             const elapsed = Date.now() - loadStartTime;
             const remaining = Math.max(0, minTime - elapsed);
 

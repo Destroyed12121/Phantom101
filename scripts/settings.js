@@ -5,18 +5,13 @@
     const STORAGE_KEY = 'void_settings';
 
     const getDefaults = () => {
-        return window.SITE_CONFIG?.defaults || {
-            cloakMode: 'none',
-            cloakRotation: false,
-            cloakInterval: 5000,
-            panicKey: 'x',
-            panicModifiers: ['ctrl', 'shift'],
-            panicUrl: 'https://classroom.google.com',
-            maxMovieRating: 'R',
+        const d = window.SITE_CONFIG?.defaults || {};
+        return {
+            ...d,
             offlineGames: [],
-            gameLibrary: 'multi',
-            leaveConfirmation: false,
-            historyEnabled: true
+            customCloaks: [],
+            customBackgrounds: [],
+            customWisps: [],
         };
     };
 
@@ -175,7 +170,7 @@
             Settings.update({
                 customBackground: target,
                 lastSeenFeatured: target.id,
-                backgroundRotation: false
+                lastBackgroundRotation: Date.now()
             });
         }
 
