@@ -170,7 +170,7 @@
             Settings.update({
                 customBackground: target,
                 lastSeenFeatured: target.id,
-                backgroundRotation: false
+                lastBackgroundRotation: Date.now()
             });
         }
 

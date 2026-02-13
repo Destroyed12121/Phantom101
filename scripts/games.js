@@ -8,6 +8,7 @@ const Games = {
     recent: JSON.parse(localStorage.getItem('recent_games') || '[]'),
     isLoading: false,
     firstLoad: true,
+    popularityData: { year: {}, month: {}, week: {}, day: {} },
 
     async init() {
         this.lib = window.Settings?.get('gameLibrary') || 'multi';
@@ -22,8 +23,67 @@ const Games = {
         });
 
         await this.loadGames();
+        await this.fetchPopularity(); // Fetch trending data
         this.checkRedirect(); //  ?gamename=
         this.setupListeners();
+        
+        // Apply default sort after popularity data is fetched
+        const sortSelect = document.getElementById('sort-select');
+        if (sortSelect) {
+            this.sort(sortSelect.value);
+        }
+    },
+
+    async fetchPopularity() {
+        // Fetch popularity data from jsdelivr for gnmath games
+        try {
+            const durations = ['year', 'month', 'week', 'day'];
+            await Promise.all(durations.map(d => this.fetchPopularityForDuration(d)));
+        } catch (e) {
+            console.warn('Failed to fetch popularity data:', e);
+        }
+    },
+
+    async fetchPopularityForDuration(duration) {
+        try {
+            // Fetch gnmath popularity
+            const gnmathResponse = await fetch(
+                `https://data.jsdelivr.com/v1/stats/packages/gh/gn-math/html@main/files?period=${duration}`
+            );
+            const gnmathData = await gnmathResponse.json();
+            gnmathData.forEach(file => {
+                const idMatch = file.name.match(/^\/(\d+)\.html$/);
+                if (idMatch) {
+                    const id = parseInt(idMatch[1]);
+                    this.popularityData[duration][id] = file.hits?.total ?? 0;
+                }
+            });
+        } catch (e) {
+            console.warn(`Failed to fetch ${duration} gnmath popularity:`, e);
+        }
+
+        try {
+            // Fetch UGS popularity
+            const ugsResponse = await fetch(
+                `https://data.jsdelivr.com/v1/stats/packages/gh/bubbls/ugs-singlefile@master/files?period=${duration}`
+            );
+            const ugsData = await ugsResponse.json();
+            ugsData.forEach(file => {
+                // Handle different file path formats from jsdelivr API
+                // Try UGS-Files pattern first
+                let nameMatch = file.name?.match(/^\/UGS-Files\/(.+)\.html$/);
+                if (!nameMatch) {
+                    // Try without UGS-Files prefix
+                    nameMatch = file.name?.match(/^\/(.+)\.html$/);
+                }
+                if (nameMatch) {
+                    const gameName = nameMatch[1];
+                    this.popularityData[duration][`ugs:${gameName}`] = file.hits?.total ?? 0;
+                }
+            });
+        } catch (e) {
+            console.warn(`Failed to fetch ${duration} UGS popularity:`, e);
+        }
     },
 
     async loadGames() {
@@ -43,8 +103,7 @@ const Games = {
             this.allGames = await window.Gloader.load(this.lib);
             this.filteredGames = [...this.allGames];
             this.applyLikedSort();
-            this.resetRender();
-
+            
             if (window.Notify) window.Notify.success('Games', `${this.allGames.length} games loaded`);
         } catch (e) {
             console.error(e);
@@ -75,16 +134,60 @@ const Games = {
     },
 
     sort(method) {
-        if (method === 'name') {
-            this.filteredGames.sort((a, b) => a.name.localeCompare(b.name));
-        } else if (method === 'newest') {
+        // Store current sort method for use in applyLikedSort
+        this.currentSortMethod = method;
+        
+        if (method === 'newest') {
             this.filteredGames.reverse();
-        } else {
-            // Default order preservation if possible, or just index based
-            // Since we don't have original index easily, we might rely on load order
+        } else if (method === 'popularity') {
+            // Sort by original order (preserves source order as "popularity")
+            const originalOrder = new Map(this.allGames.map((g, i) => [g.url, i]));
+            this.filteredGames.sort((a, b) => (originalOrder.get(a.url) || 0) - (originalOrder.get(b.url) || 0));
+        } else if (method === 'trendingYear') {
+            // Sort by yearly popularity, gnmath always on top
+            this.filteredGames.sort((a, b) => {
+                const aGnmath = a.type === 'gnmath' ? 0 : 1;
+                const bGnmath = b.type === 'gnmath' ? 0 : 1;
+                if (aGnmath !== bGnmath) return aGnmath - bGnmath;
+                return this.getPopularity(b) - this.getPopularity(a);
+            });
+        } else if (method === 'trendingMonth') {
+            // Sort by monthly trending, gnmath always on top
+            this.filteredGames.sort((a, b) => {
+                const aGnmath = a.type === 'gnmath' ? 0 : 1;
+                const bGnmath = b.type === 'gnmath' ? 0 : 1;
+                if (aGnmath !== bGnmath) return aGnmath - bGnmath;
+                return this.getPopularity(b, 'month') - this.getPopularity(a, 'month');
+            });
+        } else if (method === 'trendingWeek') {
+            // Sort by weekly trending, gnmath always on top
+            this.filteredGames.sort((a, b) => {
+                const aGnmath = a.type === 'gnmath' ? 0 : 1;
+                const bGnmath = b.type === 'gnmath' ? 0 : 1;
+                if (aGnmath !== bGnmath) return aGnmath - bGnmath;
+                return this.getPopularity(b, 'week') - this.getPopularity(a, 'week');
+            });
         }
         this.applyLikedSort();
         this.resetRender();
+    },
+
+    getPopularity(game, duration = 'year') {
+        // Extract game ID from URL for gnmath games
+        const idMatch = game.url?.match(/\/(\d+)\.html$/);
+        if (idMatch) {
+            const id = parseInt(idMatch[1]);
+            return this.popularityData[duration]?.[id] ?? 0;
+        }
+        // Check for UGS games
+        const ugsMatch = game.url?.match(/UGS-Files\/(.+)\.html$/);
+        if (ugsMatch) {
+            // Decode the URL-encoded filename and look up popularity
+            const gameName = decodeURIComponent(ugsMatch[1]);
+            const ugsKey = `ugs:${gameName}`;
+            return this.popularityData[duration]?.[ugsKey] ?? 0;
+        }
+        return 0;
     },
 
     resetRender() {
@@ -140,14 +243,21 @@ const Games = {
     },
 
     applyLikedSort() {
+        // Stable sort: preserve relative order within liked/unliked groups
+        // by using the current index as a tiebreaker
+        const indexMap = new Map(this.filteredGames.map((g, i) => [g.url, i]));
         this.filteredGames.sort((a, b) => {
-            return (this.isLiked(b) ? 1 : 0) - (this.isLiked(a) ? 1 : 0);
+            const aLiked = this.isLiked(a) ? 1 : 0;
+            const bLiked = this.isLiked(b) ? 1 : 0;
+            if (aLiked !== bLiked) return bLiked - aLiked;
+            // Preserve relative order for games with same liked status
+            return (indexMap.get(a.url) || 0) - (indexMap.get(b.url) || 0);
         });
     },
 
     openGame(game) {
         this.addToRecent(game);
-        window.location.href = `player.html?type=game&title=${encodeURIComponent(game.name)}&url=${encodeURIComponent(game.url)}`;
+        window.location.href = `player.html?type=game&title=${encodeURIComponent(game.name)}&url=${encodeURIComponent(game.url)}&img=${encodeURIComponent(game.img || '')}`;
     },
 
     addToRecent(game) {
@@ -220,15 +330,15 @@ const Games = {
                 const newLib = e.target.value;
                 if (newLib === this.lib) return;
 
-                // Just set the setting; the 'settings-changed' listener below handles the loadGames call
+                // Reload page to apply library change
                 window.Settings?.set('gameLibrary', newLib);
+                window.location.reload();
             };
         }
         window.addEventListener('settings-changed', (e) => {
             if (e.detail.gameLibrary && e.detail.gameLibrary !== this.lib) {
                 this.lib = e.detail.gameLibrary;
                 if (libSelect) libSelect.value = this.lib;
-                this.loadGames();
             }
         });
         const sortSelect = document.getElementById('sort-select');

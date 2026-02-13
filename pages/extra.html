@@ -6,11 +6,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About - Phantom</title>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/extra.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/background.css">
+    <style>
+        .stats-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 12px;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-top: 12px;
+        }
+
+        .stats-iframe-wrapper {
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-notice {
+            background: rgba(192, 132, 252, 0.1);
+            border-left: 4px solid #c084fc;
+            padding: 16px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-sec);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-notice i {
+            color: #c084fc;
+        }
+    </style>
 </head>
 
 <body>
@@ -28,6 +68,11 @@
             </div>
             <h1>Phantom</h1>
             <div class="version-badge" id="version-text">v1.0.0</div>
+            <span class="online-counter" style="margin-left: 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--text-muted);">
+                <i class="fa-solid fa-user-group" style="color: #22c55e;"></i>
+                <span id="page-online-count">--</span>
+                <span>online</span>
+            </span>
             <p>the goat unblocked website</p>
 
             <div class="quick-links">
@@ -53,7 +98,7 @@
                 <div class="credit-avatar">D</div>
                 <div class="credit-info">
                     <h3>Destroyed12121</h3>
-                    <p>me</p>
+                    <p>creator of phantom </p>
                 </div>
             </div>
         </section>
@@ -125,12 +170,35 @@
 
         <!-- License -->
         <section class="extra-section">
-            <div class="license-notice">
+            <div class="extra-section-header">
                 <i class="fa-solid fa-scale-balanced"></i>
-                <div class="license-notice-content">
-                    <h3>GNU AGPL v3.0</h3>
-                    <p>This project is open source. You may use, modify, and distribute it under the GNU AGPL v3.0
-                        license.</p>
+                <h2>license</h2>
+            </div>
+            <div class="roadmap-container" style="padding: 12px 16px;">
+                <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">This project is licensed under the PolyForm Noncommercial License. You may use and modify it for non-commercial purposes only.</p>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="extra-section">
+            <div class="extra-section-header">
+                <i class="fa-solid fa-chart-line"></i>
+                <h2>Phantom Links</h2>
+            </div>
+            <div class="roadmap-container">
+                <button class="roadmap-toggle" id="stats-toggle">
+                    <span>view phantom links</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="roadmap-content" id="stats-content">
+                    <div class="stats-container">
+                        <div class="stats-iframe-wrapper">
+                            <iframe width="100%" height="100%"
+                                src="https://lookerstudio.google.com/embed/reporting/52e55881-a048-4d1a-b15d-032ccec97394/page/5fBoF"
+                                frameborder="0" style="border:0" allowfullscreen
+                                sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -166,6 +234,14 @@
         toggle.addEventListener('click', () => {
             toggle.classList.toggle('open');
             content.classList.toggle('show');
+        });
+
+        // Stats toggle
+        const statsToggle = document.getElementById('stats-toggle');
+        const statsContent = document.getElementById('stats-content');
+        statsToggle.addEventListener('click', () => {
+            statsToggle.classList.toggle('open');
+            statsContent.classList.toggle('show');
         });
 
         // Load TODO from config.js

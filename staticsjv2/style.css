@@ -228,15 +228,20 @@ input.bar::placeholder {
 
 /* Loading Bar */
 .loading-bar-container {
-    height: 2px;
-    background: transparent;
+    height: 3px;
+    background: var(--border);
+    overflow: hidden;
+}
+
+.loading-bar-container.active {
+    background: var(--border);
 }
 
 .loading-bar {
     height: 100%;
     width: 0%;
-    background: var(--text);
-    transition: width 0.4s ease, opacity 0.15s;
+    background: var(--accent);
+    transition: width 0.3s ease, opacity 0.2s;
 }
 
 /* Iframe */

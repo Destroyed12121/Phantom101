@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Unblocked</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/search.css">
     <link rel="stylesheet" href="components/topbar.css">
@@ -259,14 +259,19 @@
                 </div>
                 <div class="featured-grid" id="featured-grid"></div>
             </section>
+
+            <!-- Online Counter -->
+            <div class="online-counter" style="margin-top: 24px; display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; color: var(--text-muted);">
+                <i class="fa-solid fa-user-group" style="color: #22c55e;"></i>
+                <span id="page-online-count">--</span>
+                <span>online</span>
+            </div>
         </main>
 
     </div>
 
 
     <script>
-
-
         // Featured 
         window.addEventListener('DOMContentLoaded', async () => {
             if (!window.FeaturedGames) return;

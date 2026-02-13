@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Phantom</title>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/settings.css">
@@ -16,6 +16,7 @@
     <script src="../scripts/notifications.js"></script>
     <script src="../scripts/cloaking.js"></script>
     <script src="../scripts/settings.js"></script>
+    <script src="../scripts/player.js"></script>
     <script src="../scripts/background.js"></script>
     <script src="../scripts/rotation.js"></script>
     <script src="../components/topbar.js"></script>
@@ -59,6 +60,19 @@
                     <p style="color: var(--text-muted); font-size: 0.8125rem;">Choose a preset or add your own:</p>
                     <div class="cloaks-grid" id="cloaks-grid"></div>
 
+                    <div class="add-cloak-form" id="add-cloak-form" style="margin-top: 16px; padding: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px;">
+                        <h3 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">Add Custom Cloak</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <input type="text" class="setting-input" id="new-cloak-name" placeholder="Name (e.g., Google)" style="width: 100%;">
+                            <input type="text" class="setting-input" id="new-cloak-title" placeholder="Title (e.g., Google - My Drive)" style="width: 100%;">
+                            <input type="text" class="setting-input" id="new-cloak-icon" placeholder="Icon URL (optional)" style="width: 100%;">
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary" id="cancel-cloak">Cancel</button>
+                                <button class="btn btn-primary" id="save-cloak">Save</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="setting-row"
                         style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
                         <div class="setting-info">
@@ -75,21 +89,6 @@
                         </div>
                         <input type="number" class="setting-input" id="rotate-interval" value="5" min="0.1" max="30"
                             step="0.1" style="width: 80px;">
-                    </div>
-
-                    <button class="btn btn-secondary" id="add-cloak-btn" style="margin-top: 16px; width: 100%;"><i
-                            class="fa-solid fa-plus"></i> Add Custom Cloak</button>
-                    <div class="add-cloak-form" id="add-cloak-form">
-                        <input type="text" class="setting-input" id="new-cloak-name" placeholder="Name (e.g. Google)"
-                            style="width: 100%;">
-                        <input type="text" class="setting-input" id="new-cloak-title" placeholder="Tab title"
-                            style="width: 100%;">
-                        <input type="text" class="setting-input" id="new-cloak-icon"
-                            placeholder="Favicon URL (https://...)" style="width: 100%;">
-                        <div class="add-cloak-actions">
-                            <button class="btn btn-secondary" id="cancel-cloak">Cancel</button>
-                            <button class="btn btn-primary" id="save-cloak">Save Cloak</button>
-                        </div>
                     </div>
 
                     <div class="setting-row">
@@ -319,6 +318,15 @@
                             <input type="color" id="border-light-color" value="#2a2a2a"
                                 style="width:40px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
                         </div>
+                        <div class="setting-row" id="save-theme-btn" style="cursor: pointer;">
+                            <div class="setting-info">
+                                <div class="setting-label">Save Theme</div>
+                            </div>
+                            <div
+                                style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--surface-hover);border-radius:8px;border:1px solid var(--border);">
+                                <i class="fa-solid fa-plus"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -326,6 +334,28 @@
             <div class="settings-panel" id="panel-content">
                 <div class="settings-section">
                     <h2 class="section-title"><i class="fa-solid fa-film"></i> Movies</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Default Provider</div>
+                            <div class="setting-desc">The default video source for movies and TV shows</div>
+                        </div>
+                        <select class="setting-select" id="default-provider-select">
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Auto-Switch Providers</div>
+                            <div class="setting-desc">Automatically switch if a movie source fails to load</div>
+                        </div>
+                        <div class="toggle" id="autoswitch-toggle"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Ambiance Mode</div>
+                            <div class="setting-desc">Enable immersive ambient background in the player</div>
+                        </div>
+                        <div class="toggle" id="ambiance-setting-toggle"></div>
+                    </div>
                     <div class="setting-row">
                         <div class="setting-info">
                             <div class="setting-label">Maximum Rating</div>
@@ -337,13 +367,6 @@
                             <option value="PG-13">PG-13</option>
                             <option value="R">R</option>
                         </select>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <div class="setting-label">Auto-Switch Providers</div>
-                            <div class="setting-desc">Automatically switch if a movie source fails to load</div>
-                        </div>
-                        <div class="toggle" id="autoswitch-toggle"></div>
                     </div>
                 </div>
 

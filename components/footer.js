@@ -76,10 +76,55 @@
             <a href="${rootPrefix}pages/disclaimer.html" class="footer-link">Disclaimer</a>
             <a href="${rootPrefix}pages/extra.html" class="footer-link">Credits</a>
         </div>
-        <span class="footer-version" id="footer-version">${config.name || 'Phantom'} v${config.version || '1.0.0'}</span>
+        <span class="footer-version" id="footer-version">&copy; 2026 ${config.name || 'Phantom Unblocked'}. All rights reserved. | v${config.version || '1.0.0'}</span>
+        <span class="footer-online-counter" style="margin-left: 12px; opacity: 0.8; display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-dim, #52525b);">
+            <i class="fa-solid fa-user-group" style="color: #22c55e;"></i>
+            <span id="footer-online-count">--</span>
+            <span>online</span>
+        </span>
     `;
 
     document.body.appendChild(footer);
+
+    // Online counter
+    async function updateOnlineCount() {
+        try {
+            const res = await fetch('https://counter.leelive2021.workers.dev/');
+            const data = await res.json();
+            
+            // Update footer counter
+            const footerEl = document.getElementById('footer-online-count');
+            if (footerEl) {
+                if (data.online !== undefined) {
+                    footerEl.textContent = data.online;
+                } else if (data.error) {
+                    footerEl.textContent = '--';
+                } else {
+                    footerEl.textContent = '--';
+                }
+            }
+            
+            // Update page counter (for index2.html)
+            const pageEl = document.getElementById('page-online-count');
+            if (pageEl) {
+                if (data.online !== undefined) {
+                    pageEl.textContent = data.online;
+                } else if (data.error) {
+                    pageEl.textContent = '--';
+                } else {
+                    pageEl.textContent = '--';
+                }
+            }
+        } catch(e) {
+            const footerEl = document.getElementById('footer-online-count');
+            if (footerEl) footerEl.textContent = '--';
+            const pageEl = document.getElementById('page-online-count');
+            if (pageEl) pageEl.textContent = '--';
+            console.error('Online counter fetch error:', e);
+        }
+    }
+    updateOnlineCount();
+    setInterval(updateOnlineCount, 30000);
 
 
 
@@ -116,7 +161,7 @@
                 </div>
                 <div class="modal-body">
                     <ul style="margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
-                        ${changes.map(c => '<li>' + c + '</li>').join('')}
+                        ${changes.map(c => '<li>' + formatAnnouncement(c) + '</li>').join('')}
                     </ul>
                 </div>
                 <div class="modal-footer">
@@ -143,6 +188,85 @@
 
     // Expose openChangelog globally
     window.openChangelog = openChangelog;
+
+    const formatAnnouncement = (text) => {
+        if (!text) return '';
+        // Bold: **text** -> <strong>text</strong>
+        // Strikethrough: ***text*** -> <del>text</del>
+        // Remove quotes: "" -> "" (actually requested to not show at all)
+        return text
+            .replace(/\*\*\*(.*?)\*\*\*/g, '<del>$1</del>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/"/g, '');
+    };
+
+    const openAnnouncement = (message) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = `
+            <div class="modal" style="width: 400px; max-width: 90vw;">
+                <div class="modal-header">
+                    <h3 class="modal-title">Announcements</h3>
+                    <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+                        ${formatAnnouncement(message)}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="${config.discord?.inviteUrl || '#'}" target="_blank" style="color: #5865F2; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-brands fa-discord"></i> Join Discord
+                    </a>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('show'));
+
+        const close = () => {
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.remove(), 200);
+        };
+
+        overlay.querySelectorAll('.modal-close').forEach(btn => btn.onclick = close);
+        overlay.onclick = (e) => { if (e.target === overlay) close(); };
+    };
+
+    async function checkAnnouncements() {
+        if (!config.announcement) return;
+
+        let ann = config.announcement;
+
+        if (ann.useCDN) {
+            // Stashed CDN URL
+            const endpoint = "https://raw.githubusercontent.com/Destroyed12121/Phantom101/main/announcement.json";
+            try {
+                const res = await fetch(endpoint);
+                const data = await res.json();
+                if (data) ann = { ...ann, ...data };
+            } catch (err) {
+                // Ignore errors
+            }
+        }
+
+        // Don't show if message is empty
+        if (!ann.message || formatAnnouncement(ann.message).trim() === "") return;
+
+        // Use a simple hash or just the message string for uniqueness
+        const messageId = btoa(unescape(encodeURIComponent(ann.message))).slice(0, 32);
+        const seenKey = `announcement_seen_${messageId}`;
+
+        if (!localStorage.getItem(seenKey)) {
+            setTimeout(() => {
+                openAnnouncement(ann.message);
+                localStorage.setItem(seenKey, 'true');
+            }, 1500);
+        }
+    }
+
+    checkAnnouncements();
 
     const changelogBtn = document.getElementById('footer-changelog');
     if (changelogBtn) changelogBtn.onclick = openChangelog;
@@ -267,39 +391,4 @@
         initDiscord();
     });
 
-    // counters
-    // Only show on home page (index2.html) checking if main-content exists
-    const mainContent = document.querySelector('.main-content');
-    // Ensure we are on the home page view (search bar checks etc) or just check existence
-    if (mainContent && document.querySelector('.featured-section')) {
-        const counterContainer = document.createElement('div');
-        counterContainer.id = 'supercounters-wrapper';
-        counterContainer.style.position = 'absolute';
-        counterContainer.style.width = '0';
-        counterContainer.style.height = '0';
-        counterContainer.style.overflow = 'hidden';
-        counterContainer.style.opacity = '0';
-        counterContainer.style.pointerEvents = 'none';
-
-        // Use iframe to isolate document.write from the widget
-        const iframe = document.createElement('iframe');
-        iframe.style.border = 'none';
-        iframe.style.width = '150px';
-        iframe.style.height = '40px';
-        iframe.style.overflow = 'hidden';
-
-        // Widget code
-        const widgetCode = `
-            <html>
-            <body style="margin:0;display:flex;justify-content:center;align-items:center;background:transparent;">
-                <script type="text/javascript" src="//widget.supercounters.com/ssl/online_i.js"></script>
-                <script type="text/javascript">sc_online_i(1726449,"ffffff","000000");</script>
-            </body>
-            </html>
-        `;
-
-        iframe.srcdoc = widgetCode;
-        counterContainer.appendChild(iframe);
-        mainContent.appendChild(counterContainer);
-    }
 })();

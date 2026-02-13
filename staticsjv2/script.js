@@ -182,18 +182,19 @@ async function registerServiceWorker() {
             // Update all loading tabs, not just active one
             tabs.forEach(tab => {
                 if (tab.loading) {
-                    const isError = e.data.status >= 400;
-                    const increment = isError ? 0.5 : 5; // Increased visual speed
-                    tab.progress = Math.min(96, tab.progress + increment);
+                    tab.lastProgressUpdate = Date.now(); // Track when we got an update
+                    const isError = e.data.status >= 400 || e.data.status === 0;
+                    const increment = isError ? 5 : 12; // Boost for actual resource loads
+                    tab.progress = Math.min(94, tab.progress + increment);
 
                     if (tab.id === activeTabId) {
                         updateLoadingBar(tab, tab.progress);
                     }
 
                     // Auto-complete if progress is high enough and it's 200/304
-                    if (tab.progress >= 95 && (e.data.status === 200 || e.data.status === 304)) {
+                    if (tab.progress >= 80 && (e.data.status === 200 || e.data.status === 304)) {
                         if (tab.finishTimer) clearTimeout(tab.finishTimer);
-                        tab.finishTimer = setTimeout(() => completeLoading(tab), 800);
+                        tab.finishTimer = setTimeout(() => completeLoading(tab), 200);
                     }
                 }
             });
@@ -372,16 +373,32 @@ async function createTab(makeActive = true) {
         updateTabsUI();
         updateAddressBar();
 
-        tab.progress = 10;
+        // Reset and show loading bar immediately with simulation
+        tab.progress = 8;
+        tab.lastProgressUpdate = Date.now();
         updateLoadingBar(tab, tab.progress);
+        
+        // Start fallback progress simulation
+        if (tab.progressTimer) clearInterval(tab.progressTimer);
+        tab.progressTimer = setInterval(() => {
+            if (!tab.loading) {
+                clearInterval(tab.progressTimer);
+                return;
+            }
+            // Progress faster if recently got resource-loaded, slower otherwise
+            const timeSinceUpdate = Date.now() - (tab.lastProgressUpdate || 0);
+            const increment = timeSinceUpdate < 500 ? 4 : 2;
+            tab.progress = Math.min(92, tab.progress + increment);
+            if (tab.id === activeTabId) updateLoadingBar(tab, tab.progress);
+        }, 200);
 
         if (tab.skipTimeout) clearTimeout(tab.skipTimeout);
         tab.skipTimeout = setTimeout(() => {
             if (tab.loading && tab.id === activeTabId) document.getElementById('skip-btn')?.style.setProperty('display', 'inline-block');
-        }, 500);
+        }, 3000);
 
         if (tab.safetyTimeout) clearTimeout(tab.safetyTimeout);
-        tab.safetyTimeout = setTimeout(() => completeLoading(tab), 8000);
+        tab.safetyTimeout = setTimeout(() => completeLoading(tab), 5000);
     });
 
     frame.frame.addEventListener('load', () => {
@@ -439,6 +456,7 @@ function completeLoading(tab) {
     if (tab.skipTimeout) clearTimeout(tab.skipTimeout);
     if (tab.finishTimer) clearTimeout(tab.finishTimer);
     if (tab.safetyTimeout) clearTimeout(tab.safetyTimeout);
+    if (tab.progressTimer) clearInterval(tab.progressTimer);
 
     if (tab.id === activeTabId) {
         showIframeLoading(false);
@@ -471,6 +489,7 @@ function closeTab(tabId) {
     if (tab.skipTimeout) clearTimeout(tab.skipTimeout);
     if (tab.finishTimer) clearTimeout(tab.finishTimer);
     if (tab.safetyTimeout) clearTimeout(tab.safetyTimeout);
+    if (tab.progressTimer) clearInterval(tab.progressTimer);
 
     if (tab.frame?.frame) tab.frame.frame.remove();
     tabs.splice(idx, 1);
@@ -521,6 +540,12 @@ function updateLoadingBar(tab, percent) {
     }
 
     const container = bar.parentElement;
+    
+    // Force display for initial loading
+    if (percent > 0 && percent < 100) {
+        bar.style.display = 'block';
+    }
+    
     bar.style.width = percent + "%";
     bar.style.opacity = percent === 100 ? "0" : "1";
 
@@ -532,6 +557,7 @@ function updateLoadingBar(tab, percent) {
         container?.classList.remove('active');
         bar._cleanup = setTimeout(() => {
             bar.style.width = "0%";
+            bar.style.display = 'none';
             bar._cleanup = null;
         }, 200);
     }

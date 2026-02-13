@@ -736,6 +736,7 @@ async function searchMedia() {
                     <div class="suggestion-info">
                         <div class="suggestion-title">${item.title || item.name}</div>
                         <div class="suggestion-meta">${item.media_type.toUpperCase()} • ${(item.release_date || item.first_air_date || '').split('-')[0]}</div>
+                        <div class="suggestion-overview">${item.overview || ''}</div>
                     </div>
                 </div>
             `).join('');

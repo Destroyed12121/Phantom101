@@ -31,8 +31,19 @@
             setFavicon(p.icon || p.favicon);
         } else {
             const s = window.Settings?.getAll() || {};
-            setTitle(s.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle);
-            setFavicon(s.tabFavicon || window.SITE_CONFIG?.defaults?.tabFavicon);
+            const presets = getPresets();
+            const selectedPresetName = s.selectedCloakPreset;
+            
+            // Find preset by name
+            const preset = presets.find(pr => pr.name === selectedPresetName);
+            if (preset) {
+                setTitle(preset.title);
+                setFavicon(preset.icon || preset.favicon);
+            } else {
+                // Fallback to defaults
+                setTitle(window.SITE_CONFIG?.defaults?.tabTitle || 'Phantom Unblocked');
+                setFavicon(window.SITE_CONFIG?.defaults?.tabFavicon || '/favicon.svg');
+            }
         }
     };
 
@@ -55,8 +66,22 @@
 
     const getPopupContent = (url) => {
         const s = window.Settings?.getAll() || {};
-        const title = s.tabTitle || window.SITE_CONFIG?.defaults?.tabTitle || 'Google';
-        const icon = s.tabFavicon || window.SITE_CONFIG?.defaults?.tabFavicon || 'https://www.google.com/favicon.ico';
+        const presets = getPresets();
+        const selectedPresetName = s.selectedCloakPreset;
+        
+        let title = 'Google';
+        let icon = 'https://www.google.com/favicon.ico';
+        
+        // Find preset by name
+        const preset = presets.find(pr => pr.name === selectedPresetName);
+        if (preset) {
+            title = preset.title || title;
+            icon = preset.icon || preset.favicon || icon;
+        } else {
+            // Fallback to defaults
+            title = window.SITE_CONFIG?.defaults?.tabTitle || title;
+            icon = window.SITE_CONFIG?.defaults?.tabFavicon || icon;
+        }
         return `<!DOCTYPE html><html><head><title>${title}</title><link rel="icon" href="${icon}"><style>* {margin:0;padding:0;height:100%;overflow:hidden;} iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${url}"></iframe></body></html>`;
     };
 

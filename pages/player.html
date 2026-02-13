@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Player - Phantom</title>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/player.css?v=2">
@@ -14,11 +14,12 @@
     <script src="../config.js"></script>
     <script src="../scripts/settings.js"></script>
     <script>Settings.apply();</script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.js"></script>
 </head>
 
 <body>
     <script src="../components/topbar.js"></script>
+    <div id="player-ambiance" class="player-ambiance"></div>
 
     <div class="player-page">
 
@@ -69,6 +70,9 @@
                 <button class="btn btn-secondary" id="btn-fullscreen">
                     <i class="fa-solid fa-expand"></i> Fullscreen
                 </button>
+                <button class="btn btn-secondary" id="btn-ambiance" title="Toggle Ambiance Mode">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Ambiance
+                </button>
             </div>
 
             <div class="player-info">
@@ -86,6 +90,7 @@
     <script src="../scripts/notifications.js"></script>
     <script src="../scripts/quotes.js"></script>
     <script src="../components/footer.js"></script>
+    <script src="../scripts/ambiance.js"></script>
     <script src="../scripts/player.js"></script>
 </body>
 

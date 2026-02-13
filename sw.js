@@ -1,4 +1,6 @@
-const CACHE_NAME = 'phantom-offline-v1';
+
+
+const CACHE_NAME = 'phantom-offline-v2';
 const ASSETS_TO_CACHE = [
     './index2.html',
     './pages/games.html',
@@ -45,7 +47,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
-    // Ignore proxy requests or external API calls if we don't want to cache them actively (except what's in ASSETS_TO_CACHE)
+    // Ignore proxy requests or external API calls
     const url = new URL(event.request.url);
     if ((url.origin !== location.origin && !ASSETS_TO_CACHE.includes(event.request.url)) || url.pathname.includes('/staticsjv2/')) {
         return;
@@ -57,7 +59,7 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse;
             }
             return fetch(event.request).catch(() => {
-                // Optional: Return offline page if navigation
+
                 if (event.request.mode === 'navigate') {
                     return caches.match('./index2.html');
                 }

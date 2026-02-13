@@ -17,42 +17,74 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
 function renderCloaks() {
     const grid = document.getElementById('cloaks-grid');
     const allCloaks = [...(config.cloakPresets || []), ...(settings.customCloaks || [])];
-    const activeCloak = settings.tabTitle || '';
+    const activeCloak = settings.selectedCloakPreset || '';
     grid.innerHTML = allCloaks.map(c => {
-        const isActive = c.title === activeCloak;
-        return '<button class="cloak-btn ' + (isActive ? 'active' : '') + '" data-title="' + c.title + '" data-icon="' + (c.icon || '') + '">' +
+        const isActive = c.name === activeCloak;
+        return '<button class="cloak-btn ' + (isActive ? 'active' : '') + '" data-name="' + c.name + '" data-title="' + (c.title || '') + '" data-icon="' + (c.icon || '') + '">' +
             (c.icon ? '<img src="' + c.icon + '" onerror="this.style.display=\'none\'">' : '<i class="fa-solid fa-globe"></i>') +
             '<span>' + c.name + '</span></button>';
     }).join('');
-    grid.querySelectorAll('.cloak-btn').forEach(btn => {
+    
+    // Add "Add Custom Cloak" button at the end (like Save Theme)
+    const addBtn = document.createElement('button');
+    addBtn.className = 'cloak-btn';
+    addBtn.id = 'add-cloak-btn';
+    addBtn.innerHTML = '<i class="fa-solid fa-plus"></i><span>Add</span>';
+    addBtn.onclick = () => {
+        const form = document.getElementById('add-cloak-form');
+        if (form) form.classList.toggle('show');
+    };
+    grid.appendChild(addBtn);
+    
+    grid.querySelectorAll('.cloak-btn:not(#add-cloak-btn)').forEach(btn => {
         btn.onclick = () => {
-            settings.tabTitle = btn.dataset.title;
-            settings.tabFavicon = btn.dataset.icon;
+            settings.selectedCloakPreset = btn.dataset.name;
             saveSettings(settings);
             renderCloaks();
-            document.title = settings.tabTitle;
+            // Apply the cloak immediately
+            const presets = [...(config.cloakPresets || []), ...(settings.customCloaks || [])];
+            const selected = presets.find(p => p.name === btn.dataset.name);
+            if (selected) {
+                document.title = selected.title || 'Phantom Unblocked';
+                if (window.Cloaking?.apply) window.Cloaking.apply(selected);
+            }
         };
     });
 }
 renderCloaks();
 
-document.getElementById('add-cloak-btn').onclick = () => document.getElementById('add-cloak-form').classList.toggle('show');
-document.getElementById('cancel-cloak').onclick = () => document.getElementById('add-cloak-form').classList.remove('show');
-document.getElementById('save-cloak').onclick = () => {
-    const name = document.getElementById('new-cloak-name').value.trim();
-    const title = document.getElementById('new-cloak-title').value.trim();
-    const icon = document.getElementById('new-cloak-icon').value.trim();
-    if (name && title) {
-        settings.customCloaks = settings.customCloaks || [];
-        settings.customCloaks.push({ name, title, icon });
-        saveSettings(settings);
-        renderCloaks();
-        document.getElementById('add-cloak-form').classList.remove('show');
-        document.getElementById('new-cloak-name').value = '';
-        document.getElementById('new-cloak-title').value = '';
-        document.getElementById('new-cloak-icon').value = '';
-    }
-};
+// Cloak form handling - ensure elements exist
+const addCloakForm = document.getElementById('add-cloak-form');
+const cancelCloakBtn = document.getElementById('cancel-cloak');
+const saveCloakBtn = document.getElementById('save-cloak');
+
+if (cancelCloakBtn && addCloakForm) {
+    cancelCloakBtn.onclick = () => addCloakForm.classList.remove('show');
+}
+
+if (saveCloakBtn) {
+    saveCloakBtn.onclick = () => {
+        const nameInput = document.getElementById('new-cloak-name');
+        const titleInput = document.getElementById('new-cloak-title');
+        const iconInput = document.getElementById('new-cloak-icon');
+        if (!nameInput || !titleInput || !iconInput) return;
+        
+        const name = nameInput.value.trim();
+        const title = titleInput.value.trim();
+        const icon = iconInput.value.trim();
+        if (name && title) {
+            settings.customCloaks = settings.customCloaks || [];
+            settings.customCloaks.push({ name, title, icon });
+            settings.selectedCloakPreset = name;
+            saveSettings(settings);
+            renderCloaks();
+            if (addCloakForm) addCloakForm.classList.remove('show');
+            nameInput.value = '';
+            titleInput.value = '';
+            iconInput.value = '';
+        }
+    };
+}
 
 document.getElementById('bg-color').value = settings.background?.value || '#0a0a0a';
 document.getElementById('cloak-mode').value = settings.cloakMode || 'about:blank';
@@ -222,6 +254,19 @@ document.getElementById('add-custom-wisp').onclick = () => {
 
 document.getElementById('max-rating').value = settings.maxMovieRating || 'R';
 
+const defaultProviderSelect = document.getElementById('default-provider-select');
+if (defaultProviderSelect && window.PROVIDERS) {
+    window.PROVIDERS.forEach(p => {
+        defaultProviderSelect.add(new Option(p.name, p.id));
+    });
+    defaultProviderSelect.value = settings.defaultProvider || window.PROVIDERS[0]?.id || 'vidify';
+    defaultProviderSelect.onchange = (e) => {
+        settings.defaultProvider = e.target.value;
+        saveSettings(settings);
+        if (window.Notify) Notify.success('Saved', `Default provider set to ${e.target.options[e.target.selectedIndex].text}`);
+    };
+}
+
 function renderBackgrounds() {
     const grid = document.getElementById('backgrounds-grid');
     if (!grid) return;
@@ -361,20 +406,79 @@ if (applyCustomBgBtn) {
     };
 }
 
-const presets = window.SITE_CONFIG?.themePresets || {};
-const presetsContainer = document.getElementById('themes-grid');
-if (presetsContainer) {
-    Object.entries(presets).forEach(([key, theme]) => {
+function renderThemes() {
+    const presetsContainer = document.getElementById('themes-grid');
+    if (!presetsContainer) return;
+
+    presetsContainer.innerHTML = '';
+    const presets = window.SITE_CONFIG?.themePresets || {};
+    const customThemes = settings.customThemes || [];
+
+    const allThemes = [...Object.entries(presets).map(([k, v]) => ({ ...v, id: k, isCustom: false })), ...customThemes.map((v, i) => ({ ...v, id: 'custom-' + i, isCustom: true }))];
+
+    allThemes.forEach(theme => {
         const btn = document.createElement('button');
         btn.className = 'cloak-btn';
         btn.style.alignItems = 'flex-start';
         btn.style.padding = '12px';
+        btn.style.position = 'relative';
+
         btn.innerHTML = `
-            <div style="width:100%; height:24px; background:${theme.bg.value}; border-radius:4px; margin-bottom:8px; border:1px solid var(--border)"></div>
+            <div style="width:100%; height:24px; background:${theme.bg?.value || theme.bg}; border-radius:4px; margin-bottom:8px; border:1px solid var(--border)"></div>
             <span style="font-weight:600">${theme.name}</span>
         `;
-        btn.onclick = () => {
-            settings.background = theme.bg;
+
+        if (theme.isCustom) {
+            const delBtn = document.createElement('div');
+            delBtn.className = 'theme-delete-btn';
+
+            // Minimalist style
+            Object.assign(delBtn.style, {
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                color: 'var(--text-muted)',
+                padding: '2px', // Smaller padding
+                fontSize: '0.65rem', // Smaller icon
+                zIndex: '10',
+                cursor: 'pointer',
+                opacity: '0',
+                transition: 'opacity 0.2s, color 0.1s', // Simple fade and color transition
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            });
+
+            delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+
+            delBtn.onmouseenter = () => {
+                delBtn.style.color = '#ef4444'; // Red on hover
+            };
+            delBtn.onmouseleave = () => {
+                delBtn.style.color = 'var(--text-muted)';
+            };
+
+            btn.appendChild(delBtn);
+
+            btn.onmouseenter = () => delBtn.style.opacity = '1';
+            btn.onmouseleave = () => delBtn.style.opacity = '0';
+        }
+
+        btn.onclick = (e) => {
+            if (e.target.closest('.theme-delete-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                settings.customThemes = settings.customThemes.filter(t => t.name !== theme.name);
+                saveSettings(settings);
+                renderThemes();
+                if (window.Notify) Notify.success('Deleted', 'Theme deleted');
+                return;
+            }
+
+            let bg = theme.bg;
+            if (typeof bg === 'string') bg = { type: 'color', value: bg };
+
+            settings.background = bg;
             settings.surfaceColor = theme.surface;
             settings.surfaceHoverColor = theme.surfaceHover;
             settings.surfaceActiveColor = theme.surfaceActive;
@@ -387,7 +491,7 @@ if (presetsContainer) {
             settings.accentColor = theme.accent;
             saveSettings(settings);
 
-            document.getElementById('bg-color').value = theme.bg.value;
+            document.getElementById('bg-color').value = bg.value;
             document.getElementById('accent-color').value = theme.accent;
             document.getElementById('surface-color').value = theme.surface;
             document.getElementById('secondary-color').value = theme.secondary;
@@ -398,14 +502,43 @@ if (presetsContainer) {
             document.getElementById('surface-active-color').value = theme.surfaceActive;
             document.getElementById('border-color').value = theme.border;
             document.getElementById('border-light-color').value = theme.borderLight;
+
             if (window.Notify) {
                 Notify.success('Theme Applied', `Switched to ${theme.name} theme`);
-            } else {
-                alert('Theme "' + theme.name + '" applied!');
             }
         };
         presetsContainer.appendChild(btn);
     });
+}
+renderThemes();
+
+const saveThemeBtn = document.getElementById('save-theme-btn');
+if (saveThemeBtn) {
+    saveThemeBtn.onclick = () => {
+        const name = prompt('Enter a name for your theme:');
+        if (!name) return;
+
+        const newTheme = {
+            name: name,
+            bg: { value: document.getElementById('bg-color').value, type: 'color' },
+            accent: document.getElementById('accent-color').value,
+            surface: document.getElementById('surface-color').value,
+            secondary: document.getElementById('secondary-color').value,
+            text: document.getElementById('text-color').value,
+            textSec: document.getElementById('text-secondary-color').value,
+            textDim: document.getElementById('text-dim-color').value,
+            surfaceHover: document.getElementById('surface-hover-color').value,
+            surfaceActive: document.getElementById('surface-active-color').value,
+            border: document.getElementById('border-color').value,
+            borderLight: document.getElementById('border-light-color').value
+        };
+
+        settings.customThemes = settings.customThemes || [];
+        settings.customThemes.push(newTheme);
+        saveSettings(settings);
+        renderThemes();
+        if (window.Notify) Notify.success('Theme Saved', `${name} added to presets`);
+    };
 }
 
 const mods = settings.panicModifiers || window.SITE_CONFIG?.defaults?.panicModifiers || ['ctrl', 'shift'];
@@ -421,12 +554,17 @@ if (settings.showChangelogOnUpdate !== false) document.getElementById('changelog
 else document.getElementById('changelog-toggle').classList.remove('active');
 if (settings.themeRotation) document.getElementById('theme-rotation-toggle').classList.add('active');
 else document.getElementById('theme-rotation-toggle').classList.remove('active');
+if (settings.backgroundRotation) document.getElementById('background-rotation-toggle').classList.add('active');
+else document.getElementById('background-rotation-toggle').classList.remove('active');
 if (settings.autoSwitchProviders !== false) document.getElementById('autoswitch-toggle').classList.add('active');
 else document.getElementById('autoswitch-toggle').classList.remove('active');
 if (settings.historyEnabled !== false) document.getElementById('history-toggle').classList.add('active');
 else document.getElementById('history-toggle').classList.remove('active');
-if (settings.backgroundRotation) document.getElementById('background-rotation-toggle').classList.add('active');
-else document.getElementById('background-rotation-toggle').classList.remove('active');
+if (localStorage.getItem('phantom_ambiance_enabled') !== 'false') document.getElementById('ambiance-setting-toggle').classList.add('active');
+else document.getElementById('ambiance-setting-toggle').classList.remove('active');
+
+const announcementSourceSelect = document.getElementById('announcement-source-select');
+if (announcementSourceSelect) announcementSourceSelect.value = settings.announcementSource || 'cdn';
 
 if (settings.rotateCloaks) {
     document.getElementById('rotate-toggle').classList.add('active');
@@ -460,6 +598,20 @@ document.getElementById('theme-rotation-toggle').onclick = function () { this.cl
 document.getElementById('autoswitch-toggle').onclick = function () { this.classList.toggle('active'); settings.autoSwitchProviders = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('history-toggle').onclick = function () { this.classList.toggle('active'); settings.historyEnabled = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('background-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.backgroundRotation = this.classList.contains('active'); saveSettings(settings); };
+document.getElementById('ambiance-setting-toggle').onclick = function () {
+    this.classList.toggle('active');
+    const enabled = this.classList.contains('active');
+    localStorage.setItem('phantom_ambiance_enabled', enabled);
+    if (window.Notify) Notify.success('Saved', 'Ambiance Mode ' + (enabled ? 'enabled' : 'disabled'));
+};
+
+if (announcementSourceSelect) {
+    announcementSourceSelect.onchange = (e) => {
+        settings.announcementSource = e.target.value;
+        saveSettings(settings);
+        if (window.Notify) Notify.success('Saved', 'Announcement source updated');
+    };
+}
 
 document.getElementById('rotate-toggle').onclick = function () {
     this.classList.toggle('active');
@@ -535,6 +687,6 @@ document.getElementById('clear-cache').onclick = async () => {
 };
 document.getElementById('reset-settings').onclick = () => {
     if (!confirm('Reset all settings?')) return;
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('void_settings');
     location.reload();
 };

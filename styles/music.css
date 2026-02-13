@@ -220,11 +220,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px 40px;
+    justify-content: flex-start;
+    padding: 160px 40px 40px;
+    /* Force the entire group down towards the bottom */
     height: 100vh;
     overflow-y: auto;
     position: relative;
+    scroll-behavior: smooth;
 }
 
 @media (max-width: 768px) {
@@ -259,9 +261,10 @@
     background: var(--surface);
     padding: 4px;
     border-radius: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
     justify-content: center;
+    z-index: 100;
 }
 
 .source-tab {
@@ -289,8 +292,9 @@
 .search-container {
     width: 100%;
     max-width: 480px;
-    margin-bottom: 24px;
-    z-index: 20;
+    margin-bottom: 32px;
+    /* Standard gap above player */
+    z-index: 90;
 }
 
 .search-wrapper {
@@ -416,6 +420,8 @@
     align-items: center;
     width: 100%;
     max-width: 720px;
+    margin-top: 0;
+    /* Remove auto margin to keep it tight with search */
 }
 
 @media (min-width: 768px) {
@@ -653,9 +659,13 @@
 /* Lyrics */
 .lyrics-section {
     margin-top: 24px;
+    margin-bottom: 60px;
+    /* Fixed space at bottom for stability */
     max-width: 500px;
     width: 100%;
     text-align: center;
+    min-height: 250px;
+    /* Force space even when empty to prevent shifting */
 }
 
 .lyrics-header {
@@ -672,9 +682,10 @@
     height: 220px;
     overflow-y: auto;
     scroll-behavior: smooth;
-    mask-image: linear-gradient(to bottom, transparent, black 25%, black 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%, black 100%);
-    padding: 100px 0;
+    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    padding: 20px 0 100px;
+    /* Keep bottom padding so last lines can be centered */
     box-sizing: border-box;
     transition: all 0.4s ease;
 }

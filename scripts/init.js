@@ -1,3 +1,9 @@
+/**
+ * Phantom Unblocked - Core Initialization
+ * Copyright (C) 2026 Phantom Unblocked.
+ * Licensed under the PolyForm Noncommercial License 1.0.0.
+ */
+
 // proxy init
 
 const ProxyInit = {

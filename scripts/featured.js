@@ -7,9 +7,9 @@ const FeaturedGames = {
         { name: 'Music', icon: 'fa-solid fa-music', url: 'pages/music.html' },
         { name: 'Roblox', icon: 'fa-solid fa-cubes', url: 'pages/player.html?type=game&title=Roblox&url=https://nowgg.fun/apps/aptoide/5874/aptoide.html?deep_link=aptoidesearch://roblox.com.roblox' },
         { name: 'Settings', icon: 'fa-solid fa-cog', url: 'pages/settings.html' },
-        { name: 'Retro Bowl', gameName: 'Retro Bowl' },
         { name: 'Geometry Dash', gameName: 'Geometry Dash Lite (REMAKE)' },
-        { name: 'OvO', gameName: 'ovofixxed' },
+        { name: 'Retro Bowl', gameName: 'Retro Bowl' },
+        { name: 'OvO', gameName: 'Ovofixed' },
         { name: 'Basket Random', gameName: 'Basket Random' },
         { name: 'Code Runner', icon: 'fa-solid fa-code', url: 'pages/code.html' }
     ],

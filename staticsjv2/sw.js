@@ -289,7 +289,31 @@ self.addEventListener("fetch", (event) => {
         if (scramjet.route(event)) {
             return scramjet.fetch(event);
         }
-        return fetch(event.request);
+        
+        // Send resource-loaded for direct requests (not proxied)
+        // This ensures loading bar updates for all requests
+        try {
+            const response = await fetch(event.request);
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'resource-loaded',
+                    url: event.request.url,
+                    status: response.status
+                });
+            });
+            return response;
+        } catch (err) {
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'resource-loaded',
+                    url: event.request.url,
+                    status: 0
+                });
+            });
+            throw err;
+        }
     })());
 });
 
