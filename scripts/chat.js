@@ -15,7 +15,7 @@ class PhantomChat {
 
         this.placeholders = [
             "Ask me anything...",
-            "Explain quantum physics simply",
+            "Explain quantum physics in simple terms",
             "Write a poem about the stars",
             "Help me with my homework"
         ];
@@ -336,7 +336,7 @@ class PhantomChat {
 
     async generateText(input, conv) {
         const thinkingId = 'thinking-' + Date.now();
-        this.appendMessage({ role: 'ai', id: thinkingId, isThinking: true });
+        const thinkingEl = this.appendMessage({ role: 'ai', id: thinkingId, isThinking: true });
 
         try {
             const messages = [
@@ -356,25 +356,75 @@ class PhantomChat {
                 body: JSON.stringify({
                     messages,
                     model: this.state.config.textModel,
-                    seed: Math.floor(Math.random() * 1000000)
+                    seed: Math.floor(Math.random() * 1000000),
+                    stream: true
                 })
             });
 
             if (!res.ok) throw new Error(`API Error: ${res.status}`);
 
-            const data = await res.json();
-            const reply = data.choices[0].message.content;
+            thinkingEl?.remove();
 
-            document.getElementById(thinkingId)?.remove();
+            // Create the real message element for streaming
+            const messageId = 'msg-' + Date.now();
+            const messageEl = this.appendMessage({ role: 'ai', content: '', id: messageId });
+            const textContainer = messageEl.querySelector('.message-text');
 
-            conv.messages.push({ role: 'ai', content: reply, type: 'text' });
-            this.appendMessage({ role: 'ai', content: reply, type: 'text' });
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let fullContent = '';
+            let lastRenderTime = Date.now();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const dataStr = line.slice(6);
+                        if (dataStr === '[DONE]') break;
+
+                        try {
+                            const data = JSON.parse(dataStr);
+                            const content = data.choices[0]?.delta?.content || '';
+                            if (content) {
+                                fullContent += content;
+
+                                // Periodic rendering every 5 seconds
+                                if (Date.now() - lastRenderTime > 5000) {
+                                    textContainer.innerHTML = this.processMarkdown(fullContent);
+                                    this.finalizeMessageRendering(messageEl, fullContent, 'text', true);
+                                    lastRenderTime = Date.now();
+                                } else {
+                                    // Simple text update for performance
+                                    textContainer.textContent = fullContent;
+                                }
+                                this.scrollToBottom();
+                            }
+                        } catch (e) {
+                            // Ignore partial JSON 
+                        }
+                    }
+                }
+            }
+
+            // Final rendering
+            conv.messages.push({ role: 'ai', content: fullContent, type: 'text' });
+
+            // Replace simple text with rendered markdown/katex
+            textContainer.innerHTML = this.processMarkdown(fullContent);
+            this.finalizeMessageRendering(messageEl, fullContent, 'text');
 
         } catch (err) {
             const el = document.getElementById(thinkingId);
             if (el) {
                 el.querySelector('.message-text').innerHTML =
                     `<span style="color: var(--error)">Failed to get response: ${err.message}</span>`;
+            } else {
+                this.appendMessage({ role: 'ai', content: `Error: ${err.message}`, type: 'text' });
             }
         }
     }
@@ -387,36 +437,94 @@ class PhantomChat {
         this.appendMessage({ role: 'ai', content: url, prompt, type: 'image' });
     }
 
-    retryLast() {
+    retryLast(index) {
         const conv = this.currentConversation;
-        if (!conv || conv.messages.length < 2) return;
+        if (!conv || conv.messages.length === 0) return;
 
-        for (let i = conv.messages.length - 1; i >= 0; i--) {
-            if (conv.messages[i].role === 'user') {
-                const text = conv.messages[i].content;
-                conv.messages = conv.messages.slice(0, i + 1);
-                this.render();
-                this.dom.input.value = text;
-                this.sendMessage();
-                break;
+        let targetIndex = -1;
+
+        if (index !== undefined) {
+            // Re-run from a specific user message
+            if (conv.messages[index].role === 'user') {
+                targetIndex = index;
+            } else {
+                // If it's an AI message, find the preceding user message
+                for (let i = index - 1; i >= 0; i--) {
+                    if (conv.messages[i].role === 'user') {
+                        targetIndex = i;
+                        break;
+                    }
+                }
             }
+        } else {
+            // Find the last user message (original behavior)
+            for (let i = conv.messages.length - 1; i >= 0; i--) {
+                if (conv.messages[i].role === 'user') {
+                    targetIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (targetIndex !== -1) {
+            const text = conv.messages[targetIndex].content;
+            conv.messages = conv.messages.slice(0, targetIndex + 1);
+            this.render();
+            this.dom.input.value = text;
+            this.sendMessage();
         }
     }
 
-    // draws stuff
-    render() {
+    editMessage(index) {
         const conv = this.currentConversation;
-        this.renderConversationList();
-        this.dom.chatBody.innerHTML = '';
+        if (!conv || !conv.messages[index]) return;
 
-        if (!conv || !conv.messages.length) {
-            this.dom.hero.style.display = 'block';
-            this.dom.title.textContent = 'Phantom AI';
-        } else {
-            this.dom.hero.style.display = 'none';
-            this.dom.title.textContent = conv.title;
-            conv.messages.forEach(msg => this.appendMessage(msg));
+        const text = conv.messages[index].content;
+        // Just load the text and clear subsequent history to branch from here
+        conv.messages = conv.messages.slice(0, index);
+        this.render();
+        this.dom.input.value = text;
+        this.dom.input.focus();
+        this.autoResizeInput();
+    }
+
+    speakText(text, btn) {
+        if (!window.speechSynthesis) {
+            if (window.Notify) Notify.error('Feature Unavailable', 'Speech synthesis not supported');
+            return;
         }
+
+        // Toggle: if currently speaking, stop
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            this.resetSpeechIcons();
+            return;
+        }
+
+        this.resetSpeechIcons();
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = 'fas fa-times'; // Show X when speaking
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => v.name.includes('Google') || v.name.includes('Natural')) || voices[0];
+        if (preferred) utterance.voice = preferred;
+
+        utterance.onend = () => this.resetSpeechIcons();
+        utterance.onerror = () => this.resetSpeechIcons();
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    resetSpeechIcons() {
+        document.querySelectorAll('.speak-btn i').forEach(i => {
+            i.className = 'fas fa-volume-up';
+        });
     }
 
     renderConversationList() {
@@ -429,6 +537,21 @@ class PhantomChat {
                 </button>
             </div>
         `).join('');
+    }
+
+    render() {
+        const conv = this.currentConversation;
+        this.renderConversationList();
+        this.dom.chatBody.innerHTML = '';
+
+        if (!conv || !conv.messages.length) {
+            this.dom.hero.style.display = 'block';
+            this.dom.title.textContent = 'Phantom AI';
+        } else {
+            this.dom.hero.style.display = 'none';
+            this.dom.title.textContent = conv.title;
+            conv.messages.forEach((msg, idx) => this.appendMessage({ ...msg, index: idx }));
+        }
     }
 
     escapeHtml(text) {
@@ -491,7 +614,7 @@ class PhantomChat {
         return html;
     }
 
-    appendMessage({ role, content, type = 'text', prompt, id, isThinking }) {
+    appendMessage({ role, content, type = 'text', prompt, id, isThinking, index }) {
         this.dom.hero.style.display = 'none';
 
         const div = document.createElement('div');
@@ -523,7 +646,7 @@ class PhantomChat {
                 </div>
             `;
         } else {
-            messageHtml = this.processMarkdown(content);
+            messageHtml = content ? this.processMarkdown(content) : '';
         }
 
         const imgId = type === 'image' ? `img-${Date.now()}` : '';
@@ -535,12 +658,25 @@ class PhantomChat {
             <div class="message-content">
                 <div class="message-text">${messageHtml.replace('class="generated-image"', `class="generated-image" id="${imgId}"`)}</div>
                 ${role === 'ai' && !isThinking ? `
-                    <div class="message-actions">
-                        <button class="btn" title="Copy" onclick="${type === 'image' ? `phantomChat.copyImage(document.getElementById('${imgId}'))` : `phantomChat.copyText(\`${content.replace(/`/g, '\\`').replace(/\\/g, '\\\\')}\`)`}">
+                    <div class="message-actions" style="${!content ? 'display: none' : ''}">
+                        <button class="btn speak-btn" title="Speak">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <button class="btn copy-btn" title="Copy">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="btn" title="Retry" onclick="phantomChat.retryLast()">
+                        <button class="btn redo-btn" title="Retry">
                             <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                ` : ''}
+                ${role === 'user' && index !== undefined ? `
+                    <div class="message-actions">
+                         <button class="btn copy-btn" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                         <button class="btn edit-btn" title="Edit">
+                            <i class="fas fa-pen"></i>
                         </button>
                     </div>
                 ` : ''}
@@ -556,30 +692,77 @@ class PhantomChat {
             });
         }
 
-        if (!isThinking && type === 'text' && window.hljs) {
-            div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
-        }
-
-        if (!isThinking && type === 'text' && window.renderMathInElement) {
-            renderMathInElement(div, {
-                delimiters: [
-                    { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false },
-                    { left: '\\(', right: '\\)', display: false },
-                    { left: '\\begin{equation}', right: '\\end{equation}', display: true },
-                    { left: '\\begin{align}', right: '\\end{align}', display: true },
-                    { left: '\\begin{alignat}', right: '\\end{alignat}', display: true },
-                    { left: '\\begin{gather}', right: '\\end{gather}', display: true },
-                    { left: '\\begin{CD}', right: '\\end{CD}', display: true },
-                    { left: '\\[', right: '\\]', display: true }
-                ],
-                throwOnError: false,
-                trust: true,
-                strict: false
-            });
+        if (!isThinking && content && type === 'text') {
+            this.finalizeMessageRendering(div, content, type, false, index);
+        } else if (role === 'ai' && !isThinking) {
+            // Attach listeners even if content is empty (for streaming updates later)
+            this.attachMessageActionListeners(div, content, type, index);
         }
 
         this.scrollToBottom();
+        return div;
+    }
+
+    attachMessageActionListeners(div, content, type, index) {
+        const speakBtn = div.querySelector('.speak-btn');
+        if (speakBtn) speakBtn.onclick = () => this.speakText(content, speakBtn);
+
+        const copyBtn = div.querySelector('.copy-btn');
+        if (copyBtn) {
+            copyBtn.onclick = () => {
+                if (type === 'image') {
+                    const img = div.querySelector('.generated-image');
+                    if (img) this.copyImage(img);
+                } else {
+                    this.copyText(content);
+                }
+            };
+        }
+
+        const redoBtn = div.querySelector('.redo-btn');
+        if (redoBtn) {
+            redoBtn.onclick = () => this.retryLast(index);
+        }
+
+        const editBtn = div.querySelector('.edit-btn');
+        if (editBtn) {
+            editBtn.onclick = () => this.editMessage(index);
+        }
+    }
+
+    finalizeMessageRendering(div, content, type, isPartial = false, index) {
+        if (type === 'text') {
+            if (window.hljs) {
+                div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            }
+
+            if (window.renderMathInElement) {
+                renderMathInElement(div, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\begin{equation}', right: '\\end{equation}', display: true },
+                        { left: '\\begin{align}', right: '\\end{align}', display: true },
+                        { left: '\\begin{alignat}', right: '\\end{alignat}', display: true },
+                        { left: '\\begin{gather}', right: '\\end{gather}', display: true },
+                        { left: '\\begin{CD}', right: '\\end{CD}', display: true },
+                        { left: '\\[', right: '\\]', display: true }
+                    ],
+                    throwOnError: false,
+                    trust: true,
+                    strict: false
+                });
+            }
+        }
+
+        if (!isPartial) {
+            const actions = div.querySelector('.message-actions');
+            if (actions) {
+                actions.style.display = 'flex';
+                this.attachMessageActionListeners(div, content, type, index);
+            }
+        }
     }
 }
 

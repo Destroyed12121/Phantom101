@@ -1,4 +1,3 @@
-
 const ADBLOCK = {
     blocked: [
         "*youtube.com/get_video_info?*adformat=*",
@@ -44,7 +43,7 @@ const ADBLOCK = {
         "*.openx.com*",
         "*.indexexchange.com*",
         "*.casalemedia.com*",
-        "*.indexexchange.com*", // Spread out
+        "*.indexexchange.com*",
         "*.adcolony.com*",
         "*.chartboost.com*",
         "*.unityads.unity3d.com*",
@@ -110,12 +109,12 @@ self.basePath = self.basePath || basePath;
 
 self.$scramjet = {
     files: {
-        wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
-        sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js",
+        wasm: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.wasm.wasm",
+        sync: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.sync.js",
     }
 };
 
-importScripts("https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js");
+importScripts("https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js");
 importScripts("https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.js");
 
 const { ScramjetServiceWorker } = $scramjetLoadWorker();
@@ -126,11 +125,11 @@ const scramjet = new ScramjetServiceWorker({
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
-// wisp
 let wispConfig = {
     wispurl: null,
     servers: [],
-    autoswitch: true
+    autoswitch: true,
+    transport: 'epoxy'
 };
 
 let serverHealth = new Map();
@@ -197,7 +196,6 @@ function switchToServer(url, latency = null, reason = 'Connection unstable') {
     wispConfig.wispurl = url;
     currentServerStartTime = Date.now();
 
-    // Reset client to force new connection on next request
     scramjet.client = null;
 
     self.clients.matchAll().then(clients => {
@@ -218,7 +216,6 @@ async function proactiveServerCheck() {
 
     const currentUrl = wispConfig.wispurl;
 
-    // Sort servers to prioritize checking current server or others
     const results = await Promise.all(
         wispConfig.servers.map(s => pingServer(s.url))
     );
@@ -226,7 +223,6 @@ async function proactiveServerCheck() {
     results.forEach(r => updateServerHealth(r.url, r.success));
 
     const currentHealth = serverHealth.get(currentUrl);
-    // If current is bad, or if there's a significantly better one (latency improvement > 40%)
     const bestWorking = results
         .filter(r => r.success)
         .sort((a, b) => a.latency - b.latency)[0];
@@ -247,12 +243,10 @@ self.addEventListener("message", ({ data }) => {
     if (data.type === "config") {
         if (data.wispurl) {
             wispConfig.wispurl = data.wispurl;
-            console.log("SW: Received wispurl", data.wispurl);
             currentServerStartTime = Date.now();
         }
         if (data.servers && data.servers.length > 0) {
             wispConfig.servers = data.servers;
-            console.log("SW: Received servers", data.servers.length);
             if (wispConfig.autoswitch) {
                 setTimeout(proactiveServerCheck, 500);
             }
@@ -262,6 +256,9 @@ self.addEventListener("message", ({ data }) => {
             if (wispConfig.autoswitch && wispConfig.servers?.length > 0) {
                 setTimeout(proactiveServerCheck, 500);
             }
+        }
+        if (data.transport) {
+            wispConfig.transport = data.transport;
         }
         if (wispConfig.wispurl && resolveConfigReady) {
             resolveConfigReady();
@@ -281,7 +278,6 @@ self.addEventListener("message", ({ data }) => {
 self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
         if (isAdBlocked(event.request.url)) {
-            console.log("SW: Blocked ad request:", event.request.url);
             return new Response(new ArrayBuffer(0), { status: 204 });
         }
 
@@ -289,9 +285,7 @@ self.addEventListener("fetch", (event) => {
         if (scramjet.route(event)) {
             return scramjet.fetch(event);
         }
-        
-        // Send resource-loaded for direct requests (not proxied)
-        // This ensures loading bar updates for all requests
+
         try {
             const response = await fetch(event.request);
             const clients = await self.clients.matchAll();
@@ -327,7 +321,11 @@ scramjet.addEventListener("request", async (e) => {
 
         if (!scramjet.client) {
             const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-            await connection.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", [{ wisp: wispConfig.wispurl }]);
+            let transportUrl = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
+            if (wispConfig.transport === "libcurl") {
+                transportUrl = "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/libcurl.mjs";
+            }
+            await connection.setTransport(transportUrl, [{ wisp: wispConfig.wispurl }]);
             scramjet.client = new BareMux.BareClient();
         }
 
@@ -346,7 +344,6 @@ scramjet.addEventListener("request", async (e) => {
                     duplex: "half",
                 });
 
-                // Real resource tracking for loading bar
                 self.clients.matchAll().then(clients => {
                     clients.forEach(client => {
                         client.postMessage({
@@ -378,7 +375,6 @@ scramjet.addEventListener("request", async (e) => {
         if (wispConfig.autoswitch && wispConfig.servers && wispConfig.servers.length > 1) {
             const currentHealth = serverHealth.get(wispConfig.wispurl);
 
-            // Only switch if server has been unstable for a while
             if (currentHealth && currentHealth.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
                 for (const server of wispConfig.servers) {
                     if (server.url === wispConfig.wispurl) continue;
@@ -386,7 +382,6 @@ scramjet.addEventListener("request", async (e) => {
                     if (!serverH || serverH.consecutiveFailures < MAX_CONSECUTIVE_FAILURES) {
                         const pingResult = await pingServer(server.url);
                         if (pingResult.success) {
-                            console.log(`SW: Auto-switching to ${server.url} due to failures on current server`);
                             switchToServer(server.url, pingResult.latency);
                             break;
                         }

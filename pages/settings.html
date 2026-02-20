@@ -60,12 +60,18 @@
                     <p style="color: var(--text-muted); font-size: 0.8125rem;">Choose a preset or add your own:</p>
                     <div class="cloaks-grid" id="cloaks-grid"></div>
 
-                    <div class="add-cloak-form" id="add-cloak-form" style="margin-top: 16px; padding: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px;">
-                        <h3 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">Add Custom Cloak</h3>
+                    <div class="add-cloak-form" id="add-cloak-form"
+                        style="margin-top: 16px; padding: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px;">
+                        <h3
+                            style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">
+                            Add Custom Cloak</h3>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <input type="text" class="setting-input" id="new-cloak-name" placeholder="Name (e.g., Google)" style="width: 100%;">
-                            <input type="text" class="setting-input" id="new-cloak-title" placeholder="Title (e.g., Google - My Drive)" style="width: 100%;">
-                            <input type="text" class="setting-input" id="new-cloak-icon" placeholder="Icon URL (optional)" style="width: 100%;">
+                            <input type="text" class="setting-input" id="new-cloak-name"
+                                placeholder="Name (e.g., Google)" style="width: 100%;">
+                            <input type="text" class="setting-input" id="new-cloak-title"
+                                placeholder="Title (e.g., Google - My Drive)" style="width: 100%;">
+                            <input type="text" class="setting-input" id="new-cloak-icon"
+                                placeholder="Icon URL (optional)" style="width: 100%;">
                             <div style="display: flex; gap: 8px;">
                                 <button class="btn btn-secondary" id="cancel-cloak">Cancel</button>
                                 <button class="btn btn-primary" id="save-cloak">Save</button>
@@ -419,6 +425,13 @@
             <div class="settings-panel" id="panel-data">
                 <div class="settings-section">
                     <h2 class="section-title"><i class="fa-solid fa-database"></i> Storage</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Offline Mode</div>
+                            <div class="setting-desc">Cache site for offline use (better performance)</div>
+                        </div>
+                        <div class="toggle" id="offline-mode-toggle"></div>
+                    </div>
                     <div class="setting-row">
                         <div class="setting-info">
                             <div class="setting-label">Clear Cache</div>
