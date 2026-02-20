@@ -1,4 +1,3 @@
-// footer
 (function () {
     'use strict';
 
@@ -18,10 +17,8 @@
     let storedSettings = {};
     try { storedSettings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
 
-    // settings
     let settings = { ...(config.defaults || {}), ...storedSettings };
 
-    // Inject modals.css 
     if (!document.querySelector('link[href*="styles/modals.css"]')) {
         const modalLink = document.createElement('link');
         modalLink.rel = 'stylesheet';
@@ -86,13 +83,22 @@
 
     document.body.appendChild(footer);
 
-    // Online counter
+    function getSessionId() {
+        const key = 'phantom_session_id';
+        let id = localStorage.getItem(key);
+        if (!id) {
+            id = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+            localStorage.setItem(key, id);
+        }
+        return id;
+    }
+
     async function updateOnlineCount() {
         try {
-            const res = await fetch('https://counter.leelive2021.workers.dev/');
+            const sessionId = getSessionId();
+            const res = await fetch(`https://counter.leelive2021.workers.dev/?id=${encodeURIComponent(sessionId)}`);
             const data = await res.json();
-            
-            // Update footer counter
+
             const footerEl = document.getElementById('footer-online-count');
             if (footerEl) {
                 if (data.online !== undefined) {
@@ -103,8 +109,7 @@
                     footerEl.textContent = '--';
                 }
             }
-            
-            // Update page counter (for index2.html)
+
             const pageEl = document.getElementById('page-online-count');
             if (pageEl) {
                 if (data.online !== undefined) {
@@ -115,7 +120,7 @@
                     pageEl.textContent = '--';
                 }
             }
-        } catch(e) {
+        } catch (e) {
             const footerEl = document.getElementById('footer-online-count');
             if (footerEl) footerEl.textContent = '--';
             const pageEl = document.getElementById('page-online-count');
@@ -126,9 +131,6 @@
     updateOnlineCount();
     setInterval(updateOnlineCount, 30000);
 
-
-
-    // Inject GTM head script 
     if (!document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
@@ -138,7 +140,6 @@
         document.head.insertBefore(gtmScript, document.head.firstChild);
     }
 
-    // Add GTM noscript fallback (for pages that don't have it in HTML)
     if (!document.querySelector('noscript iframe[src*="googletagmanager"]')) {
         const gtmNoscript = document.createElement('noscript');
         gtmNoscript.innerHTML = '<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LMBC27Z" height="0" width="0" style="display:none;visibility:hidden"></iframe>';
@@ -149,7 +150,6 @@
         if (e && e.preventDefault) e.preventDefault();
         const changes = customContent || config.changelog || ['No changes listed'];
 
-        // Use standard modal structure from main.css
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
 
@@ -174,7 +174,6 @@
 
         document.body.appendChild(overlay);
 
-        // Trigger animation
         requestAnimationFrame(() => overlay.classList.add('show'));
 
         const close = () => {
@@ -186,14 +185,10 @@
         overlay.onclick = (e) => { if (e.target === overlay) close(); };
     };
 
-    // Expose openChangelog globally
     window.openChangelog = openChangelog;
 
     const formatAnnouncement = (text) => {
         if (!text) return '';
-        // Bold: **text** -> <strong>text</strong>
-        // Strikethrough: ***text*** -> <del>text</del>
-        // Remove quotes: "" -> "" (actually requested to not show at all)
         return text
             .replace(/\*\*\*(.*?)\*\*\*/g, '<del>$1</del>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -237,32 +232,54 @@
     async function checkAnnouncements() {
         if (!config.announcement) return;
 
-        let ann = config.announcement;
+        const localMessage = config.announcement.message;
+        const localId = localMessage ? btoa(unescape(encodeURIComponent(localMessage))).slice(0, 32) : null;
+        const localSeenKey = localId ? `announcement_seen_${localId}` : null;
 
-        if (ann.useCDN) {
-            // Stashed CDN URL
+        const showLocal = localId && !localStorage.getItem(localSeenKey);
+
+        const fetchCDN = async () => {
             const endpoint = "https://raw.githubusercontent.com/Destroyed12121/Phantom101/main/announcement.json";
             try {
                 const res = await fetch(endpoint);
                 const data = await res.json();
-                if (data) ann = { ...ann, ...data };
-            } catch (err) {
-                // Ignore errors
-            }
-        }
+                if (data && data.message) {
+                    const cdnId = btoa(unescape(encodeURIComponent(data.message))).slice(0, 32);
+                    const cdnSeenKey = `announcement_seen_cdn_${cdnId}`;
+                    if (!localStorage.getItem(cdnSeenKey)) {
+                        return { message: data.message, key: cdnSeenKey };
+                    }
+                }
+            } catch (err) { }
+            return null;
+        };
 
-        // Don't show if message is empty
-        if (!ann.message || formatAnnouncement(ann.message).trim() === "") return;
-
-        // Use a simple hash or just the message string for uniqueness
-        const messageId = btoa(unescape(encodeURIComponent(ann.message))).slice(0, 32);
-        const seenKey = `announcement_seen_${messageId}`;
-
-        if (!localStorage.getItem(seenKey)) {
+        if (showLocal) {
             setTimeout(() => {
-                openAnnouncement(ann.message);
-                localStorage.setItem(seenKey, 'true');
+                openAnnouncement(localMessage);
+                localStorage.setItem(localSeenKey, 'true');
+
+                const checkCDNInterval = setInterval(async () => {
+                    if (!document.querySelector('.modal-overlay.show')) {
+                        clearInterval(checkCDNInterval);
+                        const cdn = await fetchCDN();
+                        if (cdn) {
+                            setTimeout(() => {
+                                openAnnouncement(cdn.message);
+                                localStorage.setItem(cdn.key, 'true');
+                            }, 1000);
+                        }
+                    }
+                }, 1000);
             }, 1500);
+        } else {
+            const cdn = await fetchCDN();
+            if (cdn) {
+                setTimeout(() => {
+                    openAnnouncement(cdn.message);
+                    localStorage.setItem(cdn.key, 'true');
+                }, 1500);
+            }
         }
     }
 
@@ -274,19 +291,15 @@
     const versionBtn = document.getElementById('footer-version');
     if (versionBtn) versionBtn.onclick = openChangelog;
 
-    // sync
-    // syncRemoteChangelog removed - using local config
-
-
-    // Initialize Sync
-    // syncRemoteChangelog();
-
     const currentVersion = config.version;
     const lastVersion = settings.lastVersion;
 
     if (settings.showChangelogOnUpdate && lastVersion && lastVersion !== currentVersion) {
         setTimeout(() => {
             openChangelog();
+            if (window.RotationManager?.rotateBackground) {
+                window.RotationManager.rotateBackground();
+            }
             settings.lastVersion = currentVersion;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
         }, 1000);
@@ -295,14 +308,12 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     }
 
-    // panic
     if (settings.panicKey) {
         document.addEventListener('keydown', (e) => {
             const keys = settings.panicModifiers || ['ctrl', 'shift'];
             const triggerKey = settings.panicKey.toLowerCase();
             const pressedKey = e.key.toLowerCase();
 
-            // Check modifiers
             const ctrlMatch = keys.includes('ctrl') === e.ctrlKey;
             const shiftMatch = keys.includes('shift') === e.shiftKey;
             const altMatch = keys.includes('alt') === e.altKey;
@@ -310,31 +321,23 @@
             if (ctrlMatch && shiftMatch && altMatch && pressedKey === triggerKey) {
                 e.preventDefault();
 
-                // Show white screen instantly (if panic-overlay exists in parent)
                 const parentOverlay = window.parent?.document?.getElementById('panic-overlay');
                 if (parentOverlay) {
                     parentOverlay.style.display = 'block';
                 } else {
-                    // Create overlay if it doesn't exist
                     const overlay = document.createElement('div');
                     overlay.id = 'panic-overlay';
                     overlay.style.cssText = 'position:fixed;inset:0;background:white;z-index:99999;';
                     document.body.appendChild(overlay);
                 }
 
-                // Redirect immediately
                 const url = settings.panicUrl || 'https://classroom.google.com';
                 try { window.top.location.href = url; } catch { window.location.href = url; }
             }
-        }, true); // Use capture phase for faster response
+        }, true);
     }
 
-    // Cloaking logic has been moved to scripts/cloaking.js for better synchronization.
-    // If you need cloaking on a specific page, include that script.
-
-
     window.addEventListener('beforeunload', (e) => {
-        // Reload settings to get latest value
         try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
 
         if (window.top === window.self && settings.leaveConfirmation) {
@@ -344,12 +347,10 @@
         }
     });
 
-    // discord
     let crateInstance = null;
 
     function initDiscord() {
         if (settings.discordWidget && config.discord && config.discord.widgetServer && config.discord.widgetChannel) {
-            // Check if already loaded
             if (document.querySelector('script[src*="@widgetbot/crate"]')) {
                 if (crateInstance) crateInstance.show();
                 return;
@@ -369,15 +370,12 @@
             };
             document.body.appendChild(crateScript);
         } else {
-            // Hide if disabled
             if (crateInstance) crateInstance.hide();
         }
     }
 
-    // Initialize
     initDiscord();
 
-    // Listen for settings change to toggle dynamically
     window.addEventListener('storage', (e) => {
         if (e.key === STORAGE_KEY) {
             try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
@@ -385,7 +383,6 @@
         }
     });
 
-    // Listen for internal event
     window.addEventListener('settings-changed', (e) => {
         settings = e.detail;
         initDiscord();

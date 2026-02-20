@@ -11,7 +11,6 @@ let tabs = [];
 let activeTabId = null;
 let nextTabId = 1;
 
-
 function getStoredWisps() {
     return window.Settings?.get('customWisps') || [];
 }
@@ -62,8 +61,6 @@ async function initWispAutoswitch() {
     if (window.Settings?.get('wispAutoswitch') === false) return;
 
     const currentUrl = window.Settings?.get('proxServer') || DEFAULT_WISP;
-
-
     const currentHealth = await pingWispServer(currentUrl, 800);
 
     if (currentHealth.success) {
@@ -86,7 +83,6 @@ async function initWispAutoswitch() {
     }
 }
 
-
 const getBasePath = () => {
     const path = location.pathname.replace(/[^/]*$/, '');
     return path.endsWith('/') ? path : path + '/';
@@ -99,9 +95,9 @@ async function getSharedScramjet() {
     sharedScramjet = new ScramjetController({
         prefix: getBasePath() + "scramjet/",
         files: {
-            wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
-            all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
-            sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
+            wasm: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.wasm.wasm",
+            all: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js",
+            sync: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.sync.js"
         }
     });
 
@@ -129,7 +125,7 @@ async function getSharedConnection() {
 
     let transportUrl = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
     if (transport === "libcurl") {
-        transportUrl = "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/libcurl.mjs";
+        transportUrl = "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/libcurl.mjs";
     }
 
     sharedConnection = new BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
@@ -159,7 +155,8 @@ async function registerServiceWorker() {
         type: "config",
         wispurl: window.Settings?.get("proxServer") ?? DEFAULT_WISP,
         servers: getAllWispServers(),
-        autoswitch: window.Settings?.get('wispAutoswitch') !== false
+        autoswitch: window.Settings?.get('wispAutoswitch') !== false,
+        transport: window.Settings?.get('transport') || 'epoxy'
     };
 
     const send = () => {
@@ -179,19 +176,17 @@ async function registerServiceWorker() {
         } else if (e.data.type === 'navigate') {
             handleSubmit(e.data.url);
         } else if (e.data.type === 'resource-loaded') {
-            // Update all loading tabs, not just active one
             tabs.forEach(tab => {
                 if (tab.loading) {
-                    tab.lastProgressUpdate = Date.now(); // Track when we got an update
+                    tab.lastProgressUpdate = Date.now();
                     const isError = e.data.status >= 400 || e.data.status === 0;
-                    const increment = isError ? 5 : 12; // Boost for actual resource loads
+                    const increment = isError ? 5 : 12;
                     tab.progress = Math.min(94, tab.progress + increment);
 
                     if (tab.id === activeTabId) {
                         updateLoadingBar(tab, tab.progress);
                     }
 
-                    // Auto-complete if progress is high enough and it's 200/304
                     if (tab.progress >= 80 && (e.data.status === 200 || e.data.status === 304)) {
                         if (tab.finishTimer) clearTimeout(tab.finishTimer);
                         tab.finishTimer = setTimeout(() => completeLoading(tab), 200);
@@ -247,7 +242,7 @@ function handleSubmit(url) {
 
 function initializeBrowserUI() {
     const root = document.getElementById("app");
-    if (!root || root.innerHTML.trim() !== "") return; // Avoid double init
+    if (!root || root.innerHTML.trim() !== "") return;
 
     root.innerHTML = `
         <div class="browser-container">
@@ -279,8 +274,6 @@ function initializeBrowserUI() {
             try {
                 tab.frame.frame.contentWindow.history.back();
             } catch (e) {
-                console.error("Navigation error:", e);
-                // Fallback for isolated contexts
                 tab.frame.frame.contentWindow.postMessage({ type: 'history-back' }, '*');
             }
         }
@@ -291,8 +284,6 @@ function initializeBrowserUI() {
             try {
                 tab.frame.frame.contentWindow.history.forward();
             } catch (e) {
-                console.error("Navigation error:", e);
-                // Fallback for isolated contexts
                 tab.frame.frame.contentWindow.postMessage({ type: 'history-forward' }, '*');
             }
         }
@@ -340,7 +331,6 @@ function initializeBrowserUI() {
 
 async function createTab(makeActive = true) {
     if (!sharedScramjet) {
-        console.log("Tab: Waiting for Scramjet...");
         await getSharedScramjet();
     }
 
@@ -373,19 +363,16 @@ async function createTab(makeActive = true) {
         updateTabsUI();
         updateAddressBar();
 
-        // Reset and show loading bar immediately with simulation
         tab.progress = 8;
         tab.lastProgressUpdate = Date.now();
         updateLoadingBar(tab, tab.progress);
-        
-        // Start fallback progress simulation
+
         if (tab.progressTimer) clearInterval(tab.progressTimer);
         tab.progressTimer = setInterval(() => {
             if (!tab.loading) {
                 clearInterval(tab.progressTimer);
                 return;
             }
-            // Progress faster if recently got resource-loaded, slower otherwise
             const timeSinceUpdate = Date.now() - (tab.lastProgressUpdate || 0);
             const increment = timeSinceUpdate < 500 ? 4 : 2;
             tab.progress = Math.min(92, tab.progress + increment);
@@ -406,13 +393,6 @@ async function createTab(makeActive = true) {
         try {
             const win = frame.frame.contentWindow;
             if (win?.document?.title) tab.title = win.document.title;
-
-            // Sync URL after navigation (especially back/forward)
-            const currentUrl = win.location.href;
-            if (currentUrl && !currentUrl.includes('about:blank')) {
-                // The URL might be the proxied one, Scramjet handles resolution in urlchange,
-                // but for history navigation we help it here if needed.
-            }
         } catch { }
 
         if (frame.frame.contentWindow.location.href.includes('NT.html')) {
@@ -472,7 +452,6 @@ function switchTab(tabId) {
     tabs.forEach(t => t.frame.frame.classList.toggle("hidden", t.id !== tabId));
     if (tab) {
         showIframeLoading(tab.loading, tab.url);
-        // Ensure loading bar matches the new tab state
         updateLoadingBar(tab, tab.loading ? tab.progress : 100);
     }
 
@@ -527,8 +506,6 @@ function updateAddressBar() {
     if (bar && tab) bar.value = (tab.url && !tab.url.includes("NT.html")) ? tab.url : "";
 }
 
-
-
 function updateLoadingBar(tab, percent) {
     if (tab.id !== activeTabId) return;
     const bar = document.getElementById("loading-bar");
@@ -540,12 +517,11 @@ function updateLoadingBar(tab, percent) {
     }
 
     const container = bar.parentElement;
-    
-    // Force display for initial loading
+
     if (percent > 0 && percent < 100) {
         bar.style.display = 'block';
     }
-    
+
     bar.style.width = percent + "%";
     bar.style.opacity = percent === 100 ? "0" : "1";
 
@@ -562,7 +538,6 @@ function updateLoadingBar(tab, percent) {
         }, 200);
     }
 }
-
 
 function openSettings() {
     const modal = document.getElementById('wisp-settings-modal');
@@ -647,9 +622,6 @@ function renderServerList() {
     list.appendChild(toggle);
 }
 
-
-
-
 function saveCustomWisp() {
     const url = document.getElementById('custom-wisp-input').value.trim();
     if (!url || (!url.startsWith('ws://') && !url.startsWith('wss://'))) return notify('error', 'Invalid URL', 'Must start with ws:// or wss://');
@@ -693,8 +665,6 @@ function setWisp(url) {
     }
     setTimeout(() => location.reload(), 500);
 }
-
-
 
 window.addEventListener('message', (e) => {
     if (e.data?.type === 'navigate' && e.data.url) {

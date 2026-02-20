@@ -24,7 +24,7 @@ function renderCloaks() {
             (c.icon ? '<img src="' + c.icon + '" onerror="this.style.display=\'none\'">' : '<i class="fa-solid fa-globe"></i>') +
             '<span>' + c.name + '</span></button>';
     }).join('');
-    
+
     // Add "Add Custom Cloak" button at the end (like Save Theme)
     const addBtn = document.createElement('button');
     addBtn.className = 'cloak-btn';
@@ -35,7 +35,7 @@ function renderCloaks() {
         if (form) form.classList.toggle('show');
     };
     grid.appendChild(addBtn);
-    
+
     grid.querySelectorAll('.cloak-btn:not(#add-cloak-btn)').forEach(btn => {
         btn.onclick = () => {
             settings.selectedCloakPreset = btn.dataset.name;
@@ -68,7 +68,7 @@ if (saveCloakBtn) {
         const titleInput = document.getElementById('new-cloak-title');
         const iconInput = document.getElementById('new-cloak-icon');
         if (!nameInput || !titleInput || !iconInput) return;
-        
+
         const name = nameInput.value.trim();
         const title = titleInput.value.trim();
         const icon = iconInput.value.trim();
@@ -560,6 +560,8 @@ if (settings.autoSwitchProviders !== false) document.getElementById('autoswitch-
 else document.getElementById('autoswitch-toggle').classList.remove('active');
 if (settings.historyEnabled !== false) document.getElementById('history-toggle').classList.add('active');
 else document.getElementById('history-toggle').classList.remove('active');
+if (settings.offlineMode !== false) document.getElementById('offline-mode-toggle').classList.add('active');
+else document.getElementById('offline-mode-toggle').classList.remove('active');
 if (localStorage.getItem('phantom_ambiance_enabled') !== 'false') document.getElementById('ambiance-setting-toggle').classList.add('active');
 else document.getElementById('ambiance-setting-toggle').classList.remove('active');
 
@@ -598,6 +600,28 @@ document.getElementById('theme-rotation-toggle').onclick = function () { this.cl
 document.getElementById('autoswitch-toggle').onclick = function () { this.classList.toggle('active'); settings.autoSwitchProviders = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('history-toggle').onclick = function () { this.classList.toggle('active'); settings.historyEnabled = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('background-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.backgroundRotation = this.classList.contains('active'); saveSettings(settings); };
+document.getElementById('offline-mode-toggle').onclick = function () {
+    this.classList.toggle('active');
+    const enabled = this.classList.contains('active');
+    settings.offlineMode = enabled;
+    saveSettings(settings);
+
+    if (!enabled && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+            for (const reg of regs) {
+                if (reg.active && reg.active.scriptURL.endsWith('/sw.js') && !reg.active.scriptURL.includes('/staticsjv2/')) {
+                    reg.unregister();
+                }
+            }
+        });
+    } else if (enabled) {
+        // Trigger registration
+        if (window.ProxyInit?.init) window.ProxyInit.init();
+    }
+
+    if (window.Notify) Notify.success('Saved', 'Offline Mode ' + (enabled ? 'enabled (Requires refresh)' : 'disabled'));
+};
+
 document.getElementById('ambiance-setting-toggle').onclick = function () {
     this.classList.toggle('active');
     const enabled = this.classList.contains('active');

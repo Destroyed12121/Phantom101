@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BG Proxy</title>
     <script src="../config.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
+    <script src="https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js" defer></script>
     <script type="module">
         import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
         window.BareMux = BareMux;
@@ -16,10 +16,6 @@
 
 <body>
     <script>
-        // background image proxy
-        // This page is loaded in an invisible iframe by background.js
-        // It proxies image requests and sends them back via postMessage
-
         const DEFAULT_WISP = window.SITE_CONFIG?.defaultWisp || "wss://glseries.net/wisp/";
         let connectionInstance = null;
         let initPromise = null;
@@ -29,7 +25,6 @@
             if (initPromise) return initPromise;
 
             initPromise = (async () => {
-                // Wait for BareMux to be ready
                 let retries = 0;
                 while (!window.BareMux && retries < 50) {
                     await new Promise(r => setTimeout(r, 100));
@@ -43,7 +38,6 @@
                 const basePath = location.pathname.replace(/[^/]*$/, '') + '/';
                 const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
 
-                // Path updated to point to staticsjv2/bareworker.js
                 connectionInstance = new BareMux.BareMuxConnection("../staticsjv2/bareworker.js");
                 await connectionInstance.setTransport(
                     "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
@@ -72,7 +66,6 @@
 
                 return new Promise((resolve) => {
                     reader.onload = () => {
-                        // Send base64 data back to parent
                         window.parent.postMessage({
                             type: 'bg-proxy-response',
                             requestId,
@@ -103,14 +96,12 @@
             }
         }
 
-        // Listen for proxy requests from parent
         window.addEventListener('message', async (e) => {
             if (e.data?.type === 'bg-proxy-request' && e.data.url && e.data.requestId) {
                 await proxyImage(e.data.url, e.data.requestId);
             }
         });
 
-        // Signal ready to parent
         window.parent.postMessage({ type: 'bg-proxy-ready' }, '*');
     </script>
 </body>

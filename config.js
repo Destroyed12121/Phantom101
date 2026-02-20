@@ -1,44 +1,20 @@
-/**
- * Phantom Unblocked - A feature-rich unblocked games platform.
- * Copyright (C) 2026 Phantom.
- * Licensed under the PolyForm Noncommercial License 1.0.0.
- */
-
-// site config
-
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.1.2",
+    version: "1.1.4",
 
     changelog: [
-        "made a worker for youtube search**",
-        "added music miniplayer",
-        "reorganized settings page",
-        "added a custom online counter",
-        "fixxed games sorting and added trending option",
-        "added saving for custom themes",
-        "refined proxy - added libcurl support and more",
-        "added proxy settings to settings page",
-        "added small offline support to allow playing games without wifi",
-        "made loading screen not show during click to launch",
-        "**Added Autoupdating links in Credits**",
-        "fixed blob tab launching",
-        "**Join the Discord Lil Bro**",
-        "added announcements back",
-        "maybe fixxed miniplayer forcing you to go to a new song to work",
-        "added announcement source selector",
-        "Added ambiance to movies and games and such (might remove)",
-        "added twitch chat to twitch",
-        "added continue watching and recently played",
-        "optimized page code slightly",
-        "fixxed/updated ugs games",
-        "updated license",
-        "many small changes and fixxes",
+        "added streaming and more to aichat (makes ai realtime)",
+        "fixxed users counter",
+        "fixxed libcurl support",
+        "made announcements use both cdns and local data",
+        "fixxed reloading for games",
+        "fixxed offline mode",
+        "quit making the singlefile",
+        "AND MORE!"
 
     ],
 
-    // quotes
     quotes: [
         "lebron lebron lebronn james",
         "so tuff",
@@ -60,10 +36,9 @@ window.SITE_CONFIG = {
         "stop looking at my screen",
     ],
 
-    // todo
-    // *** for strikethrough
-    // ** for bold
     todos: [
+        "add singlefile, genuinely dont know how to do this and im not tryna do it manually",
+        "***fix issues with users couner and libcurl support mb i should have took more time before releasing***",
         "***add custom users counter***",
         "***add more sources for movies and fix autoswitch***",
         "***make ambiance be on by default***",
@@ -93,7 +68,7 @@ window.SITE_CONFIG = {
         widgetChannel: "1447673726228496617",
     },
 
-    firstVisitCloak: false, //fake error page
+    firstVisitCloak: true,
     defaults: {
         cloakMode: "about:blank",
         selectedCloakPreset: "Quiz",
@@ -108,7 +83,7 @@ window.SITE_CONFIG = {
         miniplayer: true,
         leaveConfirmation: false,
         showChangelogOnUpdate: true,
-        themeRotation: false,
+        themeRotation: true,
         lastThemeRotation: 0,
         backgroundRotation: true,
         lastBackgroundRotation: 0,
@@ -125,11 +100,10 @@ window.SITE_CONFIG = {
         proxServer: 'wss://glseries.net/wisp/',
         historyEnabled: true,
         autoSwitchProviders: true,
-        autoLaunch: true, // i forgot what this does 
+        autoLaunch: true,
     },
 
     announcement: {
-        useCDN: false,
         message: "",
     },
 
@@ -142,7 +116,7 @@ window.SITE_CONFIG = {
         ocean: { name: 'Oceanic', bg: { type: 'color', value: '#011627' }, surface: '#0B1823', surfaceHover: '#1d3b53', surfaceActive: '#2d4b63', secondary: '#0b2942', border: '#1d3b53', borderLight: '#0b2942', text: '#d6deeb', textSec: '#5f7e97', textDim: '#011627', accent: '#7fdbca' },
     },
 
-    backgroundPresets: [ //active: true }, makes background the default
+    backgroundPresets: [
         { id: 'none', name: 'None (Theme Default)', type: 'none' },
         { id: 'Night sky', name: 'Night sky', type: 'image', url: 'https://images.pexels.com/photos/5675745/pexels-photo-5675745.jpeg', overlay: 0.3 },
         { id: 'winter-mountains', name: 'Winter mountains', type: 'image', url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg', overlay: 0.3 },

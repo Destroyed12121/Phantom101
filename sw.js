@@ -1,25 +1,38 @@
 
 
-const CACHE_NAME = 'phantom-offline-v2';
+const CACHE_NAME = 'phantom-offline-v3';
 const ASSETS_TO_CACHE = [
+    './',
+    './index.html',
     './index2.html',
     './pages/games.html',
+    './pages/settings.html',
     './styles/main.css',
     './styles/search.css',
     './styles/background.css',
     './styles/layout.css',
     './styles/card.css',
+    './styles/settings.css',
+    './styles/error.css',
+    './styles/modals.css',
     './components/topbar.css',
     './scripts/init.js',
     './scripts/games.js',
     './scripts/gloader.js',
     './scripts/background.js',
     './scripts/settings.js',
+    './scripts/settingspage.js',
+    './scripts/notifications.js',
+    './scripts/cloaking.js',
+    './scripts/rotation.js',
+    './scripts/quotes.js',
+    './scripts/featured.js',
+    './scripts/search.js',
     './favicon.svg',
     './config.js',
     './components/topbar.js',
     './components/footer.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
 self.addEventListener('install', (event) => {
@@ -47,9 +60,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
-    // Ignore proxy requests or external API calls
     const url = new URL(event.request.url);
-    if ((url.origin !== location.origin && !ASSETS_TO_CACHE.includes(event.request.url)) || url.pathname.includes('/staticsjv2/')) {
+
+    // Ignore proxy requests or external API calls (except FontAwesome)
+    const isFontAwesome = event.request.url.includes('cdnjs.cloudflare.com/ajax/libs/font-awesome');
+    if ((url.origin !== location.origin && !isFontAwesome) || url.pathname.includes('/staticsjv2/')) {
         return;
     }
 
@@ -59,9 +74,9 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse;
             }
             return fetch(event.request).catch(() => {
-
                 if (event.request.mode === 'navigate') {
-                    return caches.match('./index2.html');
+                    // Fallback to index.html for navigation errors if offline
+                    return caches.match('./index.html') || caches.match('./index2.html');
                 }
             });
         })

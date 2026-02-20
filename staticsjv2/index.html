@@ -7,7 +7,7 @@
     <title>Browser</title>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
+    <script src="https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js" defer></script>
     <script type="module">
         import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
         window.BareMux = BareMux;
@@ -27,9 +27,6 @@
 </head>
 
 <body>
-    <!-- Home Button -->
-
-
     <div id="app"></div>
 
     <div class="wisp-settings-modal hidden" id="wisp-settings-modal">
@@ -54,10 +51,12 @@
                     </div>
 
                     <div class="section-title"><i class="fa-solid fa-bolt"></i> Transport Method</div>
-                    <select id="transport-select" class="input select" style="margin-bottom: 20px;">
-                        <option value="epoxy">Epoxy (Faster)</option>
-                        <option value="libcurl">Libcurl (Compatible)</option>
-                    </select>
+                    <center>
+                        <select id="internal-transport-select" class="input select" style="margin-bottom: 20px;">
+                            <option value="epoxy">Epoxy (Faster)</option>
+                            <option value="libcurl">Libcurl (Compatible)</option>
+                        </select>
+                    </center>
                 </div>
 
             </div>

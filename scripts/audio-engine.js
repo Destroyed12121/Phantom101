@@ -215,7 +215,10 @@ class AudioEngine {
             this.state.currentTrack.artistName === track.artistName;
 
         if (isSameTrack) {
-            this.play();
+            // Always try to play if currently paused or unstarted
+            if (!this.state.isPlaying || (this.player && this.player.getPlayerState && this.player.getPlayerState() <= 0)) {
+                this.play();
+            }
             return;
         }
 
@@ -441,21 +444,26 @@ class AudioEngine {
     _checkAutoResume() {
         const now = Date.now();
         const wasPlaying = this.state.isPlaying;
+
+        // Reset playing state before attempt; play() will set it back if successful
         this.state.isPlaying = false;
 
         if (wasPlaying && (now - (this.state.timestamp || 0) < 15000)) {
             if (this.state.currentTrack) {
                 console.log('[AudioEngine] Resuming playback...');
-                this.play(this.state.currentTrack);
-                if (this.state.currentTime > 0) {
-                    this.queue.push(() => {
-                        if (this.state.source === 'itunes' && this.audio) {
-                            this.audio.currentTime = this.state.currentTime;
-                        } else if (this.player && this.player.seekTo) {
-                            this.player.seekTo(this.state.currentTime);
-                        }
-                    });
-                }
+                // We use setTimeout to ensure player is initialized enough
+                setTimeout(() => {
+                    this.play(this.state.currentTrack);
+                    if (this.state.currentTime > 0) {
+                        this.queue.push(() => {
+                            if (this.state.source === 'itunes' && this.audio) {
+                                this.audio.currentTime = this.state.currentTime;
+                            } else if (this.player && this.player.seekTo) {
+                                this.player.seekTo(this.state.currentTime);
+                            }
+                        });
+                    }
+                }, 500);
             }
         }
     }

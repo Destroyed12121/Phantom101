@@ -1,11 +1,3 @@
-/**
- * Phantom Unblocked - Core Initialization
- * Copyright (C) 2026 Phantom Unblocked.
- * Licensed under the PolyForm Noncommercial License 1.0.0.
- */
-
-// proxy init
-
 const ProxyInit = {
     DEFAULT_WISP: window.SITE_CONFIG?.defaultWisp || "wss://glseries.net/wisp/",
     WISP_SERVERS: window.SITE_CONFIG?.wispServers || [],
@@ -65,24 +57,47 @@ const ProxyInit = {
             const scramjet = new ScramjetController({
                 prefix: this.BASE_PATH + "scramjet/",
                 files: {
-                    wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
-                    all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
-                    sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
+                    wasm: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.wasm.wasm",
+                    all: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js",
+                    sync: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.sync.js"
                 }
             });
             await scramjet.init();
 
-            if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.register(this.BASE_PATH + "sw.js", { scope: this.BASE_PATH });
-                const config = {
-                    type: "config",
-                    wispurl: best,
-                    servers: [...this.WISP_SERVERS, ...JSON.parse(localStorage.getItem('customWisps') || '[]')],
-                    autoswitch: localStorage.getItem('wispAutoswitch') !== 'false'
-                };
+            const settings = JSON.parse(localStorage.getItem('void_settings') || '{}');
+            const offlineEnabled = settings.offlineMode !== false;
 
-                const send = () => reg.active?.postMessage(config);
-                send(); setTimeout(send, 500);
+            if ('serviceWorker' in navigator) {
+                if (offlineEnabled) {
+                    try {
+                        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+                    } catch (e) {
+                        console.error('Main SW registration failed:', e);
+                    }
+                } else {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (const reg of regs) {
+                        if (reg.active && reg.active.scriptURL.endsWith('/sw.js') && !reg.active.scriptURL.includes('/staticsjv2/')) {
+                            await reg.unregister();
+                            console.log('Main Offline SW unregistered');
+                        }
+                    }
+                }
+
+                try {
+                    const reg = await navigator.serviceWorker.register(this.BASE_PATH + "sw.js", { scope: this.BASE_PATH });
+                    const config = {
+                        type: "config",
+                        wispurl: best,
+                        servers: [...this.WISP_SERVERS, ...JSON.parse(localStorage.getItem('customWisps') || '[]')],
+                        autoswitch: localStorage.getItem('wispAutoswitch') !== 'false'
+                    };
+
+                    const send = () => reg.active?.postMessage(config);
+                    send(); setTimeout(send, 500);
+                } catch (e) {
+                    console.error('Proxy SW registration failed:', e);
+                }
 
                 const conn = new BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
                 await conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: best }]);

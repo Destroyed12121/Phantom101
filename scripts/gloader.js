@@ -5,7 +5,7 @@ const UGS_PREFIX = "https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/
 
 const Gloader = {
     CACHE_KEY: 'phantom_games_cache_v2',
-    EXPIRY_MS: 7 * 24 * 60 * 60 * 1000, // 7 Days
+    EXPIRY_MS: 7 * 24 * 60 * 60 * 1000,
 
     async load(lib = 'multi') {
         const cacheKey = `${this.CACHE_KEY}_${lib}`;
