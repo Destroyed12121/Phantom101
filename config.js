@@ -5,7 +5,7 @@ window.SITE_CONFIG = {
 
     changelog: [
         "added streaming and more to aichat (makes ai realtime)",
-        "fixxed users counter",
+        "made users counter much smarter (fixxed)",
         "fixxed libcurl support",
         "made announcements use both cdns and local data",
         "fixxed reloading for games",
@@ -105,6 +105,7 @@ window.SITE_CONFIG = {
 
     announcement: {
         message: "",
+        endpoint: "/testing",
     },
 
     themePresets: {

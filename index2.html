@@ -261,11 +261,9 @@
             </section>
 
             <!-- Online Counter -->
-            <div class="online-counter"
-                style="margin-top: 24px; display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; color: var(--text-muted);">
-                <i class="fa-solid fa-user-group" style="color: #22c55e;"></i>
-                <span id="page-online-count">--</span>
-                <span>online</span>
+            <div class="online-counter" style="margin-top: 24px; font-size: 0.875rem; color: var(--text-muted);">
+                <span id="page-online-count">--</span> online
+                <span id="page-refresh-countdown" style="margin-left: 4px; opacity: 0.6;"></span>
             </div>
         </main>
 
@@ -288,7 +286,7 @@
                 card.href = g.url;
                 card.className = 'featured-card';
                 card.innerHTML = `
-                    <div class="featured-card-icon" style="background: ${g.gameName ? 'transparent' : 'var(--surface-hover)'}; color: var(--text-muted);">
+                    <div class="featured-card-icon" style="background: ${g.bgColor || (g.gameName ? 'transparent' : 'var(--surface-hover)')}; color: var(--text-muted);">
                         ${g.img ? `<img src="${g.img}" loading="eager" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-gamepad\\'></i>'">` : `<i class="${g.icon}"></i>`}
                     </div>
                     <div class="featured-card-title">${g.name}</div>
