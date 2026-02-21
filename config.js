@@ -105,7 +105,6 @@ window.SITE_CONFIG = {
 
     announcement: {
         message: "",
-        endpoint: "/testing",
     },
 
     themePresets: {
