@@ -68,7 +68,7 @@ window.SITE_CONFIG = {
         widgetChannel: "1447673726228496617",
     },
 
-    firstVisitCloak: true,
+    firstVisitCloak: false, // fake offline page
     defaults: {
         cloakMode: "about:blank",
         selectedCloakPreset: "Quiz",
