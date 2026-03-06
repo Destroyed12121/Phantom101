@@ -57,9 +57,9 @@ const ProxyInit = {
             const scramjet = new ScramjetController({
                 prefix: this.BASE_PATH + "scramjet/",
                 files: {
-                    wasm: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.wasm.wasm",
-                    all: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js",
-                    sync: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.sync.js"
+                    wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
+                    all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
+                    sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
                 }
             });
             await scramjet.init();

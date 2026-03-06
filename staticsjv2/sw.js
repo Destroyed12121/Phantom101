@@ -109,12 +109,12 @@ self.basePath = self.basePath || basePath;
 
 self.$scramjet = {
     files: {
-        wasm: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.wasm.wasm",
-        sync: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.sync.js",
+        wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
+        sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js",
     }
 };
 
-importScripts("https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js");
+importScripts("https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js");
 importScripts("https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.js");
 
 const { ScramjetServiceWorker } = $scramjetLoadWorker();
@@ -321,11 +321,49 @@ scramjet.addEventListener("request", async (e) => {
 
         if (!scramjet.client) {
             const connection = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-            let transportUrl = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
-            if (wispConfig.transport === "libcurl") {
-                transportUrl = "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/libcurl.mjs";
+            const EPOXY_URL = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
+            const LIBCURL_URL = "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/libcurl.mjs";
+            let transportUrl = wispConfig.transport === "libcurl" ? LIBCURL_URL : EPOXY_URL;
+            let usedFallback = false; // Track if we've already fallen back to prevent loops
+
+            try {
+                await connection.setTransport(transportUrl, [{ wisp: wispConfig.wispurl }]);
+            } catch (err) {
+                console.warn("SW: Transport failed, attempting fallback:", err);
+                if (wispConfig.transport === "libcurl") {
+                    // Libcurl failed - try epoxy
+                    await connection.setTransport(EPOXY_URL, [{ wisp: wispConfig.wispurl }]);
+                    const clients = await self.clients.matchAll();
+                    clients.forEach(client => {
+                        client.postMessage({
+                            type: 'transportFallback',
+                            original: 'libcurl',
+                            fallback: 'epoxy',
+                            error: err.message
+                        });
+                    });
+                } else if (wispConfig.transport === "epoxy" && !usedFallback) {
+                    // Epoxy failed - try libcurl as fallback (only once to prevent loops)
+                    usedFallback = true;
+                    try {
+                        await connection.setTransport(LIBCURL_URL, [{ wisp: wispConfig.wispurl }]);
+                        const clients = await self.clients.matchAll();
+                        clients.forEach(client => {
+                            client.postMessage({
+                                type: 'transportFallback',
+                                original: 'epoxy',
+                                fallback: 'libcurl',
+                                error: err.message
+                            });
+                        });
+                    } catch (fallbackErr) {
+                        console.error("SW: Libcurl fallback also failed:", fallbackErr);
+                        throw new Error('SW: Both transports failed');
+                    }
+                } else {
+                    throw err;
+                }
             }
-            await connection.setTransport(transportUrl, [{ wisp: wispConfig.wispurl }]);
             scramjet.client = new BareMux.BareClient();
         }
 

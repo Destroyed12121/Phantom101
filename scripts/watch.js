@@ -16,7 +16,7 @@ function setPlatform(p) {
 
     // On platform switch, if search is empty, show defaults
     if (!searchInput.value.trim()) {
-        if (p === 'youtube') searchYouTube('Fortnite');
+        if (p === 'youtube') searchYouTube('nba 2k26');
         else showDefaultStreamers();
     }
 }
@@ -25,11 +25,11 @@ function showDefaultStreamers() {
     if (!grid) return;
     grid.innerHTML = "";
     const streamers = [
-        'Clix', 'Jynxzi', 'Lacy', 'Flight23White', 'aussieantics', 'peterbot247official', 'CaseOh_',
-        'KaiCenat', 'StableRonaldo', 'Marlon', 'PlaqueboyMax',
-        'AdinRoss', 'IShowSpeed', 'Skeppy', 'AsianGuyStream',
-        'Mongraal', 'SypherPK', 'NickEh30', 'Tfue', 'Ninja', 'xQc', 'Sketch', 'DukeDennis',
-        'Fanum', 'Agent00', 'TenZ', 'TypicalGamer', 'Bugha', 'FaZeRug'
+        'Clix', 'Jynxzi', 'Lacy', 'Flight23White', 'CaseOh_', 'KaiCenat',
+        'Agent00', 'ChrisSmoove', 'Tyceno', 'TYCooN', 'PowerDF', 'itsshakedown',
+        'PlaqueboyMax', 'AdinRoss', 'IShowSpeed', 'DukeDennis', 'Fanum', 'StableRonaldo',
+        'Mongraal', 'SypherPK', 'NickEh30', 'Tfue', 'Ninja', 'xQc',
+        'Sketch', 'TenZ', 'TypicalGamer', 'Bugha', 'FaZeRug', 'YourRAGE'
     ];
 
     streamers.forEach(channel => {
@@ -58,9 +58,9 @@ async function searchYouTube(query) {
     let videos = [];
     let fromCache = false;
 
-    // Check cache for default Fortnite query
-    if (query.toLowerCase() === 'fortnite') {
-        const cached = localStorage.getItem('fortnite_default_cache');
+    // Check cache for default nba 2k26 query
+    if (query.toLowerCase() === 'nba 2k26') {
+        const cached = localStorage.getItem('nba2k26_default_cache');
         if (cached) {
             try {
                 const data = JSON.parse(cached);
@@ -84,9 +84,9 @@ async function searchYouTube(query) {
             const result = await response.json();
             videos = result.data?.items || [];
 
-            // Save to cache if this was the default Fortnite query
-            if (query.toLowerCase() === 'fortnite' && videos.length > 0) {
-                localStorage.setItem('fortnite_default_cache', JSON.stringify({
+            // Save to cache if this was the default nba 2k26 query
+            if (query.toLowerCase() === 'nba 2k26' && videos.length > 0) {
+                localStorage.setItem('nba2k26_default_cache', JSON.stringify({
                     timestamp: Date.now(),
                     items: videos
                 }));
@@ -235,8 +235,8 @@ function loadContinueWatching() {
 // Initial load
 document.addEventListener('DOMContentLoaded', () => {
     loadContinueWatching();
-    // Automatically search for Fortnite to populate the grid
-    searchYouTube('Fortnite');
+    // Automatically search for nba 2k26 to populate the grid
+    searchYouTube('nba 2k26');
 });
 
 // Add event listener for Enter key

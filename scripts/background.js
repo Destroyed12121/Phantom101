@@ -270,19 +270,14 @@
                 return;
             }
 
-            // 2. Try Direct Load (CORS)
-            const directUrl = await this.tryDirectLoad(url);
-            if (directUrl) {
-                if (isStale()) {
-                    if (directUrl.startsWith('blob:')) URL.revokeObjectURL(directUrl);
-                    return;
-                }
-                this.cacheFromUrl(url, directUrl);
-                this.createImage(directUrl, pos);
+            // 2. If it's a local/data URL, load directly
+            if (!url.startsWith('http') || url.includes(location.hostname)) {
+                if (isStale()) return;
+                this.createImage(url, pos);
                 return;
             }
 
-            // 3. Proxy
+            // 3. Always Proxy for external URLs
             try {
                 const base64Data = await ProxyManager.proxyImage(url);
                 if (isStale()) return;
@@ -293,34 +288,6 @@
                 console.warn('Background proxy failed, using fallback', err);
                 this.createImage(url, pos);
             }
-        },
-
-        async tryDirectLoad(url) {
-            if (!url.startsWith('http') || url.includes(location.hostname)) return url;
-            try {
-                const response = await fetch(url, { method: 'GET', mode: 'cors' });
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const blobUrl = URL.createObjectURL(blob);
-                    this.blobUrls.add(blobUrl);
-                    return blobUrl;
-                }
-            } catch { }
-            return null;
-        },
-
-        async cacheFromUrl(originalUrl, loadedUrl) {
-            try {
-                if (loadedUrl.startsWith('blob:')) {
-                    const response = await fetch(loadedUrl);
-                    const blob = await response.blob();
-                    const reader = new FileReader();
-                    reader.onload = () => ImageCache.set(originalUrl, reader.result);
-                    reader.readAsDataURL(blob);
-                } else if (loadedUrl.startsWith('data:')) {
-                    ImageCache.set(originalUrl, loadedUrl);
-                }
-            } catch { }
         },
 
         activateBackground() {

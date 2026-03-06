@@ -550,6 +550,8 @@ else document.getElementById('discord-toggle').classList.remove('active');
 if (settings.miniplayer !== false) document.getElementById('miniplayer-toggle').classList.add('active');
 else document.getElementById('miniplayer-toggle').classList.remove('active');
 if (settings.leaveConfirmation) document.getElementById('leave-confirm-toggle').classList.add('active');
+if (settings.fastLeaveConfirmation !== false) document.getElementById('fast-leave-toggle').classList.add('active');
+else document.getElementById('fast-leave-toggle').classList.remove('active');
 if (settings.showChangelogOnUpdate !== false) document.getElementById('changelog-toggle').classList.add('active');
 else document.getElementById('changelog-toggle').classList.remove('active');
 if (settings.themeRotation) document.getElementById('theme-rotation-toggle').classList.add('active');
@@ -595,6 +597,11 @@ document.getElementById('max-rating').onchange = e => { settings.maxMovieRating 
 document.getElementById('discord-toggle').onclick = function () { this.classList.toggle('active'); settings.discordWidget = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('miniplayer-toggle').onclick = function () { this.classList.toggle('active'); settings.miniplayer = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('leave-confirm-toggle').onclick = function () { this.classList.toggle('active'); settings.leaveConfirmation = this.classList.contains('active'); saveSettings(settings); };
+document.getElementById('fast-leave-toggle').onclick = function () { 
+    this.classList.toggle('active'); 
+    settings.fastLeaveConfirmation = this.classList.contains('active'); 
+    saveSettings(settings);
+};
 document.getElementById('changelog-toggle').onclick = function () { this.classList.toggle('active'); settings.showChangelogOnUpdate = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('theme-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.themeRotation = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('autoswitch-toggle').onclick = function () { this.classList.toggle('active'); settings.autoSwitchProviders = this.classList.contains('active'); saveSettings(settings); };

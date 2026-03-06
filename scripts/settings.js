@@ -19,7 +19,9 @@
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
-                return { ...getDefaults(), ...JSON.parse(stored) };
+                const parsed = JSON.parse(stored);
+                delete parsed.fastLeaveConfirmation;
+                return { ...getDefaults(), ...parsed };
             }
         } catch (e) {
             console.warn('Failed to load settings:', e);
@@ -29,7 +31,8 @@
 
     const save = (settings) => {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+            const { fastLeaveConfirmation, ...settingsToSave } = settings;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settingsToSave));
             window.dispatchEvent(new CustomEvent('settings-changed', { detail: settings }));
             if (window.parent !== window) {
                 window.parent.postMessage({ type: 'settings-update' }, '*');

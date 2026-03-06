@@ -32,7 +32,7 @@
 
             <div class="select-wrapper">
                 <select id="lib-select">
-                    <option value="multi">Multi (Default)</option>
+                    <option value="multi" selected>All Games</option>
                     <option value="gnmath">Gnmath</option>
                     <option value="ugs">UGS</option>
                 </select>
@@ -46,7 +46,19 @@
                     <option value="newest">Newest</option>
                 </select>
             </div>
+
+            <button id="random-btn" class="control-btn" title="Random Game">
+                <i class="fa-solid fa-dice"></i>
+            </button>
+
+            <button id="liked-toggle" class="control-btn" title="Show Favorites Only">
+                <i class="fa-solid fa-heart"></i>
+            </button>
         </div>
+
+        <button id="back-to-top" class="back-to-top-btn" title="Back to Top">
+            <i class="fa-solid fa-arrow-up"></i>
+        </button>
 
         <div id="recent-section" style="margin-bottom: 2rem; display: none;">
             <div class="section-header">
@@ -58,7 +70,7 @@
 
 
         <div class="section-header">
-            <i class="fa-solid fa-gamepad"></i> <span id="game-count">All Games</span>
+            <i class="fa-solid fa-gamepad"></i> <span id="game-count">Games</span>
         </div>
         <div class="game-grid" id="games-grid">
             <!-- Loading Skeletons -->
