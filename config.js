@@ -1,17 +1,15 @@
 window.SITE_CONFIG = {
     name: "Phantom",
     fullName: "Phantom Unblocked",
-    version: "1.1.4",
+    version: "1.1.5",
 
     changelog: [
-        "added streaming and more to aichat (makes ai realtime)",
-        "fixxed users counter",
-        "fixxed libcurl support",
-        "made announcements use both cdns and local data",
-        "fixxed reloading for games",
-        "fixxed offline mode",
-        "quit making the singlefile",
-        "AND MORE!"
+
+        "added search suggestions to the browser",
+        "fixxed browser",
+        "updated games tab",
+        "nba 2k26 instead of fortnite videos are now shown in watch",
+        "added fast click to enable leave confirmation, this should **unblock the website for securly if used right**. Learn more in the credits page.",
 
     ],
 
@@ -37,29 +35,14 @@ window.SITE_CONFIG = {
     ],
 
     todos: [
-        "add singlefile, genuinely dont know how to do this and im not tryna do it manually",
-        "***fix issues with users couner and libcurl support mb i should have took more time before releasing***",
-        "***add custom users counter***",
-        "***add more sources for movies and fix autoswitch***",
-        "***make ambiance be on by default***",
-        "***make ai chat icons be bigger***",
-        "***make ai chat text backgrounds more visible***",
-        "***fixed ai chat latex***",
-        "***fix blob tab***",
-        "***make the default song be lebron***",
-        "***add continue watching and recently played***",
-        "***fix proxy constantly asking skip?***",
-        "***fix loading times***",
-        "***remove .workers.dev from player.html urls***",
-        "***fix tv shows endpoints for player.html***",
-        "***fixxed aboutblank opening while securly is on (previously if popups were off it would load intab instead of clickto launch now it will use clicktolaunch unless popups are blocked)***",
-        "***add a miniplayer for music***",
+        "rename void_settings api to phantom_settings",
+        "update movies and watch tab similarly to games",
+        "add singlefile, genuinely dont know how to do this",
     ],
     defaultWisp: "wss://glseries.net/wisp/",
     wispServers: [
-        { name: "GLSeries's Wisp", url: "wss://glseries.net/wisp/" },
-        { name: "Anura's Wisp", url: "wss://anura.mercurywork.shop/" },
-        { name: "Rhw's Wisp", url: "wss://wisp.rhw.one/" },
+      { name: "Anura's Wisp", url: "wss://anura.mercurywork.shop/" },
+
     ],
 
     discord: {
@@ -68,20 +51,21 @@ window.SITE_CONFIG = {
         widgetChannel: "1447673726228496617",
     },
 
-    firstVisitCloak: true,
+    firstVisitCloak: false, // fake offline page
     defaults: {
         cloakMode: "about:blank",
         selectedCloakPreset: "Quiz",
         cloakRotation: false,
         cloakInterval: 5000,
         panicKey: "x",
-        panicModifiers: ["ctrl", "shift"],
+        panicModifiers: ["ctrl"],
         panicUrl: "https://classroom.google.com",
         maxMovieRating: "R",
         gameLibrary: "multi",
         discordWidget: true,
         miniplayer: true,
         leaveConfirmation: false,
+        fastLeaveConfirmation: true,
         showChangelogOnUpdate: true,
         themeRotation: true,
         lastThemeRotation: 0,
@@ -97,7 +81,6 @@ window.SITE_CONFIG = {
         searchEngine: 'https://www.bing.com/search?q=',
         transport: 'epoxy',
         wispAutoswitch: true,
-        proxServer: 'wss://glseries.net/wisp/',
         historyEnabled: true,
         autoSwitchProviders: true,
         autoLaunch: true,
@@ -122,7 +105,7 @@ window.SITE_CONFIG = {
         { id: 'winter-mountains', name: 'Winter mountains', type: 'image', url: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg', overlay: 0.3 },
         { id: 'f1 car', name: 'F1 Car', type: 'image', url: 'https://images.pexels.com/photos/14401632/pexels-photo-14401632.jpeg', overlay: 0.3 },
         { id: 'moon-landing', name: 'Moon Landing', type: 'image', url: 'https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg', overlay: 0.3, objectPosition: 'top left' },
-        { id: 'turtle', name: 'Turtle', type: 'image', url: 'https://images.unsplash.com/photo-1501791187590-9ef2612ba1eb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', overlay: 0.3, active: true },
+        { id: 'turtle', name: 'Turtle', type: 'image', url: 'https://images.unsplash.com/photo-1501791187590-9ef2612ba1eb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', overlay: 0.3,},
         { id: 'road', name: 'Road', type: 'image', url: 'https://images.unsplash.com/photo-1508233620467-f79f1e317a05', overlay: 0.3 },
         { id: 'railroad', name: 'Railroad', type: 'image', url: 'https://images.unsplash.com/photo-1505832018823-50331d70d237', overlay: 0.3 },
         { id: 'mountain', name: 'Mountain', type: 'image', url: 'https://raw.githubusercontent.com/evanhnry/brave-wallpapers/refs/heads/main/Brave/clay-banks-u27Rrbs9Dwc-unsplash.jpg', overlay: 0.3 },

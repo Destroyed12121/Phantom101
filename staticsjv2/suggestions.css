@@ -1,0 +1,52 @@
+/* Suggestions Dropdown Shared Styles */
+.suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 10000;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    display: none;
+}
+
+.suggestions-dropdown.active {
+    display: block;
+}
+
+body.phantom-bg-active .suggestions-dropdown {
+    background: rgba(15, 15, 15, 0.75);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.suggestion-item {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+    background: var(--surface-hover);
+}
+
+.suggestion-item i {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.suggestion-item span {
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

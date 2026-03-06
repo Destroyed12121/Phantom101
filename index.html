@@ -12,7 +12,6 @@
 
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
             w[l] = w[l] || []; w[l].push({
                 'gtm.start':
@@ -21,7 +20,6 @@
                 j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
                     'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
         })(window, document, 'script', 'dataLayer', 'GTM-5LMBC27Z');</script>
-    <!-- End Google Tag Manager -->
     <style>
         * {
             margin: 0;
@@ -144,7 +142,6 @@
             border: none;
         }
 
-        /* Panic white screen */
         #panic-overlay {
             position: fixed;
             inset: 0;
@@ -266,7 +263,6 @@
         <button id="launch-button" class="launch-button"> Launch Phantom</button>
     </div>
 
-    <!-- Panic White Screen Overlay -->
     <div id="panic-overlay"></div>
 
     <iframe id="main-frame"></iframe>
@@ -278,6 +274,78 @@
         const iframe = document.getElementById('main-frame');
         let loadStartTime = Date.now();
         let fallbackTimer = setTimeout(hideLoading, 2000);
+
+        const QUICK_CLICK_TIMEOUT = 1200;
+        let quickClickEnabled = false;
+
+        function isQuickClickEnabled() {
+            try {
+                const stored = localStorage.getItem('void_settings');
+                if (stored) {
+                    const settings = JSON.parse(stored);
+                    return settings.fastLeaveConfirmation !== false;
+                }
+            } catch (e) { }
+            return true;
+        }
+
+        function isClickOnEmptySpace(e) {
+            const target = e.target;
+            if (target === document.body || target === document.documentElement) {
+                return true;
+            }
+            if (target.tagName === 'IFRAME') {
+                return false;
+            }
+            const tag = target.tagName.toLowerCase();
+            const isInteractiveTag = ['button', 'a', 'input', 'select', 'textarea', 'label'].includes(tag);
+            if (isInteractiveTag) {
+                return false;
+            }
+            let el = target;
+            while (el && el !== document.body) {
+                const role = el.getAttribute?.('role');
+                if (role === 'button' || role === 'link' || role === 'menuitem') {
+                    return false;
+                }
+                if (el.onclick || el.onmousedown || el.onpointerdown) {
+                    return false;
+                }
+                el = el.parentElement;
+            }
+            const cursor = window.getComputedStyle(target).cursor;
+            if (cursor === 'pointer') {
+                return false;
+            }
+            return true;
+        }
+
+        function handleQuickClick(e) {
+            if (quickClickEnabled) return;
+            
+            const elapsed = Date.now() - loadStartTime;
+            if (elapsed <= QUICK_CLICK_TIMEOUT && isQuickClickEnabled() && isClickOnEmptySpace(e)) {
+                quickClickEnabled = true;
+                sessionStorage.setItem('sessionLeaveConfirmation', 'true');
+                
+                if (window.Notify) {
+                    window.Notify.info('Leave Confirmation Enabled', 'Leave confirmation has been temporarily enabled for this session.');
+                }
+            }
+        }
+
+        document.addEventListener('click', handleQuickClick, { once: false });
+
+        window.addEventListener('beforeunload', function(e) {
+            const settings = window.Settings?.getAll() || {};
+            const sessionLeave = sessionStorage.getItem('sessionLeaveConfirmation') === 'true';
+            const leaveConfirmed = settings.leaveConfirmation || sessionLeave;
+            
+            if (document.getElementById('main-frame') && leaveConfirmed) {
+                e.preventDefault();
+                return e.returnValue = '';
+            }
+        });
 
         function showLoading() {
             loadingScreen.classList.remove('hidden');
@@ -291,7 +359,6 @@
         function hideLoading() {
             clearTimeout(fallbackTimer);
 
-            // Min time 0.05s (50ms) - almost instant but prevents flicker
             const minTime = 50;
             const elapsed = Date.now() - loadStartTime;
             const remaining = Math.max(0, minTime - elapsed);
@@ -300,7 +367,6 @@
                 loadingScreen.classList.add('hidden');
             }, remaining);
 
-            // Re-attach listener to the new window for next navigation
             try {
                 if (iframe.contentWindow) {
                     iframe.contentWindow.removeEventListener('unload', showLoading);
@@ -311,10 +377,8 @@
             } catch (e) { }
         }
 
-        // Listen for iframe load events
         iframe.addEventListener('load', hideLoading);
 
-        // Expose to children if needed
         window.showLoading = showLoading;
         window.hideLoading = hideLoading;
 

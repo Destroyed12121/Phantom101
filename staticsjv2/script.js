@@ -88,6 +88,7 @@ const getBasePath = () => {
     return path.endsWith('/') ? path : path + '/';
 };
 
+let scramjetRetries = 0;
 async function getSharedScramjet() {
     if (sharedScramjet) return sharedScramjet;
 
@@ -95,17 +96,18 @@ async function getSharedScramjet() {
     sharedScramjet = new ScramjetController({
         prefix: getBasePath() + "scramjet/",
         files: {
-            wasm: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.wasm.wasm",
-            all: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js",
-            sync: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.sync.js"
+            wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
+            all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
+            sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
         }
     });
 
     try {
         await sharedScramjet.init();
     } catch (err) {
-        if (err.message && (err.message.includes('IDBDatabase') || err.message.includes('object stores'))) {
-            console.warn('Clearing IndexedDB due to error...');
+        if (scramjetRetries < 3 && err.message && (err.message.includes('IDBDatabase') || err.message.includes('object stores'))) {
+            scramjetRetries++;
+            console.warn(`Clearing IndexedDB due to error (attempt ${scramjetRetries}/3)...`);
             ['scramjet-data', 'scrambase', 'ScramjetData'].forEach(db => {
                 try { indexedDB.deleteDatabase(db); } catch { }
             });
@@ -123,23 +125,47 @@ async function getSharedConnection() {
     const wispUrl = window.Settings?.get("proxServer") ?? DEFAULT_WISP;
     const transport = window.Settings?.get("transport") || "epoxy";
 
-    let transportUrl = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
+    const EPOXY_URL = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
+    const LIBCURL_URL = "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/libcurl.mjs";
+
+    let transportUrl = EPOXY_URL;
     if (transport === "libcurl") {
-        transportUrl = "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/libcurl.mjs";
+        transportUrl = LIBCURL_URL;
     }
 
     sharedConnection = new BareMux.BareMuxConnection(getBasePath() + "bareworker.js");
+    let usedFallback = false; // Track if we've already fallen back to prevent loops
     try {
         await sharedConnection.setTransport(
             transportUrl,
             [{ wisp: wispUrl }]
         );
     } catch (e) {
-        console.error("Transport failed, falling back to epoxy:", e);
-        await sharedConnection.setTransport(
-            "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
-            [{ wisp: wispUrl }]
-        );
+        console.error("Transport failed:", e);
+        // If libcurl failed, retry once then fall back to epoxy
+        if (transport === "libcurl") {
+            try {
+                console.log("Retrying libcurl transport...");
+                await sharedConnection.setTransport(LIBCURL_URL, [{ wisp: wispUrl }]);
+            } catch (retryErr) {
+                console.error("Libcurl retry failed, falling back to epoxy:", retryErr);
+                await sharedConnection.setTransport(EPOXY_URL, [{ wisp: wispUrl }]);
+                notify('warning', 'Transport Fallback', 'Libcurl failed to initialize. Falling back to Epoxy.');
+            }
+        } else if (transport === "epoxy" && !usedFallback) {
+            // Epoxy failed - try libcurl as fallback (only once to prevent loops)
+            usedFallback = true;
+            try {
+                console.log("Epoxy failed, falling back to libcurl...");
+                await sharedConnection.setTransport(LIBCURL_URL, [{ wisp: wispUrl }]);
+                notify('warning', 'Transport Fallback', 'Epoxy failed. Using Libcurl for this session.');
+            } catch (fallbackErr) {
+                console.error("Libcurl fallback also failed:", fallbackErr);
+                throw new Error('Both transports failed. Please check your proxy settings.');
+            }
+        } else {
+            throw e;
+        }
     }
     sharedConnectionReady = true;
     return sharedConnection;
@@ -173,6 +199,8 @@ async function registerServiceWorker() {
             notify('info', 'Proxy Auto-switched', `Switched to ${e.data.name}. ${e.data.reason || 'Connection unstable.'}`);
         } else if (e.data.type === 'wispError') {
             notify('error', 'Proxy Error', e.data.message);
+        } else if (e.data.type === 'transportFallback') {
+            notify('warning', 'Compatibility Mode', `Libcurl failed. Automatically switched to ${e.data.fallback} for this session.`);
         } else if (e.data.type === 'navigate') {
             handleSubmit(e.data.url);
         } else if (e.data.type === 'resource-loaded') {
@@ -253,6 +281,7 @@ function initializeBrowserUI() {
                 <button id="reload-btn" title="Reload"><i class="fa-solid fa-rotate-right"></i></button>
                 <div class="address-wrapper">
                     <input class="bar" id="address-bar" autocomplete="off" placeholder="Search or enter URL">
+                    <div id="address-suggestions" class="suggestions-dropdown"></div>
                     <button id="home-btn-nav" title="Home"><i class="fa-solid fa-house"></i></button>
                 </div>
                 <button id="devtools-btn" title="DevTools"><i class="fa-solid fa-code"></i></button>
@@ -321,9 +350,10 @@ function initializeBrowserUI() {
     };
 
     const addrBar = document.getElementById('address-bar');
-    if (addrBar) {
-        addrBar.onkeyup = (e) => e.key === 'Enter' && handleSubmit();
-        addrBar.onfocus = () => addrBar.select();
+    const suggestionsBox = document.getElementById('address-suggestions');
+
+    if (window.SuggestionsHelper && addrBar && suggestionsBox) {
+        SuggestionsHelper.init(addrBar, suggestionsBox, () => handleSubmit());
     }
 
     updateTabsUI();
@@ -671,5 +701,8 @@ window.addEventListener('message', (e) => {
         handleSubmit(e.data.url);
     }
 });
+
+
+
 
 document.addEventListener('DOMContentLoaded', init);

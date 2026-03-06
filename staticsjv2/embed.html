@@ -131,7 +131,7 @@
             color: var(--text)
         }
     </style>
-    <script src="https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
     <script type="module">
         import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
         window.BareMux = BareMux;
@@ -179,9 +179,9 @@
             scramjetInstance = new ScramjetController({
                 prefix: basePath + "scramjet/",
                 files: {
-                    wasm: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.wasm.wasm",
-                    all: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.all.js",
-                    sync: "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/JS/scramjet.sync.js"
+                    wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
+                    all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
+                    sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
                 }
             });
 
@@ -197,13 +197,28 @@
             const storedSettings = JSON.parse(localStorage.getItem("void_settings") || "{}");
             const transport = storedSettings.transport || "epoxy";
 
-            let transportUrl = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
-            if (transport === "libcurl") {
-                transportUrl = "https://raw.githubusercontent.com/Destroyed12121/Staticsj/main/libcurl.mjs";
-            }
+            const EPOXY_URL = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
+            const LIBCURL_URL = "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/libcurl.mjs";
+            let transportUrl = transport === "libcurl" ? LIBCURL_URL : EPOXY_URL;
+            let usedFallback = false; // Track if we've already fallen back to prevent loops
 
             connectionInstance = new BareMux.BareMuxConnection(basePath + "bareworker.js");
-            await connectionInstance.setTransport(transportUrl, [{ wisp: wispUrl }]);
+            try {
+                await connectionInstance.setTransport(transportUrl, [{ wisp: wispUrl }]);
+            } catch (e) {
+                console.error("Embed: Primary transport failed:", e);
+                if (transport === "libcurl") {
+                    console.log("Embed: Falling back to epoxy...");
+                    await connectionInstance.setTransport(EPOXY_URL, [{ wisp: wispUrl }]);
+                } else if (transport === "epoxy" && !usedFallback) {
+                    // Epoxy failed - try libcurl as fallback (only once to prevent loops)
+                    usedFallback = true;
+                    console.log("Embed: Epoxy failed, trying libcurl...");
+                    await connectionInstance.setTransport(LIBCURL_URL, [{ wisp: wispUrl }]);
+                } else {
+                    throw e;
+                }
+            }
             return connectionInstance;
         }
 
@@ -218,11 +233,13 @@
                     const allServers = [...WISP_SERVERS, ...JSON.parse(localStorage.getItem('customWisps') || '[]')];
                     const autoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
 
+                    const storedSettings2 = JSON.parse(localStorage.getItem("void_settings") || "{}");
                     const swConfig = {
                         type: "config",
                         wispurl: wispUrl,
                         servers: allServers,
-                        autoswitch: autoswitch
+                        autoswitch: autoswitch,
+                        transport: storedSettings2.transport || "epoxy"
                     };
 
                     const sendConfig = () => {

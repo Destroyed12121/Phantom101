@@ -25,7 +25,7 @@ if (isPlayerPage) {
         start() { this.clear(); this.tm = setTimeout(() => this.fail(), 15000); }
         fail() {
             const isYT = currentUrl && (currentUrl.includes('youtube.com') || currentUrl.includes('youtube-nocookie.com'));
-            if (type === 'video' || isYT) return;
+            if (type === 'video' || isYT) return; // Don't check search results/youtube
             if (++this.retry >= 3) return window.Notify?.error('Error', 'All providers failed');
             window.Notify?.info('Switching', 'Slow source, trying next...');
             if (type === 'game') this.toggleProxy(); else this.next();
@@ -85,6 +85,7 @@ if (isPlayerPage) {
                     loadProvider(PROVIDERS[curProvIdx].id);
                 };
             }
+            // Load default provider from settings or use first provider
             const userDefaultProvider = window.Settings?.get('defaultProvider');
             const defaultProvider = userDefaultProvider && PROVIDERS.find(p => p.id === userDefaultProvider) ? userDefaultProvider : PROVIDERS[0].id;
             const defaultIdx = PROVIDERS.findIndex(p => p.id === defaultProvider);
@@ -96,12 +97,14 @@ if (isPlayerPage) {
         descEl.textContent = (type !== 'game' ? (JSON.parse(sessionStorage.getItem('currentMovie') || '{}').overview || 'No description') : '');
         if (quoteEl) quoteEl.textContent = q;
 
+        // Ambiance Toggle Support
         const ambianceBtn = document.getElementById('btn-ambiance');
         if (ambianceBtn) {
             ambianceBtn.onclick = () => {
                 const isActive = window.Ambiance?.toggle();
                 ambianceBtn.classList.toggle('active', isActive);
             };
+            // Set initial state visual
             if (localStorage.getItem('phantom_ambiance_enabled') !== 'false') {
                 ambianceBtn.classList.add('active');
             }
@@ -115,14 +118,17 @@ if (isPlayerPage) {
     let ytPlayer = null;
     let ytInterval = null;
 
+    // YouTube API Loading
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+    // Cooperative YouTube API Loading
     const oldYTReady = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
         if (oldYTReady) oldYTReady();
+        console.log('Player YouTube API Ready');
     };
 
     function getSavedProgress() {
@@ -142,18 +148,21 @@ if (isPlayerPage) {
         const gameImg = params.get('img');
         if (gameImg) window.Ambiance?.setSource(gameImg);
 
+        // Reset visibility
         frame.style.display = 'block';
         frame.width = "100%";
         frame.height = "100%";
         videoFrame.style.display = 'none';
         if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
 
+        // Clear YouTube player trackers
         if (ytInterval) { clearInterval(ytInterval); ytInterval = null; }
         ytPlayer = null;
 
         const saved = getSavedProgress();
         const startOffset = saved ? saved.currentTime : 0;
 
+        // Check if it's an HLS stream (m3u8)
         const isHLS = url.includes('.m3u8') || url.includes('twitch.leelive2021.workers.dev');
 
         if (isHLS) {
@@ -175,11 +184,13 @@ if (isPlayerPage) {
                 videoFrame.addEventListener('loadedmetadata', initVideo);
             }
 
+            // Track progress for native video
             videoFrame.ontimeupdate = () => {
                 updateHistoryProgress(videoFrame.currentTime, videoFrame.duration);
             };
+            // Use native video for ambiance if available
             window.Ambiance?.setSource(videoFrame);
-        } else if (url.includes('jsdelivr') || url.includes('#') || url.includes('staticsjv2/') || url.includes('youtube.com') || url.includes('youtube-nocookie.com')) {
+        } else if (url.includes('#') || url.includes('staticsjv2/') || url.includes('youtube.com') || url.includes('youtube-nocookie.com') || url.includes('workers.dev')) {
             let finalUrl = url;
             const isYT = url.includes('youtube.com') || url.includes('youtube-nocookie.com');
 
@@ -194,12 +205,13 @@ if (isPlayerPage) {
                 finalUrl = `${finalUrl}${separator}${param}=${Math.floor(startOffset)}`;
             }
 
-            frame.src = 'about:blank';
-            setTimeout(() => { frame.src = finalUrl; }, 10);
+            frame.src = finalUrl;
 
+            // For iframes, use thumbnail as source
             window.Ambiance?.setSource(params.get('img'));
 
             if (isYT) {
+                // Wait for API and frame to be ready
                 frame.onload = () => {
                     if (window.YT && YT.Player) {
                         ytPlayer = new YT.Player(frame, {
@@ -229,8 +241,7 @@ if (isPlayerPage) {
             try {
                 frame.src = 'about:blank';
                 const h = await (await fetch(url)).text();
-                const d = frame.contentDocument || frame.contentWindow.document;
-                d.open(); d.write(h); d.close();
+                frame.src = URL.createObjectURL(new Blob([h], { type: 'text/html' }));
             } catch (e) { frame.src = url; }
         }
     }
@@ -240,6 +251,7 @@ if (isPlayerPage) {
             ? `https://twitch.leelive2021.workers.dev/?channel=${encodeURIComponent(channel)}`
             : `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${window.location.hostname}`;
 
+        // Always update chat src if it's twitch
         chatFrame.src = `https://www.twitch.tv/embed/${encodeURIComponent(channel)}/chat?parent=${window.location.hostname}&darkpopout`;
 
         loadGame(url);
@@ -267,7 +279,9 @@ if (isPlayerPage) {
 
         if (proxyToggle?.classList.contains('active')) u = `../staticsjv2/embed.html#${u}`;
 
+        // Proper reload: clear src first, then set new URL
         currentUrl = u;
+        const oldSrc = frame.src;
         frame.src = 'about:blank';
         setTimeout(() => { frame.src = u; }, 10);
 
@@ -286,15 +300,16 @@ if (isPlayerPage) {
                 percentage: (currentTime / duration) * 100
             };
             history[0].progress = progress;
-            history[0].timestamp = Date.now();
+            history[0].timestamp = Date.now(); // Keep timestamp update for history
             localStorage.setItem('continue_watching', JSON.stringify(history));
 
+            // Also save to individual key for getSavedProgress
             const key = (type === 'game' || type === 'video') ? urlParam : id;
             if (key) {
                 localStorage.setItem(`progress_${key}`, JSON.stringify({
                     currentTime,
                     duration,
-                    lastWatched: Date.now()
+                    lastWatched: Date.now() // Include lastWatched for individual progress
                 }));
             }
         }
@@ -303,15 +318,13 @@ if (isPlayerPage) {
     document.getElementById('btn-reload').onclick = () => {
         window.Notify?.info('Reloading', 'Refreshing content...');
         switcher.retry = 0;
-        const oldSrc = frame.src;
-        frame.src = 'about:blank';
-        setTimeout(() => {
-            if (type === 'game' || type === 'video' || source === 'twitch') {
-                loadGame(currentUrl);
-            } else {
-                frame.src = oldSrc;
-            }
-        }, 10);
+        if (type === 'game' || type === 'video' || source === 'twitch') {
+            loadGame(currentUrl);
+        } else {
+            const oldSrc = frame.src;
+            frame.src = 'about:blank';
+            setTimeout(() => { frame.src = oldSrc; }, 10);
+        }
     };
     document.getElementById('btn-fullscreen').onclick = () => {
         window.Notify?.info('Fullscreen', 'Entering fullscreen mode...');
@@ -334,6 +347,7 @@ if (isPlayerPage) {
         a.click();
         window.Notify?.success('Download Started', `${title || 'game'}.html`);
     };
+    // Theater Mode Logic
     let idleTimer;
     const resetIdleTimer = () => {
         if (!document.body.classList.contains('theater-active')) return;
@@ -367,6 +381,7 @@ if (isPlayerPage) {
         }
     };
 
+    // Vidify Progress-Tracking
     window.addEventListener('message', (event) => {
         if (event.origin !== 'https://player.vidify.top') return;
 

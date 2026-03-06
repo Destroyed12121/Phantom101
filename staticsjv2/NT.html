@@ -10,6 +10,8 @@
   <script src="../scripts/settings.js"></script>
   <script src="../scripts/background.js"></script>
   <script src="../scripts/quotes.js"></script>
+  <link rel="stylesheet" href="suggestions.css">
+  <script src="suggestions.js"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/index.mjs" type="module"></script>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -65,6 +67,8 @@
       max-width: 500px;
       margin-bottom: 40px;
       transition: all 0.2s ease;
+      position: relative;
+      z-index: 10;
     }
 
     .search-box:focus-within {
@@ -202,6 +206,7 @@
   <form class="search-box" id="searchForm">
     <i class="fa-solid fa-magnifying-glass"></i>
     <input type="text" id="searchInput" placeholder="Search the web..." autocomplete="off">
+    <div id="suggestions" class="suggestions-dropdown"></div>
     <select id="engine">
       <option value="https://search.brave.com/search?q=">Brave</option>
       <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
@@ -336,9 +341,14 @@
       });
     }
 
-
-
     renderCustom();
+
+    // Suggestions using the shared helper
+    if (window.SuggestionsHelper) {
+      SuggestionsHelper.init($('#searchInput'), $('#suggestions'), () => {
+        $('#searchForm').dispatchEvent(new Event('submit'));
+      });
+    }
   </script>
 </body>
 

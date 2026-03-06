@@ -145,6 +145,8 @@ body.phantom-bg-active .tabs {
     gap: 6px;
     padding: 8px;
     background: transparent;
+    position: relative;
+    z-index: 100;
 }
 
 /* Glass effect when background is active */

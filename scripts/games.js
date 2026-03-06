@@ -8,7 +8,9 @@ const Games = {
     recent: JSON.parse(localStorage.getItem('recent_games') || '[]'),
     isLoading: false,
     firstLoad: true,
+    showLikedOnly: false,
     popularityData: { year: {}, month: {}, week: {}, day: {} },
+    top10Trending: [],
 
     async init() {
         this.lib = window.Settings?.get('gameLibrary') || 'multi';
@@ -20,17 +22,25 @@ const Games = {
             if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
                 this.renderMore();
             }
+            this.updateBackToTop();
         });
 
         await this.loadGames();
         await this.fetchPopularity(); // Fetch trending data
         this.checkRedirect(); //  ?gamename=
         this.setupListeners();
-        
+
         // Apply default sort after popularity data is fetched
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
             this.sort(sortSelect.value);
+        }
+    },
+
+    updateBackToTop() {
+        const btn = document.getElementById('back-to-top');
+        if (btn) {
+            btn.classList.toggle('visible', window.scrollY > 500);
         }
     },
 
@@ -102,8 +112,8 @@ const Games = {
             // Use centralized loader
             this.allGames = await window.Gloader.load(this.lib);
             this.filteredGames = [...this.allGames];
-            this.applyLikedSort();
-            
+            this.applyFilters();
+
             if (window.Notify) window.Notify.success('Games', `${this.allGames.length} games loaded`);
         } catch (e) {
             console.error(e);
@@ -133,10 +143,18 @@ const Games = {
         }
     },
 
+    calculateTopTrending() {
+        // Find top 10 by week
+        this.top10Trending = [...this.allGames]
+            .sort((a, b) => this.getPopularity(b, 'week') - this.getPopularity(a, 'week'))
+            .slice(0, 10)
+            .map(g => g.url);
+    },
+
     sort(method) {
         // Store current sort method for use in applyLikedSort
         this.currentSortMethod = method;
-        
+
         if (method === 'newest') {
             this.filteredGames.reverse();
         } else if (method === 'popularity') {
@@ -168,8 +186,19 @@ const Games = {
                 return this.getPopularity(b, 'week') - this.getPopularity(a, 'week');
             });
         }
-        this.applyLikedSort();
+        this.calculateTopTrending(); // Refresh top trending after loading or sorting
+        this.applyFilters();
         this.resetRender();
+    },
+
+    applyFilters() {
+        // Apply liked filter if active
+        if (this.showLikedOnly) {
+            this.filteredGames = this.allGames.filter(g => this.isLiked(g));
+        } else {
+            // If not filtering for favorites, we still sort them to the top
+            this.applyLikedSort();
+        }
     },
 
     getPopularity(game, duration = 'year') {
@@ -197,22 +226,59 @@ const Games = {
         this.renderedCount = 0;
         this.updateRecentSection();
         const countDisplay = document.getElementById('game-count');
-        if (countDisplay) countDisplay.innerText = `${this.filteredGames.length} Games`;
-        this.renderMore();
+        if (countDisplay) {
+            const label = this.showLikedOnly ? 'Favorited Games' : 'All Games';
+            countDisplay.innerText = `${this.filteredGames.length} ${label}`;
+        }
+
+        if (this.filteredGames.length === 0) {
+            this.renderEmptyState(grid);
+        } else {
+            this.renderMore();
+        }
+    },
+
+    renderEmptyState(grid) {
+        grid.style.display = 'block';
+        grid.innerHTML = `
+            <div class="empty-state">
+                <i class="fa-solid fa-ghost"></i>
+                <h2>No games found</h2>
+                <p>Try searching for something else or check your filters.</p>
+                <button class="btn" onclick="Games.clearFilters()" style="margin-top: 20px;">Clear All Filters</button>
+            </div>
+        `;
+    },
+
+    clearFilters() {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) searchInput.value = '';
+        this.showLikedOnly = false;
+        document.getElementById('liked-toggle')?.classList.remove('active');
+        this.performSearch('');
     },
 
     renderMore() {
         if (this.renderedCount >= this.filteredGames.length) return;
         const grid = document.getElementById('games-grid');
+        grid.style.display = 'grid'; // Ensure grid is restored if it was list
         const batch = this.filteredGames.slice(this.renderedCount, this.renderedCount + this.BATCH_SIZE);
-        batch.forEach(game => grid.appendChild(this.createCard(game)));
+
+        batch.forEach((game, index) => {
+            const card = this.createCard(game);
+            // Add staggered animation delay
+            card.style.animationDelay = `${(index % this.BATCH_SIZE) * 0.03}s`;
+            grid.appendChild(card);
+        });
+
         this.renderedCount += batch.length;
     },
 
-    createCard(game) {
+    createCard(game, isRecent = false) {
         const div = document.createElement('div');
         div.className = 'game-card';
         const isLiked = this.isLiked(game);
+        const isTrending = !isRecent && this.top10Trending.includes(game.url);
 
         let imgHTML;
         if (game.img) {
@@ -224,6 +290,8 @@ const Games = {
         div.innerHTML = `
             <div class="game-img-wrapper">
                 ${imgHTML}
+                ${isTrending ? '<div class="trending-badge" title="Top 10 Trending This Week"><i class="fa-solid fa-fire"></i></div>' : ''}
+                ${isRecent ? '<button class="remove-btn" title="Remove from Recent"><i class="fa-solid fa-xmark"></i></button>' : ''}
                 <button class="like-btn ${isLiked ? 'active' : ''}"><i class="fa-solid fa-heart"></i></button>
             </div>
             <div class="game-info"><div class="game-title">${game.name}</div></div>
@@ -232,6 +300,14 @@ const Games = {
         const open = () => this.openGame(game);
         div.querySelector('.game-img-wrapper').onclick = open;
         div.querySelector('.game-info').onclick = open;
+
+        if (isRecent) {
+            const removeBtn = div.querySelector('.remove-btn');
+            removeBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.removeFromRecent(game);
+            };
+        }
 
         const likeBtn = div.querySelector('.like-btn');
         likeBtn.onclick = (e) => {
@@ -266,9 +342,15 @@ const Games = {
         this.recent = this.recent.filter(g => g.url !== game.url);
         // Add to front
         this.recent.unshift({ name: game.name, url: game.url, img: game.img, type: game.type });
-        // Cap at 12
-        if (this.recent.length > 12) this.recent.pop();
+        // Cap at 10 (user might prefer slightly less for row alignment)
+        if (this.recent.length > 10) this.recent.pop();
         localStorage.setItem('recent_games', JSON.stringify(this.recent));
+    },
+
+    removeFromRecent(game) {
+        this.recent = this.recent.filter(g => g.url !== game.url);
+        localStorage.setItem('recent_games', JSON.stringify(this.recent));
+        this.updateRecentSection();
     },
 
     updateRecentSection() {
@@ -276,7 +358,7 @@ const Games = {
         const recentSection = document.getElementById('recent-section');
         if (!recentGrid) return;
 
-        if (window.Settings && window.Settings.get('historyEnabled') === false) {
+        if (window.Settings && window.Settings.get('historyEnabled') === false || this.showLikedOnly) {
             recentSection.style.display = 'none';
             return;
         }
@@ -286,7 +368,7 @@ const Games = {
         recentGrid.innerHTML = '';
         if (this.recent.length > 0) {
             recentSection.style.display = 'block';
-            this.recent.forEach(g => recentGrid.appendChild(this.createCard(g)));
+            this.recent.forEach(g => recentGrid.appendChild(this.createCard(g, true)));
         } else {
             recentSection.style.display = 'none';
         }
@@ -312,6 +394,11 @@ const Games = {
             this.liked.push({ name: game.name, url: game.url, img: game.img, type: game.type });
         }
         localStorage.setItem('liked_games', JSON.stringify(this.liked));
+
+        // If we are in "favorites only" mode, we should refresh the grid
+        if (this.showLikedOnly) {
+            this.performSearch(document.getElementById('search-input')?.value.toLowerCase().trim() || '');
+        }
     },
 
     setupListeners() {
@@ -343,13 +430,49 @@ const Games = {
         });
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) sortSelect.onchange = (e) => this.sort(e.target.value);
+
+        // Random Game Button
+        const randomBtn = document.getElementById('random-btn');
+        if (randomBtn) {
+            randomBtn.onclick = () => {
+                if (this.allGames.length > 0) {
+                    const game = this.allGames[Math.floor(Math.random() * this.allGames.length)];
+                    this.openGame(game);
+                }
+            };
+        }
+
+        // Favorites Toggle
+        const likedToggle = document.getElementById('liked-toggle');
+        if (likedToggle) {
+            likedToggle.onclick = () => {
+                this.showLikedOnly = !this.showLikedOnly;
+                likedToggle.classList.toggle('active', this.showLikedOnly);
+                this.performSearch(searchInput?.value.toLowerCase().trim() || '');
+            };
+        }
+
+        // Back to top
+        const backToTop = document.getElementById('back-to-top');
+        if (backToTop) {
+            backToTop.onclick = () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+        }
     },
 
     performSearch(term) {
-        this.filteredGames = term ? this.allGames.filter(g => g.name.toLowerCase().includes(term)) : [...this.allGames];
-        this.applyLikedSort();
+        let results = term ? this.allGames.filter(g => g.name.toLowerCase().includes(term)) : [...this.allGames];
+
+        if (this.showLikedOnly) {
+            results = results.filter(g => this.isLiked(g));
+        }
+
+        this.filteredGames = results;
+        this.applyFilters();
         this.resetRender();
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => Games.init());
+

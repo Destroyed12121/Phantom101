@@ -74,10 +74,9 @@
             <a href="${rootPrefix}pages/extra.html" class="footer-link">Credits</a>
         </div>
         <span class="footer-version" id="footer-version">&copy; 2026 ${config.name || 'Phantom Unblocked'}. All rights reserved. | v${config.version || '1.0.0'}</span>
-        <span class="footer-online-counter" style="margin-left: 12px; opacity: 0.8; display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-dim, #52525b);">
-            <i class="fa-solid fa-user-group" style="color: #22c55e;"></i>
-            <span id="footer-online-count">--</span>
-            <span>online</span>
+        <span class="footer-online-counter" style="margin-left: 12px; font-size: 0.75rem; color: var(--text-dim, #52525b);">
+            <span id="footer-online-count">--</span> online
+            <span id="footer-refresh-countdown" style="margin-left: 4px; opacity: 0.6;"></span>
         </span>
     `;
 
@@ -91,6 +90,38 @@
             localStorage.setItem(key, id);
         }
         return id;
+    }
+
+    let countdownSeconds = 30;
+    let countdownInterval;
+
+    function startCountdown() {
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        const updateCountdownUI = () => {
+            const footerCountEl = document.getElementById('footer-refresh-countdown');
+            const pageOnlineEl = document.getElementById('page-online-count');
+
+            if (footerCountEl) {
+                footerCountEl.textContent = `(Refreshing in ${countdownSeconds}s)`;
+            }
+
+            // Also update the page element if it exists (for index2.html style)
+            const pageRefreshEl = document.getElementById('page-refresh-countdown');
+            if (pageRefreshEl) {
+                pageRefreshEl.textContent = `(Refreshing in ${countdownSeconds}s)`;
+            }
+        };
+
+        updateCountdownUI();
+        countdownInterval = setInterval(() => {
+            countdownSeconds--;
+            updateCountdownUI();
+            if (countdownSeconds <= 0) {
+                clearInterval(countdownInterval);
+                updateOnlineCount();
+            }
+        }, 1000);
     }
 
     async function updateOnlineCount() {
@@ -120,16 +151,48 @@
                     pageEl.textContent = '--';
                 }
             }
+
+            countdownSeconds = data.nextRefresh !== undefined ? data.nextRefresh : 30;
+
+            // Reset and start countdown after successful fetch
+            startCountdown();
+
         } catch (e) {
             const footerEl = document.getElementById('footer-online-count');
             if (footerEl) footerEl.textContent = '--';
             const pageEl = document.getElementById('page-online-count');
             if (pageEl) pageEl.textContent = '--';
             console.error('Online counter fetch error:', e);
+
+            // Still restart countdown even on error to try again later
+            countdownSeconds = 30;
+            startCountdown();
         }
     }
     updateOnlineCount();
-    setInterval(updateOnlineCount, 30000);
+
+    // Keep track of how many tabs are open so we only send the leave ping when the LAST tab closes
+    const TABS_KEY = 'phantom_active_tabs';
+    let currentTabs = parseInt(localStorage.getItem(TABS_KEY) || '0');
+    localStorage.setItem(TABS_KEY, (currentTabs + 1).toString());
+
+    function notifyLeave() {
+        let openTabs = parseInt(localStorage.getItem(TABS_KEY) || '1') - 1;
+        if (openTabs < 0) openTabs = 0;
+        localStorage.setItem(TABS_KEY, openTabs.toString());
+
+        if (openTabs === 0) {
+            const sessionId = getSessionId();
+            const workerUrl = `https://counter.leelive2021.workers.dev/?id=${encodeURIComponent(sessionId)}&action=leave`;
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(workerUrl);
+            } else {
+                fetch(workerUrl, { keepalive: true }).catch(() => { });
+            }
+        }
+    }
+
+    window.addEventListener('pagehide', notifyLeave);
 
     if (!document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
         window.dataLayer = window.dataLayer || [];
@@ -239,7 +302,7 @@
         const showLocal = localId && !localStorage.getItem(localSeenKey);
 
         const fetchCDN = async () => {
-            const endpoint = "https://raw.githubusercontent.com/Destroyed12121/Phantom101/main/announcement.json";
+            const endpoint = config.announcement?.endpoint || "/testing";
             try {
                 const res = await fetch(endpoint);
                 const data = await res.json();
@@ -386,6 +449,7 @@
     window.addEventListener('settings-changed', (e) => {
         settings = e.detail;
         initDiscord();
-    });
 
+    });
 })();
+
