@@ -400,15 +400,7 @@
         }, true);
     }
 
-    window.addEventListener('beforeunload', (e) => {
-        try { settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { }
 
-        if (window.top === window.self && settings.leaveConfirmation) {
-            e.preventDefault();
-            e.returnValue = '';
-            return '';
-        }
-    });
 
     let crateInstance = null;
 

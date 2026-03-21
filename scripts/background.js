@@ -144,6 +144,13 @@
         },
 
         async proxyImage(url) {
+            if (!url || typeof url !== 'string') throw new Error('Invalid URL provided to proxy');
+            if (!url.startsWith('http') && !url.startsWith('/')) {
+                // Try to resolve relative URLs
+                try { url = new URL(url, window.location.href).href; }
+                catch(e) { throw new Error('Invalid URL format: ' + url); }
+            }
+
             this.init();
             const isReady = await this.waitForReady();
             if (!isReady) throw new Error('Proxy not ready');
@@ -213,17 +220,12 @@
 
             let type = null, url = null, pos = null, overlay = 0.4;
 
-            if (custom && custom.type !== 'none') {
+            if (custom && custom.id !== 'none' && custom.type !== 'none') {
                 if (custom.id && custom.id !== 'custom') {
                     const preset = window.SITE_CONFIG?.backgroundPresets?.find(b => b.id === custom.id);
                     if (preset) Object.assign(custom, preset);
                 }
                 ({ type, url, objectPosition: pos, overlay = 0.4 } = custom);
-            } else if (theme.type === 'image' || theme.type === 'video' || theme.type === 'youtube') {
-                type = theme.type;
-                url = theme.value || theme.url;
-                pos = theme.objectPosition;
-                overlay = theme.overlay || 0.4;
             }
 
             document.documentElement.style.setProperty('--bg-overlay', overlay);
@@ -238,9 +240,8 @@
 
             document.documentElement.style.setProperty('--bg-image-position', pos || 'center');
 
-            if (!type || !url) {
+            if (!type || type === 'none' || (!url && type !== 'youtube')) {
                 this.clear();
-                document.documentElement.style.backgroundColor = 'var(--bg)';
                 return;
             }
 
@@ -270,14 +271,7 @@
                 return;
             }
 
-            // 2. If it's a local/data URL, load directly
-            if (!url.startsWith('http') || url.includes(location.hostname)) {
-                if (isStale()) return;
-                this.createImage(url, pos);
-                return;
-            }
-
-            // 3. Always Proxy for external URLs
+            // 2. Always Proxy
             try {
                 const base64Data = await ProxyManager.proxyImage(url);
                 if (isStale()) return;

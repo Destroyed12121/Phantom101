@@ -1,13 +1,14 @@
-/* Media Card Components - Shared across movies.html and potentially others */
+/* Media Card Components - Shared */
 
 .media-card {
     position: relative;
-    aspect-ratio: 3/4;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    cursor: pointer;
     background: var(--surface);
-    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    aspect-ratio: 1 / 1.4;
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    animation: fadeInUp 0.5s ease backwards;
 }
 
 .media-card:hover {

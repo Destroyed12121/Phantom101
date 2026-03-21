@@ -45,15 +45,20 @@ body.phantom-bg-active .nav {
 /* Tabs */
 .tabs {
     display: flex;
-    padding: 8px 8px 0;
+    padding: 8px 8px 0 0;
     gap: 4px;
     background: transparent;
-    overflow-x: auto;
+    overflow: auto;
+    overflow-y: hidden;
+    border-bottom: 1px solid var(--border);
+    margin-left: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 /* Glass effect when background is active */
 body.phantom-bg-active .tabs {
-    background: rgba(10, 10, 10, 0.3);
+    background-color: rgba(10, 10, 10, 0.3);
 }
 
 .tabs::-webkit-scrollbar {
@@ -82,6 +87,10 @@ body.phantom-bg-active .tabs {
 .tab.active {
     background: var(--surface-hover);
     border-color: var(--border-light);
+    position: relative;
+    border-bottom: 1px solid var(--surface-hover);
+    margin-bottom: -1px;
+    z-index: 1;
 }
 
 .tab-favicon {
@@ -125,7 +134,7 @@ body.phantom-bg-active .tabs {
     background: transparent;
     border: none;
     color: var(--text-muted);
-    border-radius: 6px;
+    border-radius: 6px 6px 0 0;
     cursor: pointer;
     transition: all 0.15s;
     font-size: 14px;
@@ -228,21 +237,23 @@ input.bar::placeholder {
     background: var(--surface-hover);
 }
 
-/* Loading Bar */
 .loading-bar-container {
-    height: 3px;
-    background: var(--border);
+    height: 0;
+    background: transparent;
     overflow: hidden;
+    transition: height 0.2s ease, opacity 0.2s;
+    opacity: 0;
 }
 
 .loading-bar-container.active {
-    background: var(--border);
+    height: 2px;
+    opacity: 1;
 }
 
 .loading-bar {
     height: 100%;
     width: 0%;
-    background: var(--accent);
+    background: color-mix(in srgb, var(--accent), black 33%);
     transition: width 0.3s ease, opacity 0.2s;
 }
 
@@ -546,7 +557,7 @@ input.bar::placeholder {
     background: var(--accent);
     border: none;
     border-radius: 6px;
-    color: #fff;
+    color: var(--surface);
     cursor: pointer;
     transition: opacity 0.15s, transform 0.15s;
     flex-shrink: 0;

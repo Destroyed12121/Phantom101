@@ -97,21 +97,11 @@
                             step="0.1" style="width: 80px;">
                     </div>
 
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <div class="setting-label">Leave Confirmation</div>
-                            <div class="setting-desc">Ask before closing the tab</div>
-                        </div>
-                        <div class="toggle" id="leave-confirm-toggle"></div>
-                    </div>
+                    <!-- Leave Confirmation removed as requested -->
 
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <div class="setting-label">Fast Leave Confirmation</div>
-                            <div class="setting-desc">Click empty space within 1.2s of page load to enable leave confirmation (session only)</div>
-                        </div>
-                        <div class="toggle active" id="fast-leave-toggle"></div>
-                    </div>
+
+
+
                 </div>
 
                 <div class="settings-section">
@@ -145,6 +135,7 @@
                             <option value="https://search.brave.com/search?q=">Brave</option>
                             <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
                             <option value="https://www.bing.com/search?q=">Bing</option>
+                            <option value="https://search.yahoo.com/search?p=">Yahoo!</option>
                         </select>
                     </div>
                 </div>
@@ -365,8 +356,8 @@
                     </div>
                     <div class="setting-row">
                         <div class="setting-info">
-                            <div class="setting-label">Ambiance Mode</div>
-                            <div class="setting-desc">Enable immersive ambient background in the player</div>
+                            <div class="setting-label">Ambiance by Default</div>
+                            <div class="setting-desc">Enable immersive ambient background in the player by default</div>
                         </div>
                         <div class="toggle" id="ambiance-setting-toggle"></div>
                     </div>
@@ -393,6 +384,29 @@
                                 you left off.</div>
                         </div>
                         <div class="toggle active" id="history-toggle"></div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-robot"></i> AI Chat Settings</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">Context Window</div>
+                            <div class="setting-desc">Number of previous messages for the AI to remember (5 - 50)</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="range" id="ai-context-slider" min="5" max="50" step="1" value="10"
+                                style="flex: 1; accent-color: var(--accent);">
+                            <span id="ai-context-value"
+                                style="font-family: monospace; min-width: 24px; text-align: right;">10</span>
+                        </div>
+                    </div>
+                    <div class="setting-row" style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;">
+                        <div class="setting-info">
+                            <div class="setting-label">Auto-Switch Search Model</div>
+                            <div class="setting-desc">Automatically switch to a search-capable model (like gemini-search) for questions about current events</div>
+                        </div>
+                        <div class="toggle active" id="ai-search-toggle"></div>
                     </div>
                 </div>
             </div>
@@ -426,6 +440,16 @@
                             <div class="setting-desc">Automatically show changelog when Phantom is updated</div>
                         </div>
                         <div class="toggle active" id="changelog-toggle"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2 class="section-title"><i class="fa-solid fa-newspaper"></i> News</h2>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">News Ticker</div>
+                            <div class="setting-desc">Show the live news feed on the home page</div>
+                        </div>
+                        <div class="toggle active" id="news-toggle"></div>
                     </div>
                 </div>
             </div>

@@ -211,7 +211,168 @@
 
 
         }
+
+        /* Minimal HUD Widgets */
+        .side-widget {
+            position: fixed;
+            top: 250px;
+            width: 220px;
+            padding: 16px;
+            background: rgba(15, 15, 15, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .side-widget:hover {
+            background: rgba(25, 25, 25, 0.3);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .left-widget {
+            left: calc(50% - 640px);
+            top: 180px;
+        }
+
+        .right-widget {
+            left: calc(50% + 420px);
+            top: 180px;
+        }
+
+        .widget-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: var(--text-dim);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+
+        .widget-header i {
+            font-size: 0.8rem;
+        }
+
+        /* Tiny Weather HUD */
+        .weather-hud {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .weather-temp-bin, .weather-precip-bin {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 99px;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .weather-temp-bin i {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .weather-temp-bin span {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .weather-precip-bin i {
+            color: #3b82f6; /* Blue for rain/precip */
+            font-size: 0.8rem;
+        }
+
+        .weather-precip-bin span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .weather-loc-tag {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 4px;
+        }
+
+        /* Tiny News Widget */
+        .news-item {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .news-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+
+        .news-summary {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            line-height: 1.3;
+        }
+
+        .news-meta {
+            font-size: 0.6rem;
+            color: var(--accent);
+            font-weight: 600;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 1000px) {
+            .side-widget {
+                display: none;
+            }
+            .mobile-widgets {
+                display: block;
+                width: 100%;
+                max-width: 500px;
+                margin-top: 24px;
+                padding: 0 16px;
+            }
+        }
+
+        @media (min-width: 1001px) {
+            .mobile-widgets {
+                display: none;
+            }
+        }
     </style>
+    <script>
+        (function() {
+            if (sessionStorage.getItem('phantom_unblock_all') === 'true') {
+                window.addEventListener('beforeunload', (e) => {
+                    e.preventDefault();
+                    e.returnValue = '';
+                });
+                
+                // Define minimal loading functions for top-level mode
+                window.showLoading = window.showLoading || (() => {});
+                window.hideLoading = window.hideLoading || (() => {});
+            }
+        })();
+    </script>
     <script src="config.js" defer></script>
     <script src="scripts/settings.js" defer></script>
     <script src="scripts/background.js" defer></script>
@@ -220,7 +381,6 @@
     <script src="scripts/notifications.js" defer></script>
     <script src="scripts/rotation.js" defer></script>
     <script src="scripts/featured.js" defer></script>
-    <script src="components/UGSfiles.js" defer></script>
     <script src="scripts/gloader.js" defer></script>
     <script src="scripts/search.js" defer></script>
     <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
@@ -240,6 +400,17 @@
         <script src="components/topbar.js"></script>
 
         <main class="main-content">
+            <!-- Floating Side Widgets -->
+            <div class="side-widget left-widget">
+                <div class="widget-header"><i class="fa-solid fa-cloud-sun"></i><span>Weather</span></div>
+                <div id="weather-widget"></div>
+            </div>
+
+            <div class="side-widget right-widget">
+                <div class="widget-header"><i class="fa-solid fa-newspaper"></i><span>News</span></div>
+                <div id="news-widget"></div>
+            </div>
+
             <h1 class="site-title">Phantom Unblocked</h1>
             <p class="site-subtitle" id="subtitle"></p>
 
@@ -260,12 +431,28 @@
                 <div class="featured-grid" id="featured-grid"></div>
             </section>
 
+            <!-- Mobile Widgets -->
+            <div class="mobile-widgets">
+                <div class="side-widget" style="position: static; width: 100%; margin-bottom: 16px;">
+                    <div class="widget-header"><i class="fa-solid fa-cloud-sun"></i><span>Weather</span></div>
+                    <div id="weather-widget-mobile"></div>
+                </div>
+                <div class="side-widget" style="position: static; width: 100%;">
+                    <div class="widget-header"><i class="fa-solid fa-newspaper"></i><span>News</span></div>
+                    <div id="news-widget-mobile"></div>
+                </div>
+            </div>
+
             <!-- Online Counter -->
             <div class="online-counter" style="margin-top: 24px; font-size: 0.875rem; color: var(--text-muted);">
                 <span id="page-online-count">--</span> online
                 <span id="page-refresh-countdown" style="margin-left: 4px; opacity: 0.6;"></span>
             </div>
         </main>
+
+        <!-- New Widget Scripts -->
+        <script src="scripts/weather.js" defer></script>
+        <script src="scripts/news.js" defer></script>
 
     </div>
 

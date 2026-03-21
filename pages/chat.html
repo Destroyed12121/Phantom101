@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -66,28 +66,55 @@
       </div>
 
       <div class="chat-footer">
-        <div class="input-container">
+        <div class="input-container" id="inputContainer">
+          <div id="attachmentPreview" class="attachment-preview" style="display: none;"></div>
+          <div class="input-row">
 
-          <div class="input-actions">
-            <button class="mode-pill mode-btn active" data-mode="text" title="Text generation">
-              <i class="fas fa-comment-alt"></i>
-              <span>Text</span>
-            </button>
-            <button class="mode-pill mode-btn" data-mode="image" title="Image generation">
-              <i class="fas fa-image"></i>
-              <span>Image</span>
-            </button>
-          </div>
+            <div class="input-actions">
+              <div class="attach-dropdown-container">
+                <button class="mode-pill mode-btn" id="attachBtn" title="Attach file">
+                  <i class="fas fa-paperclip"></i>
+                </button>
+                <div class="attach-menu" id="attachMenu">
+                  <button class="attach-menu-item" id="uploadFileBtn">
+                    <i class="fas fa-file-upload"></i>
+                    <span>Upload File</span>
+                  </button>
+                  <button class="attach-menu-item" id="takePhotoBtn">
+                    <i class="fas fa-camera"></i>
+                    <span>Take Photo</span>
+                  </button>
+                  <button class="attach-menu-item" id="screenshotBtn">
+                    <i class="fas fa-desktop"></i>
+                    <span>Take Screenshot</span>
+                  </button>
+                </div>
+              </div>
+              <input type="file" id="fileInput" style="display: none;" multiple>
+              <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+              <button class="mode-pill mode-btn active" data-mode="text" title="Text generation">
+                <i class="fas fa-comment-alt"></i>
+                <span>Text</span>
+              </button>
+              <button class="mode-pill mode-btn" data-mode="image" title="Image generation">
+                <i class="fas fa-image"></i>
+                <span>Image</span>
+              </button>
+            </div>
 
 
-          <textarea id="chatInput" class="chat-input" placeholder="Message Phantom AI..." rows="1"
-            aria-label="Chat message input"></textarea>
+            <textarea id="chatInput" class="chat-input" placeholder="Message Phantom AI..." rows="1"
+              aria-label="Chat message input"></textarea>
 
 
-          <div class="input-actions">
-            <button id="sendBtn" class="send-btn" disabled aria-label="Send message">
-              <i class="fas fa-arrow-up"></i>
-            </button>
+            <div class="input-actions" style="display: flex; gap: 8px;">
+              <button id="stopBtn" class="send-btn stop-btn" style="display: none;" aria-label="Stop generation">
+                <i class="fas fa-stop"></i>
+              </button>
+              <button id="sendBtn" class="send-btn" disabled aria-label="Send message">
+                <i class="fas fa-arrow-up"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>

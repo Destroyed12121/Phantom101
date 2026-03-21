@@ -549,9 +549,8 @@ if (settings.discordWidget !== false) document.getElementById('discord-toggle').
 else document.getElementById('discord-toggle').classList.remove('active');
 if (settings.miniplayer !== false) document.getElementById('miniplayer-toggle').classList.add('active');
 else document.getElementById('miniplayer-toggle').classList.remove('active');
-if (settings.leaveConfirmation) document.getElementById('leave-confirm-toggle').classList.add('active');
-if (settings.fastLeaveConfirmation !== false) document.getElementById('fast-leave-toggle').classList.add('active');
-else document.getElementById('fast-leave-toggle').classList.remove('active');
+// Leave confirmation logic removed
+
 if (settings.showChangelogOnUpdate !== false) document.getElementById('changelog-toggle').classList.add('active');
 else document.getElementById('changelog-toggle').classList.remove('active');
 if (settings.themeRotation) document.getElementById('theme-rotation-toggle').classList.add('active');
@@ -564,8 +563,11 @@ if (settings.historyEnabled !== false) document.getElementById('history-toggle')
 else document.getElementById('history-toggle').classList.remove('active');
 if (settings.offlineMode !== false) document.getElementById('offline-mode-toggle').classList.add('active');
 else document.getElementById('offline-mode-toggle').classList.remove('active');
-if (localStorage.getItem('phantom_ambiance_enabled') !== 'false') document.getElementById('ambiance-setting-toggle').classList.add('active');
+if (settings.ambianceByDefault !== false) document.getElementById('ambiance-setting-toggle').classList.add('active');
 else document.getElementById('ambiance-setting-toggle').classList.remove('active');
+
+if (settings.newsEnabled !== false) document.getElementById('news-toggle').classList.add('active');
+else document.getElementById('news-toggle').classList.remove('active');
 
 const announcementSourceSelect = document.getElementById('announcement-source-select');
 if (announcementSourceSelect) announcementSourceSelect.value = settings.announcementSource || 'cdn';
@@ -582,6 +584,22 @@ document.getElementById('bg-color').oninput = e => {
     settings.background = { type: 'color', value: e.target.value };
     saveSettings(settings);
 };
+
+const aiContextSlider = document.getElementById('ai-context-slider');
+const aiContextValue = document.getElementById('ai-context-value');
+if (aiContextSlider && aiContextValue) {
+    const initialVal = settings.aiContextWindow || 10;
+    aiContextSlider.value = initialVal;
+    aiContextValue.textContent = initialVal;
+    
+    aiContextSlider.oninput = (e) => {
+        const val = parseInt(e.target.value);
+        aiContextValue.textContent = val;
+        settings.aiContextWindow = val;
+        saveSettings(settings);
+    };
+}
+
 document.getElementById('panic-url').oninput = e => { settings.panicUrl = e.target.value; saveSettings(settings); };
 document.getElementById('accent-color').oninput = e => { settings.accentColor = e.target.value; saveSettings(settings); };
 document.getElementById('surface-color').oninput = e => { settings.surfaceColor = e.target.value; saveSettings(settings); };
@@ -596,16 +614,21 @@ document.getElementById('border-light-color').oninput = e => { settings.borderLi
 document.getElementById('max-rating').onchange = e => { settings.maxMovieRating = e.target.value; saveSettings(settings); };
 document.getElementById('discord-toggle').onclick = function () { this.classList.toggle('active'); settings.discordWidget = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('miniplayer-toggle').onclick = function () { this.classList.toggle('active'); settings.miniplayer = this.classList.contains('active'); saveSettings(settings); };
-document.getElementById('leave-confirm-toggle').onclick = function () { this.classList.toggle('active'); settings.leaveConfirmation = this.classList.contains('active'); saveSettings(settings); };
-document.getElementById('fast-leave-toggle').onclick = function () { 
-    this.classList.toggle('active'); 
-    settings.fastLeaveConfirmation = this.classList.contains('active'); 
-    saveSettings(settings);
-};
+// Leave confirmation onclick removed
+
 document.getElementById('changelog-toggle').onclick = function () { this.classList.toggle('active'); settings.showChangelogOnUpdate = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('theme-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.themeRotation = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('autoswitch-toggle').onclick = function () { this.classList.toggle('active'); settings.autoSwitchProviders = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('history-toggle').onclick = function () { this.classList.toggle('active'); settings.historyEnabled = this.classList.contains('active'); saveSettings(settings); };
+document.getElementById('news-toggle').onclick = function () { this.classList.toggle('active'); settings.newsEnabled = this.classList.contains('active'); saveSettings(settings); };
+
+const autoSearchToggle = document.getElementById('ai-search-toggle');
+if (autoSearchToggle) {
+    if (settings.autoSwitchSearch !== false) autoSearchToggle.classList.add('active');
+    else autoSearchToggle.classList.remove('active');
+    autoSearchToggle.onclick = function () { this.classList.toggle('active'); settings.autoSwitchSearch = this.classList.contains('active'); saveSettings(settings); };
+}
+
 document.getElementById('background-rotation-toggle').onclick = function () { this.classList.toggle('active'); settings.backgroundRotation = this.classList.contains('active'); saveSettings(settings); };
 document.getElementById('offline-mode-toggle').onclick = function () {
     this.classList.toggle('active');
@@ -632,8 +655,9 @@ document.getElementById('offline-mode-toggle').onclick = function () {
 document.getElementById('ambiance-setting-toggle').onclick = function () {
     this.classList.toggle('active');
     const enabled = this.classList.contains('active');
-    localStorage.setItem('phantom_ambiance_enabled', enabled);
-    if (window.Notify) Notify.success('Saved', 'Ambiance Mode ' + (enabled ? 'enabled' : 'disabled'));
+    settings.ambianceByDefault = enabled;
+    saveSettings(settings);
+    if (window.Notify) Notify.success('Saved', 'Ambiance by Default ' + (enabled ? 'enabled' : 'disabled'));
 };
 
 if (announcementSourceSelect) {
@@ -721,3 +745,29 @@ document.getElementById('reset-settings').onclick = () => {
     localStorage.removeItem('void_settings');
     location.reload();
 };
+
+// Remote News Switch Sync (Backend)
+(async function syncRemoteNewsSwitch() {
+    try {
+        const res = await fetch('https://raw.githubusercontent.com/Destroyed12121/Phantom101/refs/heads/master/config.js');
+        if (!res.ok) return;
+
+        const text = await res.text();
+        const match = text.match(/window\.SITE_CONFIG\s*=\s*({[\s\S]+});?/);
+        if (match) {
+            const remote = new Function(`return ${match[1]}`)();
+            if (remote.news && remote.news.enabled === false) {
+                const toggle = document.getElementById('news-toggle');
+                const row = toggle?.parentElement;
+                if (row) {
+                    row.style.opacity = '0.5';
+                    row.style.pointerEvents = 'none';
+                    const desc = row.querySelector('.setting-desc');
+                    if (desc) desc.textContent = 'This feature is currently disabled by the developer.';
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to sync remote news switch');
+    }
+})();

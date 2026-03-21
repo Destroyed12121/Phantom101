@@ -5,7 +5,6 @@
 .page-header {
     text-align: center;
     margin-bottom: 3rem;
-    animation: fadeInDown 0.6s ease;
 }
 
 .page-title {
@@ -17,99 +16,10 @@
     -webkit-text-fill-color: transparent;
 }
 
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Controls - Sticky and Premium */
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 2.5rem;
-    padding: 12px;
-    background: rgba(15, 15, 15, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    position: sticky;
-    top: 75px;
-    z-index: 100;
-    justify-content: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-
-
-.control-btn {
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.control-btn:hover {
-    background: var(--surface-hover);
-    color: var(--text);
-    transform: translateY(-2px);
-    border-color: var(--border-light);
-}
-
-.control-btn.active {
-    background: var(--accent);
-    color: var(--bg);
-    border-color: var(--accent);
-}
-
-.control-btn i {
-    font-size: 1.1rem;
-}
-
-/* Search Box override */
-.search-box {
-    background: var(--surface) !important;
-    border-radius: 12px !important;
-    border: 1px solid var(--border) !important;
-    flex: 1;
-    min-width: 200px;
-    max-width: 400px;
-}
-
-.search-box:focus-within {
-    border-color: var(--border-light) !important;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
-}
-
-/* Select wrapper override */
-.select-wrapper select {
-    background-color: var(--surface) !important;
-    border-radius: 12px !important;
-    border: 1px solid var(--border) !important;
-    height: 42px;
-    padding: 0 35px 0 15px;
-}
-
 /* Grid */
 .game-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
     gap: 20px;
     max-width: 1300px;
     margin: 0 auto;
@@ -130,18 +40,6 @@
     animation: fadeInUp 0.5s ease backwards;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 .game-card:hover {
     transform: translateY(-8px);
     border-color: rgba(255, 255, 255, 0.2);
@@ -153,7 +51,7 @@
 .game-img-wrapper {
     position: relative;
     width: 100%;
-    aspect-ratio: 16/11;
+    aspect-ratio: 16/12.5;
     background: #000;
     overflow: hidden;
 }
@@ -210,8 +108,11 @@
     flex: 1;
     background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.2));
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .game-title {
@@ -222,11 +123,31 @@
     text-overflow: ellipsis;
     text-align: center;
     color: var(--text);
-    transition: color 0.2s;
+    transition: all 0.3s ease;
 }
 
 .game-card:hover .game-title {
     color: #fff;
+    transform: translateY(-2px);
+}
+
+.game-developer {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.game-card:hover .game-developer {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .section-header {
@@ -269,39 +190,40 @@
     margin-bottom: 10px;
 }
 
-/* Back to Top */
+/* Back to Top - Optimized for Games */
 .back-to-top-btn {
     position: fixed;
     bottom: 30px;
     right: 30px;
     width: 50px;
     height: 50px;
-    border-radius: 15px;
-    background: var(--accent);
-    color: var(--bg);
+    border-radius: 16px;
+    background: #ffffff;
+    color: #000000;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
+    font-size: 1.25rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 5000;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(20px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(30px) scale(0.8);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .back-to-top-btn.visible {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
 
 .back-to-top-btn:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    transform: translateY(-8px) scale(1.05);
+    background: #f0f0f0;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
 
 /* Skeleton override */

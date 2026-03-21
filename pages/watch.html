@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../components/topbar.css">
     <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../styles/search.css">
     <link rel="stylesheet" href="../styles/card.css">
     <link rel="stylesheet" href="../styles/watch.css">
     <link rel="stylesheet" href="../styles/background.css">
@@ -22,12 +23,11 @@
 <body>
     <script src="../components/topbar.js"></script>
 
-    <div class="watch-page">
+    <div class="watch-page movies-page">
         <header class="page-header">
             <h1 class="page-title">Watch</h1>
-            <p class="page-subtitle">Stream movies and TV shows</p>
-            <div id="status"
-                style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; opacity: 0.6; height: 1em;"></div>
+            <p class="page-subtitle" id="quote-display">Loading...</p>
+            <div id="status"></div>
         </header>
 
         <div class="controls">
@@ -39,24 +39,27 @@
                 <button class="tab-btn active" id="youtube-tab" onclick="setPlatform('youtube')">YouTube</button>
                 <button class="tab-btn" id="twitch-tab" onclick="setPlatform('twitch')">Twitch</button>
             </div>
+            <button id="random-btn" class="control-btn" title="Random Choice">
+                <i class="fa-solid fa-dice"></i>
+            </button>
         </div>
 
-        <div id="continue-watching-section"
-            style="display: none; margin-bottom: 2rem; max-width: 1200px; margin-inline: auto;">
-            <div class="section-header"
-                style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">
+        <div id="continue-watching-section" class="section-container">
+            <div class="section-header">
                 <i class="fa-solid fa-clock-rotate-left"></i> Continue Watching
             </div>
-            <div class="media-grid" id="continue-watching-grid"
-                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); padding-top: 0;"></div>
+            <div class="media-grid" id="continue-watching-grid"></div>
         </div>
 
         <div class="media-grid" id="media-grid">
             <!-- Search results will appear here -->
         </div>
+
+
     </div>
 
     <script src="../scripts/background.js"></script>
+    <script src="../scripts/quotes.js"></script>
     <script src="../scripts/watch.js"></script>
     <script src="../components/footer.js"></script>
 </body>

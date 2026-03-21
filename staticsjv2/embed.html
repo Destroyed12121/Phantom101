@@ -195,7 +195,7 @@
             const basePath = location.pathname.replace(/[^/]*$/, '') + '/';
             const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
             const storedSettings = JSON.parse(localStorage.getItem("void_settings") || "{}");
-            const transport = storedSettings.transport || "epoxy";
+            const transport = storedSettings.transport || "libcurl";
 
             const EPOXY_URL = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
             const LIBCURL_URL = "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/libcurl.mjs";
@@ -239,7 +239,7 @@
                         wispurl: wispUrl,
                         servers: allServers,
                         autoswitch: autoswitch,
-                        transport: storedSettings2.transport || "epoxy"
+                        transport: storedSettings2.transport || "libcurl"
                     };
 
                     const sendConfig = () => {

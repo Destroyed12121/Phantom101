@@ -300,9 +300,241 @@
     border-radius: var(--radius-xl);
     padding: 8px;
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
     gap: var(--space-sm);
     transition: all var(--transition-normal);
+}
+
+.input-container.dragover {
+    border-color: var(--accent);
+    background: rgba(40, 40, 40, 0.9);
+}
+
+.input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.attach-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.attach-menu {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 0;
+    background: rgba(25, 25, 25, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 150px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all var(--transition-fast);
+    z-index: 100;
+}
+
+.attach-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.attach-menu-item {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+    text-align: left;
+    width: 100%;
+}
+
+.attach-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.attach-menu-item i {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.attachment-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 8px 0;
+}
+
+.attachment-item {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+}
+
+.attachment-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.attachment-item.file-item {
+    background: rgba(30, 30, 30, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    font-size: 20px;
+    padding: 4px;
+}
+
+.attachment-item.file-item .file-name {
+    font-size: 10px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.message-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.message-file-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    width: fit-content;
+    max-width: 180px;
+    transition: all var(--transition-normal);
+}
+
+.message-file-wrapper.expanded {
+    max-width: 100%;
+    width: 100%;
+}
+
+.message-file-attachment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text);
+    background: transparent;
+    transition: background var(--transition-fast);
+}
+
+.message-file-attachment:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.message-file-attachment i.fa-file-code {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.file-name-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.toggle-icon {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    transition: transform var(--transition-fast);
+}
+
+.message-file-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.message-file-wrapper.expanded .message-file-content {
+    max-height: 350px;
+}
+
+.message-file-wrapper.expanded .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.message-file-content pre {
+    margin: 0;
+    padding: var(--space-md);
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    font-size: 0.85rem;
+    max-height: 350px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.attachment-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--error);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.message-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.message-image {
+    max-width: 250px;
+    max-height: 250px;
+    border-radius: 8px;
+    object-fit: cover;
 }
 
 .input-container:focus-within {
@@ -316,6 +548,19 @@
     padding: 0px;
 }
 
+.chat-input:focus {
+    outline: none;
+}
+
+.stop-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.stop-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
 .chat-input {
     flex: 1;
     background: transparent;
@@ -445,6 +690,54 @@
     margin: var(--space-sm) 0;
     border: 1px solid var(--border);
     overflow-x: auto;
+}
+
+.code-block-wrapper {
+    position: relative;
+    background: rgba(10, 10, 10, 0.7);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin: var(--space-sm) 0;
+    padding-top: 4px; /* padding for the copy button float */
+}
+
+.code-block-wrapper pre {
+    background: transparent;
+    border: none;
+    margin: 0;
+    padding-top: 24px;
+}
+
+.code-copy-btn {
+    position: sticky;
+    top: 8px;
+    float: right;
+    margin-right: 8px;
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    z-index: 10;
+}
+
+.code-copy-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: var(--border-light);
+}
+
+.code-copy-btn.copied,
+.message-actions .btn.copied {
+    color: var(--text);
 }
 
 .message-text code {

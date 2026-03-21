@@ -1,7 +1,7 @@
 (function () {
     const style = document.createElement('style');
     style.textContent = `
-        .notify-container { position: fixed; top: 16px; right: 16px; z-index: 99999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Inter', sans-serif; }
+        .notify-container { position: fixed; top: 16px; right: 16px; z-index: 100; display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Inter', sans-serif; }
         .notify-toast { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(15, 15, 15, 0.9); backdrop-filter: blur(10px); border: 1px solid var(--border, #1f1f1f); border-radius: 10px; color: #e4e4e7; font-size: 13px; min-width: 280px; max-width: 380px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); pointer-events: auto; transform: translateX(120%); opacity: 0; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; position: relative; overflow: hidden; }
         .notify-toast.show { transform: translateX(0); opacity: 1; }
         .notify-toast.hiding { transform: translateX(120%); opacity: 0; }

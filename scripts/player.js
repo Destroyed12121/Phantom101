@@ -4,7 +4,7 @@ const type = params.get('type'), id = params.get('id'), title = params.get('titl
 const PROVIDERS = [
     { id: 'vidify', name: 'Vidify', urls: { movie: 'https://player.vidify.top/embed/movie/{id}', tv: 'https://player.vidify.top/embed/tv/{id}/{season}/{episode}' } },
     { id: 'vidfast', name: 'Vidfast', urls: { movie: 'https://vidfast.to/embed/movie/{id}', tv: 'https://vidfast.to/embed/tv/{id}/{season}/{episode}' } },
-    { id: 'vidsrc_su', name: 'VidSrc', urls: { movie: 'https://vidsrc-embed.su/embed/movie?tmdb={id}', tv: 'https://vidsrc-embed.su/embed/tv?tmdb={id}&s={season}&e={episode}' } },
+    { id: 'vidsrc_su', name: 'Vidsrc.su', urls: { movie: 'https://vidsrc.su/movie/{id}?autoplay=true', tv: 'https://vidsrc.su/tv/{id}/{season}/{episode}?autoplay=true' } },
 ];
 
 if (typeof window.PROVIDERS === 'undefined') {
@@ -94,7 +94,21 @@ if (isPlayerPage) {
             loadProvider(defaultProvider);
         }
         const q = window.Quotes ? window.Quotes.getRandom() : '';
-        descEl.textContent = (type !== 'game' ? (JSON.parse(sessionStorage.getItem('currentMovie') || '{}').overview || 'No description') : '');
+        const movieData = JSON.parse(sessionStorage.getItem('currentMovie') || '{}');
+        let overview = movieData.overview || '';
+        
+        if (type === 'video') {
+            const isYT = urlParam && (urlParam.includes('youtube.com') || urlParam.includes('youtube-nocookie.com') || urlParam.includes('youtu.be'));
+            if (source === 'twitch' || (urlParam && urlParam.includes('twitch.tv'))) {
+                overview = 'Live Stream';
+            } else if (isYT) {
+                overview = 'YouTube Video';
+            } else if (!overview || overview === 'Platform Stream' || overview === 'Twitch Stream') {
+                overview = 'Live Stream';
+            }
+        }
+        
+        descEl.textContent = (type !== 'game' ? (overview || 'No description') : '');
         if (quoteEl) quoteEl.textContent = q;
 
         // Ambiance Toggle Support
@@ -105,12 +119,50 @@ if (isPlayerPage) {
                 ambianceBtn.classList.toggle('active', isActive);
             };
             // Set initial state visual
-            if (localStorage.getItem('phantom_ambiance_enabled') !== 'false') {
+            if ((window.Settings ? window.Settings.get('ambianceByDefault') : localStorage.getItem('phantom_ambiance_enabled')) !== false) {
                 ambianceBtn.classList.add('active');
             }
         }
 
         saveWatchProgress();
+    }
+
+    function saveWatchProgress() {
+        if (source === 'twitch' || type === 'twitch') return;
+        if (window.Settings && window.Settings.get('historyEnabled') === false) return;
+
+        const currentMovie = JSON.parse(sessionStorage.getItem('currentMovie') || '{}');
+        const history = JSON.parse(localStorage.getItem('continue_watching') || '[]');
+        
+        const item = {
+            id: id,
+            type: type,
+            title: title || currentMovie.title || currentMovie.name,
+            img: params.get('img') || (currentMovie.poster_path ? 'https://image.tmdb.org/t/p/w300' + currentMovie.poster_path : null),
+            url: window.location.href,
+            timestamp: Date.now(),
+            progress: getSavedProgress() || { currentTime: 0, duration: 0, percentage: 0 }
+        };
+
+        if (type === 'tv') {
+            item.season = season;
+            item.episode = episode;
+        }
+
+        // Remove existing entry for this specific item to move it to top
+        const filteredHistory = history.filter(h => {
+            if (type === 'tv') {
+                const urlObj = new URL(h.url, window.location.origin);
+                const s = urlObj.searchParams.get('season');
+                const e = urlObj.searchParams.get('episode');
+                return !(h.id === id && h.type === 'tv' && s === season && e === episode);
+            }
+            return !(h.id === id && h.type === type);
+        });
+
+        filteredHistory.unshift(item);
+        const limitedHistory = filteredHistory.slice(0, 10);
+        localStorage.setItem('continue_watching', JSON.stringify(limitedHistory));
     }
 
     const videoFrame = document.getElementById('video-frame');
@@ -240,7 +292,24 @@ if (isPlayerPage) {
         } else {
             try {
                 frame.src = 'about:blank';
-                const h = await (await fetch(url)).text();
+                let h = await (await fetch(url)).text();
+                const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
+
+                // For Games-lib, replace absolute paths with relative ones to work on any hosting path
+                if (url.includes('Games-lib')) {
+                    h = h.replace(/(src|href)=(['"])\/(?!\/)/g, '$1=$2./');
+                }
+
+                // Inject base tag to fix all relative assets
+                const baseTag = `<base href="${baseUrl}">`;
+                if (h.includes('<head>')) {
+                    h = h.replace('<head>', `<head>${baseTag}`);
+                } else if (h.includes('<html>')) {
+                    h = h.replace('<html>', `<html><head>${baseTag}</head>`);
+                } else {
+                    h = `<head>${baseTag}</head>` + h;
+                }
+
                 frame.src = URL.createObjectURL(new Blob([h], { type: 'text/html' }));
             } catch (e) { frame.src = url; }
         }
@@ -273,7 +342,7 @@ if (isPlayerPage) {
         const saved = getSavedProgress();
         if (saved && saved.currentTime > 0) {
             const separator = u.includes('?') ? '&' : '?';
-            const param = pid === 'vidify' ? 't' : 'start';
+            const param = (pid === 'vidify' || pid === 'vidsrc_su') ? 't' : 'start';
             u += `${separator}${param}=${Math.floor(saved.currentTime)}`;
         }
 
@@ -292,26 +361,39 @@ if (isPlayerPage) {
     function updateHistoryProgress(currentTime, duration, mediaIdOverride = null) {
         if (source === 'twitch' || type === 'twitch') return;
         if (window.Settings && window.Settings.get('historyEnabled') === false) return;
+        
         const history = JSON.parse(localStorage.getItem('continue_watching') || '[]');
-        if (history.length > 0) {
+        
+        // Find existing item in history
+        const itemIdx = history.findIndex(h => {
+            if (type === 'tv') {
+                const urlObj = new URL(h.url, window.location.origin);
+                const s = urlObj.searchParams.get('season');
+                const e = urlObj.searchParams.get('episode');
+                return h.id === id && h.type === 'tv' && s === season && e === episode;
+            }
+            return h.id === id && h.type === type;
+        });
+
+        if (itemIdx !== -1) {
             const progress = {
                 currentTime,
                 duration,
                 percentage: (currentTime / duration) * 100
             };
-            history[0].progress = progress;
-            history[0].timestamp = Date.now(); // Keep timestamp update for history
+            history[itemIdx].progress = progress;
+            history[itemIdx].timestamp = Date.now();
             localStorage.setItem('continue_watching', JSON.stringify(history));
+        }
 
-            // Also save to individual key for getSavedProgress
-            const key = (type === 'game' || type === 'video') ? urlParam : id;
-            if (key) {
-                localStorage.setItem(`progress_${key}`, JSON.stringify({
-                    currentTime,
-                    duration,
-                    lastWatched: Date.now() // Include lastWatched for individual progress
-                }));
-            }
+        // Also save to individual key for getSavedProgress
+        const key = (type === 'game' || type === 'video') ? urlParam : id;
+        if (key) {
+            localStorage.setItem(`progress_${key}`, JSON.stringify({
+                currentTime,
+                duration,
+                lastWatched: Date.now()
+            }));
         }
     }
 
@@ -381,15 +463,28 @@ if (isPlayerPage) {
         }
     };
 
-    // Vidify Progress-Tracking
+    // Progress-Tracking for Providers (Vidify and VidSrc.su)
     window.addEventListener('message', (event) => {
-        if (event.origin !== 'https://player.vidify.top') return;
-
-        if (event.data?.type === 'WATCH_PROGRESS') {
+        // Vidify
+        if (event.origin === 'https://player.vidify.top' && event.data?.type === 'WATCH_PROGRESS') {
             const { mediaId, eventType, currentTime, duration } = event.data.data;
-
             if (eventType === 'timeupdate' || eventType === 'pause' || eventType === 'play') {
                 updateHistoryProgress(currentTime, duration, mediaId);
+            }
+        }
+        
+        // VidSrc.su
+        if (event.data?.type === 'MEDIA_DATA') {
+            const mediaData = event.data?.data;
+            if (mediaData && mediaData.id && (mediaData.type === 'movie' || mediaData.type === 'tv')) {
+                const progress = mediaData.progress;
+                if (progress && typeof progress.duration !== 'undefined') {
+                    // Try to find the time field (commonly watched_time or currentTime)
+                    const currentTime = progress.watched_time || progress.currentTime || progress.time;
+                    if (typeof currentTime !== 'undefined') {
+                        updateHistoryProgress(currentTime, progress.duration, mediaData.id);
+                    }
+                }
             }
         }
     });

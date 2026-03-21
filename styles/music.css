@@ -507,18 +507,7 @@
     display: inline-flex;
 }
 
-#proxyBtn {
-    display: inline-flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    transition: all .15s;
-}
 
-#proxyBtn.active {
-    background: var(--surface-hover);
-    color: var(--text);
-    border-color: var(--text-muted);
-}
 
 .track-title {
     font-size: 20px;

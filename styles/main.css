@@ -88,7 +88,7 @@ html {
 
 body {
     font-family: var(--font-sans);
-    background: var(--bg);
+    background: var(--bg, #0a0a0a);
     background-image: var(--bg-image);
     background-size: cover;
     background-position: var(--bg-image-position, center);
@@ -318,36 +318,7 @@ p {
 
 
 
-/* tabs */
-.tabs {
-    display: flex;
-    gap: 2px;
-    background: var(--surface);
-    padding: var(--space-xs);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border);
-}
 
-.tab {
-    padding: var(--space-sm) var(--space-md);
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.tab:hover {
-    color: var(--text);
-}
-
-.tab.active {
-    background: var(--surface-hover);
-    color: var(--text);
-}
 
 
 

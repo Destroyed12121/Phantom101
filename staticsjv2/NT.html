@@ -6,13 +6,13 @@
   <title>New Tab</title>
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/background.css">
-  <script src="../config.js"></script>
-  <script src="../scripts/settings.js"></script>
-  <script src="../scripts/background.js"></script>
-  <script src="../scripts/quotes.js"></script>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="../config.js" defer></script>
+  <script src="../scripts/settings.js" defer></script>
+  <script src="../scripts/background.js" defer></script>
+  <script src="../scripts/quotes.js" defer></script>
   <link rel="stylesheet" href="suggestions.css">
-  <script src="suggestions.js"></script>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/index.mjs" type="module"></script>
+  <script src="suggestions.js" defer></script>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -211,6 +211,7 @@
       <option value="https://search.brave.com/search?q=">Brave</option>
       <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
       <option value="https://www.bing.com/search?q=">Bing</option>
+      <option value="https://search.yahoo.com/search?p=">Yahoo!</option>
     </select>
   </form>
 
@@ -267,6 +268,7 @@
   <div class="quote" id="quote"></div>
 
   <script>
+    document.addEventListener('DOMContentLoaded', () => {
     const $ = s => document.querySelector(s);
     const nav = url => {
       window.parent?.postMessage({ type: 'navigate', url }, '*');
@@ -281,7 +283,8 @@
     // Clock
     function updateClock() {
       const now = new Date();
-      $('#clock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      $('#clock').textContent = timeStr.replace(/\s?[APM]+/gi, '');
       $('#date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     }
     updateClock();
@@ -289,11 +292,12 @@
 
     // Search
     const engineSelect = $('#engine');
-    const savedEngine = localStorage.getItem('searchEngine');
+    const savedEngine = window.Settings ? Settings.get('searchEngine') : localStorage.getItem('searchEngine');
     if (savedEngine) engineSelect.value = savedEngine;
 
     engineSelect.onchange = () => {
-      localStorage.setItem('searchEngine', engineSelect.value);
+      if (window.Settings) Settings.set('searchEngine', engineSelect.value);
+      else localStorage.setItem('searchEngine', engineSelect.value);
     };
 
     $('#searchForm').onsubmit = e => {
@@ -344,11 +348,12 @@
     renderCustom();
 
     // Suggestions using the shared helper
-    if (window.SuggestionsHelper) {
-      SuggestionsHelper.init($('#searchInput'), $('#suggestions'), () => {
-        $('#searchForm').dispatchEvent(new Event('submit'));
-      });
-    }
+      if (window.SuggestionsHelper) {
+        SuggestionsHelper.init($('#searchInput'), $('#suggestions'), () => {
+          $('#searchForm').dispatchEvent(new Event('submit'));
+        });
+      }
+    });
   </script>
 </body>
 

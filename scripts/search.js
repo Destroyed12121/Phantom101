@@ -65,9 +65,6 @@ const PhantomSearch = {
     },
 
     onInput(e) {
-        // Trigger UGS load if first time typing
-        if (window.loadUGSFiles) window.loadUGSFiles();
-
         const query = e.target.value.trim();
         if (!query) { this.hide(); return; }
         this.search(query);
@@ -101,53 +98,74 @@ const PhantomSearch = {
         if (!this.dropdownEl.contains(e.target) && e.target !== this.inputEl) this.hide();
     },
 
+    fuzzyMatch(query, text) {
+        const q = query.toLowerCase();
+        const t = text.toLowerCase();
+        if (t === q) return 1000;
+        if (t.startsWith(q)) return 500 - t.length;
+        if (t.includes(q)) return 200 - t.length;
+
+        // subsequence match
+        let nIdx = 0;
+        let hIdx = 0;
+        let score = 0;
+        while (nIdx < q.length && hIdx < t.length) {
+            if (q[nIdx] === t[hIdx]) {
+                nIdx++;
+                score += 10;
+            } else {
+                score -= 1;
+            }
+            hIdx++;
+        }
+        if (nIdx === q.length) return score;
+        return -1;
+    },
+
     search(query, externalResults = null) {
         const q = query.toLowerCase();
         const results = [];
         const seen = new Set();
 
-        const add = (item) => {
-            if (seen.has(item.name)) return;
+        const add = (item, score = 0) => {
+            if (seen.has(item.name)) {
+                // update score if better?
+                const existing = results.find(r => r.name === item.name);
+                if (existing && score > existing.score) existing.score = score;
+                return;
+            }
             seen.add(item.name);
-            results.push(item);
+            results.push({ ...item, score });
         };
 
         // games n pages get first dibs
-        this.allGames
-            .filter(g => g.name.toLowerCase().includes(q) || (g.normalized && g.normalized.includes(q)))
-            .sort((a, b) => {
-                const aName = a.name.toLowerCase();
-                const bName = b.name.toLowerCase();
+        this.allGames.forEach(g => {
+            const nameScore = this.fuzzyMatch(q, g.name);
+            const normScore = g.normalized ? this.fuzzyMatch(q, g.normalized) : -1;
+            const score = Math.max(nameScore, normScore);
 
-                if (aName === q && bName !== q) return -1;
-                if (bName === q && aName !== q) return 1;
-
-                const aStarts = aName.startsWith(q);
-                const bStarts = bName.startsWith(q);
-                if (aStarts && !bStarts) return -1;
-                if (bStarts && !aStarts) return 1;
-
+            if (score > 0) {
+                const normalized = g.normalized || g.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const finalUrl = `${this.rootPrefix}pages/games.html?gamename=${normalized}`;
                 // gnmath is usually better than ugs
-                if (a.source === 'gnmath' && b.source !== 'gnmath') return -1;
-                if (b.source === 'gnmath' && a.source !== 'gnmath') return 1;
+                const sourceBonus = g.source === 'gnmath' ? 50 : 0;
+                add({ ...g, url: finalUrl, type: 'game' }, score + sourceBonus);
+            }
+        });
 
-                return 0;
-            })
-            .slice(0, 3)
-            .forEach(g => {
-                if (g.type === 'gnmath' || g.type === 'ugs' || g.type === 'game') {
-                    const normalized = g.normalized || g.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    const finalUrl = `${this.rootPrefix}pages/games.html?gamename=${normalized}`;
-                    add({ ...g, url: finalUrl, type: 'game' });
-                } else {
-                    const finalUrl = g.url.startsWith('http') ? g.url : this.rootPrefix + g.url;
-                    add({ ...g, url: finalUrl });
-                }
-            });
-
-        this.pages
-            .filter(p => p.name.toLowerCase().includes(q) || (p.keywords && p.keywords.some(k => k.includes(q))))
-            .forEach(p => add({ ...p, url: this.rootPrefix + p.url }));
+        this.pages.forEach(p => {
+            const nameScore = this.fuzzyMatch(q, p.name);
+            let keywordScore = -1;
+            if (p.keywords) {
+                p.keywords.forEach(k => {
+                    keywordScore = Math.max(keywordScore, this.fuzzyMatch(q, k));
+                });
+            }
+            const score = Math.max(nameScore, keywordScore);
+            if (score > 0) {
+                add({ ...p, url: this.rootPrefix + p.url }, score);
+            }
+        });
 
         // give tv shows a little nudge
         if (externalResults) {
@@ -161,18 +179,22 @@ const PhantomSearch = {
                     type: 'tv',
                     img: tv.poster_path ? 'https://image.tmdb.org/t/p/w92' + tv.poster_path : null,
                     url: `${this.rootPrefix}pages/player.html?type=tv&id=${tv.id}&title=${encodeURIComponent(tv.name)}`
-                });
+                }, 400); // TVs get a decent fixed score if they match TMDB
             }
         }
 
         // handy domains
-        this.popularDomains
-            .filter(d => d.domain.includes(q) || d.name.toLowerCase().includes(q))
-            .slice(0, 2)
-            .forEach(d => add({
-                name: d.name, type: 'domain', icon: 'fa-globe',
-                url: d.url || `${this.rootPrefix}staticsjv2/index.html#${encodeURIComponent('https://' + d.domain)}`
-            }));
+        this.popularDomains.forEach(d => {
+            const domainScore = this.fuzzyMatch(q, d.domain);
+            const nameScore = this.fuzzyMatch(q, d.name);
+            const score = Math.max(domainScore, nameScore);
+            if (score > 0) {
+                add({
+                    name: d.name, type: 'domain', icon: 'fa-globe',
+                    url: d.url || `${this.rootPrefix}staticsjv2/index.html#${encodeURIComponent('https://' + d.domain)}`
+                }, score);
+            }
+        });
 
         // add a few movies if we have space
         if (externalResults) {
@@ -188,9 +210,11 @@ const PhantomSearch = {
                         type: 'movie',
                         img: m.poster_path ? 'https://image.tmdb.org/t/p/w92' + m.poster_path : null,
                         url: `${this.rootPrefix}pages/player.html?type=movie&id=${m.id}&title=${encodeURIComponent(m.title || m.name)}`
-                    });
+                    }, 300);
                 });
         }
+
+        results.sort((a, b) => b.score - a.score);
 
         const MAX_TOTAL = 6;
         let finalSuggestions = results.slice(0, MAX_TOTAL);
@@ -256,9 +280,15 @@ const PhantomSearch = {
     selectItem(item) {
         this.hide();
         if (item.type === 'web') {
-            const isUrl = item.query.includes('.') && !item.query.includes(' ');
-            const url = isUrl ? (item.query.startsWith('http') ? item.query : 'https://' + item.query) :
-                'https://search.brave.com/search?q=' + encodeURIComponent(item.query);
+            const query = item.query;
+            const isUrl = query.includes('.') && !query.includes(' ');
+            let url;
+            if (isUrl) {
+                url = query.startsWith('http') ? query : 'https://' + query;
+            } else {
+                const engine = window.Settings?.get('searchEngine') || "https://www.bing.com/search?q=";
+                url = engine + encodeURIComponent(query);
+            }
             window.location.href = this.rootPrefix + 'staticsjv2/index.html#' + encodeURIComponent(url);
         } else if (item.url) {
             if (item.type === 'movie' || item.type === 'tv') {
@@ -277,6 +307,29 @@ const PhantomSearch = {
     hide() { this.isOpen = false; this.selectedIndex = 0; this.dropdownEl.classList.remove('open'); },
     escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 };
+
+function handleSearch(e) {
+    if (e) e.preventDefault();
+    const input = document.getElementById('search-input');
+    if (!input) return;
+    const query = input.value.trim();
+    if (!query) return;
+
+    // Check if it's a URL
+    const isUrl = query.includes('.') && !query.includes(' ');
+    let finalUrl;
+    if (isUrl) {
+        finalUrl = query.startsWith('http') ? query : 'https://' + query;
+    } else {
+        const engine = window.Settings?.get('searchEngine') || "https://www.bing.com/search?q=";
+        finalUrl = engine + encodeURIComponent(query);
+    }
+    
+    const prefix = window.PhantomSearch?.rootPrefix || '';
+    window.location.href = prefix + 'staticsjv2/index.html#' + encodeURIComponent(finalUrl);
+}
+
+window.handleSearch = handleSearch;
 
 document.addEventListener('DOMContentLoaded', () => PhantomSearch.init('search-input'));
 window.PhantomSearch = PhantomSearch;

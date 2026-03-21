@@ -26,7 +26,8 @@ window.Quotes = {
             document.querySelectorAll(selector).forEach(el => {
                 // Only update if force is true, or it's empty, or has placeholder text
                 const text = el.textContent.trim();
-                if (force || !text || text === 'Loading...' || text.includes('Stream movies') || text.includes('Customize your') || text.includes('Phantom Unblocked')) {
+                const lowText = text.toLowerCase();
+                if (force || !text || lowText === 'loading...' || lowText.includes('stream movies') || lowText.includes('customize your') || lowText.includes('phantom unblocked')) {
                     el.textContent = quote;
                 }
             });

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom Unblocked</title>
+    <title>K12 Mathwork | ABC123Math</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
 
@@ -35,7 +35,6 @@
             background: var(--bg, #0a0a0a);
             font-family: 'Inter', -apple-system, sans-serif;
         }
-
 
         .loading-screen {
             position: fixed;
@@ -98,7 +97,6 @@
             font-size: 0.875rem;
         }
 
-
         .launch-screen {
             position: fixed;
             inset: 0;
@@ -150,6 +148,23 @@
             display: none;
         }
     </style>
+    <script>
+      (function() {
+            var p = new URLSearchParams(location.search);
+            
+            // Redirect if ?unblock is present OR if session is active
+            if (p.has('unblock') || p.has('unblock all') || p.get('unblock') === 'all' || sessionStorage.getItem('phantom_unblock_all') === 'true') {
+                sessionStorage.setItem('phantom_unblock_all', 'true');
+                window.addEventListener('beforeunload', (e) => {
+                    e.preventDefault();
+                    e.returnValue = '';
+                });
+                window.location.href = 'index2.html';
+                return;
+            }
+        })();
+    </script>
+
     <script src="config.js" defer></script>
     <script src="scripts/notifications.js" defer></script>
     <script src="scripts/settings.js" defer></script>
@@ -157,6 +172,7 @@
     <script src="scripts/cloaking.js" defer></script>
     <script src="scripts/quotes.js" defer></script>
     <script>
+
         try {
             const stored = localStorage.getItem('void_settings');
             if (stored) {
@@ -207,39 +223,80 @@
                     const STORAGE_KEY = 'phantom_fv';
                     const hasBypassed = localStorage.getItem(STORAGE_KEY);
                     const urlParams = new URLSearchParams(window.location.search);
-                    const isFakeMode = urlParams.has('fake');
 
-                    if (window.SITE_CONFIG.firstVisitCloak && !hasBypassed && !isFakeMode) {
+                    // Use simple launch
+                    async function launchApp() {
+                        const overlay = document.getElementById('fv-cloak');
+                        if (overlay) overlay.style.display = 'none';
+                        document.title = 'Phantom Unblocked';
+                        const iframe = document.getElementById('main-frame');
+
+                        try {
+                            var response = await fetch('index2.html');
+                            var pageHTML = await response.text();
+
+                            var currentPath = window.location.pathname;
+                            var lastSlash = currentPath.lastIndexOf('/');
+                            var basePathDir = currentPath.substring(0, lastSlash + 1);
+                            var currentBase = window.location.origin + basePathDir;
+                            
+                            // Robust replacement
+                            pageHTML = pageHTML.replace(/<head>/i, '<head><base href="' + currentBase + '">');
+                            
+                            iframe.src = 'about:blank';
+                            setTimeout(function() {
+                                try {
+                                    var idoc = iframe.contentWindow.document;
+                                    idoc.open();
+                                    idoc.write(pageHTML);
+                                    idoc.close();
+                                } catch (e) {
+                                    console.warn('Iframe write failed, fallback to src', e);
+                                    iframe.src = 'index2.html';
+                                }
+                            }, 50);
+                        } catch (e) {
+                            console.error('App launch failed', e);
+                            iframe.src = 'index2.html';
+                        }
+                    }
+
+                    if (window.SITE_CONFIG && window.SITE_CONFIG.firstVisitCloak && !hasBypassed && !urlParams.has('fake')) {
                         const overlay = document.getElementById('fv-cloak');
                         if (overlay) overlay.style.display = 'block';
                         document.title = origin;
 
                         document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
-                        const link = document.createElement('link');
-                        link.rel = 'icon';
-                        link.href = 'data:,';
-                        document.head.appendChild(link);
+                        const icon = document.createElement('link');
+                        icon.rel = 'icon';
+                        icon.href = 'data:,';
+                        document.head.appendChild(icon);
 
                         const style = document.createElement('style');
                         style.innerHTML = '#loading-screen { display: none !important; }';
                         document.head.appendChild(style);
 
+                        const onKey = (e) => {
+                            if (e.key.toLowerCase() === 'c') {
+                                localStorage.setItem(STORAGE_KEY, 'true');
+                                document.removeEventListener('keydown', onKey);
+                                launchApp();
+                            }
+                        };
+                        document.addEventListener('keydown', onKey);
+
                         document.getElementById('reload-button').onclick = function () {
                             localStorage.setItem(STORAGE_KEY, 'true');
-                            overlay.style.display = 'none';
-                            document.getElementById('main-frame').src = 'index2.html';
-                            document.title = 'Phantom Unblocked';
-
-                            document.querySelectorAll("link[rel*='icon']").forEach(l => l.remove());
-                            const link = document.createElement('link');
-                            link.rel = 'icon';
-                            link.href = 'favicon.svg';
-                            document.head.appendChild(link);
+                            document.removeEventListener('keydown', onKey);
+                            launchApp();
                         };
                     } else {
-                        document.getElementById('main-frame').src = 'index2.html';
+                        launchApp();
                     }
-                } catch (e) { }
+                } catch (e) { 
+                    console.error('Cloaking init failed', e);
+                    document.getElementById('main-frame').src = 'index2.html';
+                }
             }
         </script>
     </div>
@@ -265,6 +322,7 @@
 
     <div id="panic-overlay"></div>
 
+
     <iframe id="main-frame"></iframe>
 
     <script src="scripts/rotation.js" defer></script>
@@ -275,77 +333,7 @@
         let loadStartTime = Date.now();
         let fallbackTimer = setTimeout(hideLoading, 2000);
 
-        const QUICK_CLICK_TIMEOUT = 1200;
-        let quickClickEnabled = false;
 
-        function isQuickClickEnabled() {
-            try {
-                const stored = localStorage.getItem('void_settings');
-                if (stored) {
-                    const settings = JSON.parse(stored);
-                    return settings.fastLeaveConfirmation !== false;
-                }
-            } catch (e) { }
-            return true;
-        }
-
-        function isClickOnEmptySpace(e) {
-            const target = e.target;
-            if (target === document.body || target === document.documentElement) {
-                return true;
-            }
-            if (target.tagName === 'IFRAME') {
-                return false;
-            }
-            const tag = target.tagName.toLowerCase();
-            const isInteractiveTag = ['button', 'a', 'input', 'select', 'textarea', 'label'].includes(tag);
-            if (isInteractiveTag) {
-                return false;
-            }
-            let el = target;
-            while (el && el !== document.body) {
-                const role = el.getAttribute?.('role');
-                if (role === 'button' || role === 'link' || role === 'menuitem') {
-                    return false;
-                }
-                if (el.onclick || el.onmousedown || el.onpointerdown) {
-                    return false;
-                }
-                el = el.parentElement;
-            }
-            const cursor = window.getComputedStyle(target).cursor;
-            if (cursor === 'pointer') {
-                return false;
-            }
-            return true;
-        }
-
-        function handleQuickClick(e) {
-            if (quickClickEnabled) return;
-            
-            const elapsed = Date.now() - loadStartTime;
-            if (elapsed <= QUICK_CLICK_TIMEOUT && isQuickClickEnabled() && isClickOnEmptySpace(e)) {
-                quickClickEnabled = true;
-                sessionStorage.setItem('sessionLeaveConfirmation', 'true');
-                
-                if (window.Notify) {
-                    window.Notify.info('Leave Confirmation Enabled', 'Leave confirmation has been temporarily enabled for this session.');
-                }
-            }
-        }
-
-        document.addEventListener('click', handleQuickClick, { once: false });
-
-        window.addEventListener('beforeunload', function(e) {
-            const settings = window.Settings?.getAll() || {};
-            const sessionLeave = sessionStorage.getItem('sessionLeaveConfirmation') === 'true';
-            const leaveConfirmed = settings.leaveConfirmation || sessionLeave;
-            
-            if (document.getElementById('main-frame') && leaveConfirmed) {
-                e.preventDefault();
-                return e.returnValue = '';
-            }
-        });
 
         function showLoading() {
             loadingScreen.classList.remove('hidden');
@@ -366,7 +354,9 @@
             setTimeout(() => {
                 loadingScreen.classList.add('hidden');
             }, remaining);
+        }
 
+        iframe.addEventListener('load', function() {
             try {
                 if (iframe.contentWindow) {
                     iframe.contentWindow.removeEventListener('unload', showLoading);
@@ -375,9 +365,9 @@
                     });
                 }
             } catch (e) { }
-        }
 
-        iframe.addEventListener('load', hideLoading);
+            hideLoading();
+        });
 
         window.showLoading = showLoading;
         window.hideLoading = hideLoading;

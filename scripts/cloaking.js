@@ -82,7 +82,9 @@
             title = window.SITE_CONFIG?.defaults?.tabTitle || title;
             icon = window.SITE_CONFIG?.defaults?.tabFavicon || icon;
         }
-        return `<!DOCTYPE html><html><head><title>${title}</title><link rel="icon" href="${icon}"><style>* {margin:0;padding:0;height:100%;overflow:hidden;} iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${url}"></iframe></body></html>`;
+        const isUnblock = sessionStorage.getItem('phantom_unblock_all') === 'true';
+        const unblockScript = isUnblock ? `<script>window.addEventListener('beforeunload',function(e){e.preventDefault();e.returnValue='';});</script>` : '';
+        return `<!DOCTYPE html><html><head>${unblockScript}<title>${title}</title><link rel="icon" href="${icon}"><style>* {margin:0;padding:0;height:100%;overflow:hidden;} iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${url}"></iframe></body></html>`;
     };
 
     // Try to open popup and monitor if it survives for 500ms

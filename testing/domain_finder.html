@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Finder</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10vh;
+            background: #0a0a0a;
+            color: #e4e4e7;
+        }
+        .search-box {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .results-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .result-item {
+            padding: 12px;
+            background: #0f0f0f;
+            border: 1px solid #1f1f1f;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #e4e4e7;
+            transition: background 0.2s;
+        }
+        .result-item:hover {
+            background: #1a1a1a;
+        }
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+        .error {
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Domain Finder</h1>
+    
+    <div class="search-box">
+        <input type="text" id="urlInput" class="input" placeholder="Enter URL or IP..." autofocus>
+        <button id="searchBtn" class="btn">Search</button>
+    </div>
+
+    <div id="results" class="results-container"></div>
+    <div id="errorMsg" class="error"></div>
+
+    <script>
+        const input = document.getElementById('urlInput');
+        const btn = document.getElementById('searchBtn');
+        const results = document.getElementById('results');
+        const errorMsg = document.getElementById('errorMsg');
+
+        async function findDomains() {
+            const query = input.value.trim();
+            if (!query) return;
+
+            results.innerHTML = 'Searching...';
+            errorMsg.innerText = '';
+            btn.disabled = true;
+
+            try {
+                const apiUrl = `https://getwebsiteclones.vercel.app/clones?url=${encodeURIComponent(query)}`;
+                const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(apiUrl)}`);
+                
+                if (!response.ok) throw new Error('Proxy request failed');
+                
+                const text = await response.text();
+                let domains = [];
+                
+                try {
+                    const data = JSON.parse(text);
+                    if (Array.isArray(data)) {
+                        domains = data;
+                    } else if (data && typeof data === 'object') {
+                        domains = data.clones || data.data || data.domains || data.urls || Object.values(data).find(v => Array.isArray(v)) || [];
+                    }
+                } catch (e) {
+                    // Fallback to text splitting if not valid JSON
+                    domains = text.split('\n').filter(line => line.trim().length > 0);
+                }
+                
+                results.innerHTML = '';
+
+                if (domains.length > 0) {
+                    domains.forEach(d => {
+                        const domain = (typeof d === 'string' ? d : (d.url || d.domain || JSON.stringify(d))).trim();
+                        if (!domain) return;
+
+                        const link = domain.startsWith('http') ? domain : 'https://' + domain;
+                        
+                        const a = document.createElement('a');
+                        a.href = link;
+                        a.target = '_blank';
+                        a.className = 'result-item';
+                        a.innerText = domain;
+                        results.appendChild(a);
+                    });
+                } else {
+                    results.innerHTML = 'No clones found.';
+                    console.log('Search Debug:', { query: query, text: text });
+                }
+            } catch (err) {
+                console.error(err);
+                results.innerHTML = '';
+                errorMsg.innerText = 'Failed to fetch domains. Please check the URL or try again later.';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        btn.onclick = findDomains;
+        input.onkeypress = (e) => { if (e.key === 'Enter') findDomains(); };
+    </script>
+</body>
+</html>

@@ -14,10 +14,13 @@ class PhantomChat {
         };
 
         this.placeholders = [
-            "Ask me anything...",
-            "Explain quantum physics in simple terms",
-            "Write a poem about the stars",
-            "Help me with my homework"
+            "Whats a good book to read?",
+            "Whats the weather like today?",
+            "Help me with my homework",
+            "What happened in the last NBA game?",
+            "What is the biggest news story today?",
+            "Help me finish the worksheet in this picture",
+            "Write a poem about the stars"
         ];
 
         this.dom = {};
@@ -25,6 +28,7 @@ class PhantomChat {
         this.apiKey = 'sk_j66iDfX2lPbTZ2Otb9MI7xje7kRZQUyE';
         this.baseTextUrl = 'https://gen.pollinations.ai/v1/chat/completions';
         this.baseImageUrl = 'https://gen.pollinations.ai/image/';
+        this.currentAttachments = [];
 
         this.init();
     }
@@ -50,10 +54,20 @@ class PhantomChat {
             chatBody: document.getElementById('chatBody'),
             input: document.getElementById('chatInput'),
             sendBtn: document.getElementById('sendBtn'),
+            stopBtn: document.getElementById('stopBtn'),
             modelSelect: document.getElementById('modelSelector'),
             hero: document.getElementById('heroSection'),
             convList: document.getElementById('conversationsList'),
-            title: document.getElementById('chatTitle')
+            title: document.getElementById('chatTitle'),
+            attachBtn: document.getElementById('attachBtn'),
+            attachMenu: document.getElementById('attachMenu'),
+            uploadFileBtn: document.getElementById('uploadFileBtn'),
+            takePhotoBtn: document.getElementById('takePhotoBtn'),
+            screenshotBtn: document.getElementById('screenshotBtn'),
+            fileInput: document.getElementById('fileInput'),
+            cameraInput: document.getElementById('cameraInput'),
+            attachmentPreview: document.getElementById('attachmentPreview'),
+            inputContainer: document.getElementById('inputContainer')
         };
     }
 
@@ -67,11 +81,18 @@ class PhantomChat {
             if (target.closest('#newChatBtn')) {
                 this.createConversation();
             }
-            if (target.closest('.mode-btn')) {
+            if (target.closest('.mode-btn') && !target.closest('#attachBtn')) {
                 this.setMode(target.closest('.mode-btn').dataset.mode);
             }
             if (target.id === 'sidebarOverlay') {
                 this.toggleSidebar(false);
+            }
+            
+            // Close attach menu if clicking outside
+            if (this.dom.attachMenu && this.dom.attachMenu.classList.contains('active')) {
+                if (!target.closest('.attach-dropdown-container')) {
+                    this.dom.attachMenu.classList.remove('active');
+                }
             }
         });
 
@@ -80,12 +101,111 @@ class PhantomChat {
                 e.preventDefault();
                 this.sendMessage();
             }
+            // Add Ctrl+Shift+S for screenshot
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                this.takeScreenshot();
+            }
         });
+
+        if (this.dom.stopBtn) {
+            this.dom.stopBtn.addEventListener('click', () => {
+                if (this.abortController) {
+                    this.abortController.abort();
+                }
+            });
+        }
 
         this.dom.input.addEventListener('input', () => {
             this.autoResizeInput();
-            this.dom.sendBtn.disabled = !this.dom.input.value.trim();
+            this.updateSendButton();
         });
+
+        this.dom.input.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            const files = [];
+            for (const item of items) {
+                if (item.kind === 'file') {
+                    files.push(item.getAsFile());
+                }
+            }
+            if (files.length > 0) {
+                this.handleFiles(files);
+            }
+        });
+
+        if (this.dom.attachBtn) {
+            this.dom.attachBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.dom.attachMenu.classList.toggle('active');
+            });
+        }
+
+        if (this.dom.uploadFileBtn) {
+            this.dom.uploadFileBtn.addEventListener('click', () => {
+                this.dom.attachMenu.classList.remove('active');
+                this.dom.fileInput.click();
+            });
+        }
+        if (this.dom.takePhotoBtn) {
+            this.dom.takePhotoBtn.addEventListener('click', () => {
+                this.dom.attachMenu.classList.remove('active');
+                
+                // Extra check for mobile/tablet or systems with cameras
+                if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                    navigator.mediaDevices.enumerateDevices().then(devices => {
+                        const hasCamera = devices.some(device => device.kind === 'videoinput');
+                        if (!hasCamera) {
+                            if (window.Notify) Notify.warning('No Camera Found', 'A camera is required to take a photo.');
+                        }
+                    });
+                }
+                
+                this.dom.cameraInput.click();
+            });
+        }
+
+        if (this.dom.screenshotBtn) {
+            this.dom.screenshotBtn.addEventListener('click', () => {
+                this.dom.attachMenu.classList.remove('active');
+                this.takeScreenshot();
+            });
+        }
+
+        if (this.dom.fileInput) {
+            this.dom.fileInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                this.handleFiles(files);
+                e.target.value = ''; // reset
+            });
+        }
+
+        if (this.dom.cameraInput) {
+            this.dom.cameraInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                this.handleFiles(files);
+                e.target.value = ''; // reset
+            });
+        }
+
+        if (this.dom.inputContainer) {
+            this.dom.inputContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                this.dom.inputContainer.classList.add('dragover');
+            });
+            this.dom.inputContainer.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                this.dom.inputContainer.classList.remove('dragover');
+            });
+            this.dom.inputContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                this.dom.inputContainer.classList.remove('dragover');
+                if (e.dataTransfer.files) {
+                    const files = Array.from(e.dataTransfer.files);
+                    this.handleFiles(files);
+                }
+            });
+        }
 
         this.dom.modelSelect.addEventListener('change', (e) => {
             const key = this.state.config.mode === 'text' ? 'textModel' : 'imageModel';
@@ -95,6 +215,148 @@ class PhantomChat {
         });
 
         this.dom.sendBtn.addEventListener('click', () => this.sendMessage());
+    }
+
+    updateSendButton() {
+        const hasText = this.dom.input.value.trim().length > 0;
+        const hasAttachments = this.currentAttachments.length > 0;
+        this.dom.sendBtn.disabled = !hasText && !hasAttachments;
+    }
+
+    async handleFiles(files) {
+        const remainingSpace = 3 - this.currentAttachments.length;
+        if (remainingSpace <= 0) {
+            if (window.Notify) Notify.error('Limit Reached', 'Maximum 3 attachments are currently allowed');
+            return;
+        }
+
+        if (files.length > remainingSpace) {
+            if (window.Notify) Notify.warning('Limit Reached', `Only ${remainingSpace} attachment(s) will be added to stay under the 3 file limit`);
+        }
+
+        const filesToAdd = files.slice(0, remainingSpace);
+
+        for (const file of filesToAdd) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.currentAttachments.push({ type: 'image', data: e.target.result });
+                    this.renderAttachments();
+                    this.updateSendButton();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    let textData = e.target.result;
+                    const MAX_CHARS = 15000;
+                    if (textData.length > MAX_CHARS) {
+                        textData = textData.substring(0, MAX_CHARS) + "\n\n... (File truncated for length) ...";
+                        if (window.Notify) Notify.warning('File Truncated', `The file "${file.name}" was truncated to 15,000 characters to fit memory limits.`);
+                    }
+                    this.currentAttachments.push({ type: 'file', name: file.name, data: textData });
+                    this.renderAttachments();
+                    this.updateSendButton();
+                };
+                reader.readAsText(file);
+            }
+        }
+    }
+
+    async takeScreenshot() {
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                if (window.Notify) Notify.error('Feature Unavailable', 'Screen capture is not supported in this browser.');
+                return;
+            }
+
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: { cursor: "always" },
+                audio: false
+            });
+
+            // Create a hidden video element to capture the frame
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            
+            // Wait for metadata to load so we know dimensions
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play().then(resolve);
+                };
+            });
+
+            // Capture the current frame
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert to base64
+            const dataUrl = canvas.toDataURL('image/png');
+
+            // Stop all tracks in the stream
+            stream.getTracks().forEach(track => track.stop());
+
+            // Add to attachments
+            if (this.currentAttachments.length >= 3) {
+                 if (window.Notify) Notify.error('Limit Reached', 'Maximum 3 attachments allowed. Please remove one first.');
+                 return;
+            }
+
+            this.currentAttachments.push({ type: 'image', data: dataUrl });
+            this.renderAttachments();
+            this.updateSendButton();
+
+            if (window.Notify) Notify.success('Captured', 'Screenshot added to attachments');
+            
+        } catch (err) {
+            console.error('Screenshot error:', err);
+            if (err.name !== 'NotAllowedError') { // Don't notify if user just cancelled
+                if (window.Notify) Notify.error('Capture Failed', 'Could not take screenshot: ' + err.message);
+            }
+        }
+    }
+
+    removeAttachment(index) {
+        this.currentAttachments.splice(index, 1);
+        this.renderAttachments();
+        this.updateSendButton();
+    }
+
+    renderAttachments() {
+        if (!this.dom.attachmentPreview) return;
+        
+        if (this.currentAttachments.length === 0) {
+            this.dom.attachmentPreview.style.display = 'none';
+            this.dom.attachmentPreview.innerHTML = '';
+            return;
+        }
+
+        this.dom.attachmentPreview.style.display = 'flex';
+        this.dom.attachmentPreview.innerHTML = this.currentAttachments.map((item, index) => {
+            if (item.type === 'image') {
+                return `
+                    <div class="attachment-item">
+                        <img src="${item.data}" alt="attachment">
+                        <button class="attachment-remove" onclick="phantomChat.removeAttachment(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="attachment-item file-item" title="${item.name}">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="file-name">${item.name}</span>
+                        <button class="attachment-remove" onclick="phantomChat.removeAttachment(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }).join('');
     }
 
     startPlaceholderAnimation() {
@@ -307,17 +569,34 @@ class PhantomChat {
 
     async sendMessage() {
         const text = this.dom.input.value.trim();
-        if (!text) return;
+        const hasAttachments = this.currentAttachments.length > 0;
+        if (!text && !hasAttachments) return;
 
+        const attachmentsToSend = [...this.currentAttachments];
+        
         this.dom.input.value = '';
+        this.currentAttachments = [];
+        this.renderAttachments();
         this.autoResizeInput();
-        this.dom.sendBtn.disabled = true;
+        this.updateSendButton();
 
         const conv = this.currentConversation;
         if (!conv) return;
 
-        conv.messages.push({ role: 'user', content: text, type: 'text' });
-        this.appendMessage({ role: 'user', content: text });
+        const msgObj = { role: 'user', content: text, type: 'text' };
+        
+        const imageAttachments = attachmentsToSend.filter(a => a.type === 'image').map(a => a.data);
+        const fileAttachments = attachmentsToSend.filter(a => a.type === 'file');
+
+        if (imageAttachments.length > 0) {
+            msgObj.images = imageAttachments;
+        }
+        if (fileAttachments.length > 0) {
+            msgObj.files = fileAttachments;
+        }
+        
+        conv.messages.push(msgObj);
+        this.appendMessage(msgObj);
 
         if (conv.messages.length === 1) {
             conv.title = text.length > 35 ? text.substring(0, 35) + '...' : text;
@@ -326,25 +605,68 @@ class PhantomChat {
         }
 
         if (this.state.config.mode === 'image') {
-            await this.generateImage(text, conv);
+            await this.generateImage(text || "Random image", conv);
         } else {
-            await this.generateText(text, conv);
+            await this.generateText(text, conv, attachmentsToSend);
         }
 
         this.saveState();
     }
 
-    async generateText(input, conv) {
+    async generateText(input, conv, currentAttachments = []) {
         const thinkingId = 'thinking-' + Date.now();
         const thinkingEl = this.appendMessage({ role: 'ai', id: thinkingId, isThinking: true });
 
+        this.abortController = new AbortController();
+        if (this.dom.stopBtn) this.dom.stopBtn.style.display = 'flex';
+        if (this.dom.sendBtn) this.dom.sendBtn.style.display = 'none';
+
+        let fullContent = '';
+        let messageId = 'msg-' + Date.now();
+        let messageEl = null;
+
+        let targetModel = this.state.config.textModel;
+        const isAutoSearchEnabled = (window.Settings && Settings.getAll().autoSwitchSearch !== false);
+        
+        if (isAutoSearchEnabled && targetModel !== 'gemini-search') {
+            const searchRegex = /\b(today|tonight|weather|news|latest|current|who won|score|price of|how many|what is the|right now|currently|recent|recently)\b/i;
+            if (searchRegex.test(input) || (input.includes('?') && /\b(who|what|where|when|why|how)\b/i.test(input) && /\b(is|was|did|do|does|will)\b/i.test(input))) {
+                targetModel = 'gemini-search';
+                if (window.Notify) Notify.info('Model Switched', 'Switched to gemini-search for real-time info. You may disable this in settings.');
+                
+                // Update dropdown visually if it exists
+                if (this.dom.modelSelect && [...this.dom.modelSelect.options].some(o => o.value === 'gemini-search')) {
+                    this.dom.modelSelect.value = 'gemini-search';
+                    this.state.config.textModel = 'gemini-search'; // Save it so user sees it matched
+                    this.saveState();
+                }
+            }
+        }
+
         try {
+            const contextLimit = (window.Settings && Settings.getAll().aiContextWindow) || 10;
             const messages = [
                 { role: 'system', content: 'You are Phantom AI, a helpful and knowledgeable assistant. Use Markdown formatting. Use KaTeX for mathematical formulas (e.g., use $ for inline and $$ for block math). Be concise but thorough.' },
-                ...conv.messages.slice(-10).map(m => ({
-                    role: m.role === 'ai' ? 'assistant' : m.role,
-                    content: m.content
-                }))
+                ...conv.messages.slice(-contextLimit).map(m => {
+                    let messageContent = m.content || "Image description request";
+                    
+                    if (m.files && m.files.length > 0) {
+                        const filesContext = m.files.map(f => `\n\nFile: ${f.name}\n\`\`\`\n${f.data}\n\`\`\``).join('');
+                        messageContent += filesContext;
+                    }
+
+                    if (m.images && m.images.length > 0) {
+                        messageContent = [{ type: 'text', text: messageContent }];
+                        m.images.forEach(img => {
+                            messageContent.push({ type: 'image_url', image_url: { url: img } });
+                        });
+                    }
+                    
+                    return {
+                        role: m.role === 'ai' ? 'assistant' : m.role,
+                        content: messageContent
+                    };
+                })
             ];
 
             const res = await fetch(this.baseTextUrl, {
@@ -353,9 +675,10 @@ class PhantomChat {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${this.apiKey}`
                 },
+                signal: this.abortController.signal,
                 body: JSON.stringify({
                     messages,
-                    model: this.state.config.textModel,
+                    model: targetModel,
                     seed: Math.floor(Math.random() * 1000000),
                     stream: true
                 })
@@ -366,13 +689,11 @@ class PhantomChat {
             thinkingEl?.remove();
 
             // Create the real message element for streaming
-            const messageId = 'msg-' + Date.now();
-            const messageEl = this.appendMessage({ role: 'ai', content: '', id: messageId });
+            messageEl = this.appendMessage({ role: 'ai', content: '', id: messageId });
             const textContainer = messageEl.querySelector('.message-text');
 
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
-            let fullContent = '';
             let lastRenderTime = Date.now();
 
             while (true) {
@@ -393,16 +714,24 @@ class PhantomChat {
                             if (content) {
                                 fullContent += content;
 
-                                // Periodic rendering every 5 seconds
-                                if (Date.now() - lastRenderTime > 5000) {
-                                    textContainer.innerHTML = this.processMarkdown(fullContent);
-                                    this.finalizeMessageRendering(messageEl, fullContent, 'text', true);
-                                    lastRenderTime = Date.now();
-                                } else {
-                                    // Simple text update for performance
-                                    textContainer.textContent = fullContent;
+                                // Only update UI if this conversation is still active
+                                if (conv.id === this.state.currentId) {
+                                    if (!messageEl.parentNode) {
+                                        // If user switched back to this conv, messageEl might have been cleared from DOM
+                                        // We need to re-find or re-append it, but for now just skip UI update 
+                                        // until final render if it's not in DOM
+                                    } else {
+                                        // Periodic rendering every 5 seconds
+                                        if (Date.now() - lastRenderTime > 5000) {
+                                            textContainer.innerHTML = this.processMarkdown(fullContent);
+                                            this.finalizeMessageRendering(messageEl, fullContent, 'text', true);
+                                            lastRenderTime = Date.now();
+                                        } else {
+                                            textContainer.textContent = fullContent;
+                                        }
+                                        this.scrollToBottom();
+                                    }
                                 }
-                                this.scrollToBottom();
                             }
                         } catch (e) {
                             // Ignore partial JSON 
@@ -413,19 +742,55 @@ class PhantomChat {
 
             // Final rendering
             conv.messages.push({ role: 'ai', content: fullContent, type: 'text' });
+            this.saveState();
 
-            // Replace simple text with rendered markdown/katex
-            textContainer.innerHTML = this.processMarkdown(fullContent);
-            this.finalizeMessageRendering(messageEl, fullContent, 'text');
+            if (conv.id === this.state.currentId) {
+                if (!messageEl.parentNode) {
+                    this.render(); // Full re-render if we are on this chat but messageEl was lost
+                } else {
+                    textContainer.innerHTML = this.processMarkdown(fullContent);
+                    this.finalizeMessageRendering(messageEl, fullContent, 'text');
+                    this.scrollToBottom();
+                }
+            }
 
         } catch (err) {
-            const el = document.getElementById(thinkingId);
-            if (el) {
-                el.querySelector('.message-text').innerHTML =
-                    `<span style="color: var(--error)">Failed to get response: ${err.message}</span>`;
+            if (err.name === 'AbortError') {
+                const finalContent = fullContent || '*(Generation stopped)*';
+                conv.messages.push({ role: 'ai', content: finalContent, type: 'text' });
+                this.saveState();
+
+                if (conv.id === this.state.currentId) {
+                    const el = document.getElementById(messageId) || document.getElementById(thinkingId);
+                    if (el && el.parentNode) {
+                        const textContainer = el.querySelector('.message-text');
+                        if (textContainer) {
+                            textContainer.innerHTML = this.processMarkdown(finalContent);
+                            if (fullContent) this.finalizeMessageRendering(el, finalContent, 'text');
+                        }
+                        this.scrollToBottom();
+                        
+                        // Clear thinking state if aborted early
+                        if (el.id === thinkingId) {
+                           el.classList.remove('thinking-dots');
+                        }
+                    } else {
+                        this.render();
+                    }
+                }
             } else {
-                this.appendMessage({ role: 'ai', content: `Error: ${err.message}`, type: 'text' });
+                const el = document.getElementById(thinkingId);
+                if (el && el.parentNode) {
+                    el.querySelector('.message-text').innerHTML =
+                        `<span style="color: var(--error)">Failed to get response: ${err.message}</span>`;
+                } else {
+                    this.appendMessage({ role: 'ai', content: `Error: ${err.message}`, type: 'text' });
+                }
             }
+        } finally {
+            this.abortController = null;
+            if (this.dom.stopBtn) this.dom.stopBtn.style.display = 'none';
+            if (this.dom.sendBtn) this.dom.sendBtn.style.display = 'flex';
         }
     }
 
@@ -434,7 +799,12 @@ class PhantomChat {
         const url = `${this.baseImageUrl}${encodeURIComponent(prompt)}?model=${this.state.config.imageModel}&nologo=true&seed=${seed}&key=${this.apiKey}`;
 
         conv.messages.push({ role: 'ai', content: url, prompt, type: 'image' });
-        this.appendMessage({ role: 'ai', content: url, prompt, type: 'image' });
+        this.saveState();
+        
+        if (conv.id === this.state.currentId) {
+            this.appendMessage({ role: 'ai', content: url, prompt, type: 'image' });
+            this.scrollToBottom();
+        }
     }
 
     retryLast(index) {
@@ -614,7 +984,10 @@ class PhantomChat {
         return html;
     }
 
-    appendMessage({ role, content, type = 'text', prompt, id, isThinking, index }) {
+    appendMessage({ role, content, type = 'text', prompt, id, isThinking, index, images, files, conversationId }) {
+        // If conversationId is specified, only proceed if it's the current one
+        if (conversationId && conversationId !== this.state.currentId) return null;
+        
         this.dom.hero.style.display = 'none';
 
         const div = document.createElement('div');
@@ -627,7 +1000,7 @@ class PhantomChat {
 
         if (isThinking) {
             messageHtml = '<span class="thinking-dots">Thinking</span>';
-        } else if (type === 'image') {
+        } else if (type === 'image' && role === 'ai') {
             messageHtml = `
                 <p class="image-prompt">${this.escapeHtml(prompt)}</p>
                 <div class="image-container">
@@ -647,9 +1020,33 @@ class PhantomChat {
             `;
         } else {
             messageHtml = content ? this.processMarkdown(content) : '';
+            if (images && images.length > 0) {
+                const imgsHtml = `<div class="message-images">` + 
+                    images.map(img => `<img src="${img}" class="message-image" alt="User uploaded image">`).join('') + 
+                    `</div>`;
+                messageHtml += imgsHtml;
+            }
+            if (files && files.length > 0) {
+                const filesHtml = `<div class="message-files">` +
+                    files.map((f, i) => {
+                        const uniqueId = `file-${Date.now()}-${i}`;
+                        return `
+                        <div class="message-file-wrapper" id="${uniqueId}">
+                            <div class="message-file-attachment" onclick="document.getElementById('${uniqueId}').classList.toggle('expanded')">
+                                <i class="fas fa-file-code"></i>
+                                <span class="file-name-label">${this.escapeHtml(f.name)}</span>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                            <div class="message-file-content">
+                                <pre><code>${this.escapeHtml(f.data)}</code></pre>
+                            </div>
+                        </div>
+                    `}).join('') + `</div>`;
+                messageHtml += filesHtml;
+            }
         }
 
-        const imgId = type === 'image' ? `img-${Date.now()}` : '';
+        const imgId = (type === 'image' && role === 'ai') ? `img-${Date.now()}` : '';
 
         div.innerHTML = `
             <div class="message-avatar">
@@ -716,6 +1113,16 @@ class PhantomChat {
                 } else {
                     this.copyText(content);
                 }
+
+                const icon = copyBtn.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-check';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        icon.className = 'fas fa-copy';
+                        copyBtn.classList.remove('copied');
+                    }, 1500);
+                }
             };
         }
 
@@ -735,6 +1142,33 @@ class PhantomChat {
             if (window.hljs) {
                 div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
             }
+
+            // Decorate code blocks
+            div.querySelectorAll('pre:not(.code-block-wrapper pre)').forEach(pre => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                
+                const btn = document.createElement('button');
+                btn.className = 'code-copy-btn';
+                btn.innerHTML = '<i class="fas fa-copy"></i>';
+                btn.title = 'Copy code';
+                
+                btn.onclick = () => {
+                    const codeText = pre.innerText;
+                    navigator.clipboard.writeText(codeText).then(() => {
+                        btn.innerHTML = '<i class="fas fa-check"></i>';
+                        btn.classList.add('copied');
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fas fa-copy"></i>';
+                            btn.classList.remove('copied');
+                        }, 1500);
+                    });
+                };
+                
+                wrapper.appendChild(btn);
+                wrapper.appendChild(pre);
+            });
 
             if (window.renderMathInElement) {
                 renderMathInElement(div, {

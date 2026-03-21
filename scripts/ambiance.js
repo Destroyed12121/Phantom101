@@ -1,6 +1,6 @@
 class AmbianceManager {
     constructor() {
-        this.enabled = localStorage.getItem('phantom_ambiance_enabled') !== 'false';
+        this.enabled = (window.Settings ? window.Settings.get('ambianceByDefault') : localStorage.getItem('phantom_ambiance_enabled')) !== false;
         this.container = null;
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', { alpha: false });
@@ -41,7 +41,11 @@ class AmbianceManager {
 
     toggle() {
         this.enabled = !this.enabled;
-        localStorage.setItem('phantom_ambiance_enabled', this.enabled);
+        if (window.Settings) {
+            window.Settings.set('ambianceByDefault', this.enabled);
+        } else {
+            localStorage.setItem('phantom_ambiance_enabled', this.enabled);
+        }
 
         if (!this.container) this.container = document.getElementById('player-ambiance');
 

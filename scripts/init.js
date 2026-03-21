@@ -103,6 +103,11 @@ const ProxyInit = {
                 await conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: best }]);
 
                 if (window.Notify) window.Notify.success("Ready", "Proxy service initialized");
+
+                // Unblock Mode Notification
+                if (window.parent && window.parent.__phantomStealth && window.parent.__phantomStealth.isActive()) {
+                    window.Notify.info("Unblock Mode Active");
+                }
             }
         } catch (e) {
             console.error(e);

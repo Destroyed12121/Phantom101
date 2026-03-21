@@ -3,7 +3,8 @@ const Games = {
     allGames: [],
     filteredGames: [],
     renderedCount: 0,
-    BATCH_SIZE: 50,
+    lastRenderTime: 0,
+    BATCH_SIZE: 40,
     liked: JSON.parse(localStorage.getItem('liked_games') || '[]'),
     recent: JSON.parse(localStorage.getItem('recent_games') || '[]'),
     isLoading: false,
@@ -30,7 +31,6 @@ const Games = {
         this.checkRedirect(); //  ?gamename=
         this.setupListeners();
 
-        // Apply default sort after popularity data is fetched
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
             this.sort(sortSelect.value);
@@ -40,13 +40,12 @@ const Games = {
     updateBackToTop() {
         const btn = document.getElementById('back-to-top');
         if (btn) {
-            btn.classList.toggle('visible', window.scrollY > 500);
+            btn.classList.toggle('visible', window.scrollY > 300);
         }
     },
 
     async fetchPopularity() {
-        // Fetch popularity data from jsdelivr for gnmath games
-        try {
+       try {
             const durations = ['year', 'month', 'week', 'day'];
             await Promise.all(durations.map(d => this.fetchPopularityForDuration(d)));
         } catch (e) {
@@ -56,7 +55,6 @@ const Games = {
 
     async fetchPopularityForDuration(duration) {
         try {
-            // Fetch gnmath popularity
             const gnmathResponse = await fetch(
                 `https://data.jsdelivr.com/v1/stats/packages/gh/gn-math/html@main/files?period=${duration}`
             );
@@ -73,17 +71,13 @@ const Games = {
         }
 
         try {
-            // Fetch UGS popularity
             const ugsResponse = await fetch(
                 `https://data.jsdelivr.com/v1/stats/packages/gh/bubbls/ugs-singlefile@master/files?period=${duration}`
             );
             const ugsData = await ugsResponse.json();
             ugsData.forEach(file => {
-                // Handle different file path formats from jsdelivr API
-                // Try UGS-Files pattern first
                 let nameMatch = file.name?.match(/^\/UGS-Files\/(.+)\.html$/);
                 if (!nameMatch) {
-                    // Try without UGS-Files prefix
                     nameMatch = file.name?.match(/^\/(.+)\.html$/);
                 }
                 if (nameMatch) {
@@ -91,18 +85,25 @@ const Games = {
                     this.popularityData[duration][`ugs:${gameName}`] = file.hits?.total ?? 0;
                 }
             });
+            const pzResponse = await fetch(
+                `https://data.jsdelivr.com/v1/stats/packages/gh/PeteZah-Games/Games-lib@main/files?period=${duration}`
+            );
+            const pzData = await pzResponse.json();
+            pzData.forEach(file => {
+                const nameMatch = file.name?.match(/^\/(.+)\/index\.html$/);
+                if (nameMatch) {
+                    const gameName = nameMatch[1];
+                    this.popularityData[duration][`pz:${gameName}`] = file.hits?.total ?? 0;
+                }
+            });
         } catch (e) {
-            console.warn(`Failed to fetch ${duration} UGS popularity:`, e);
+            console.warn(`Failed to fetch ${duration} popularity:`, e);
         }
     },
 
     async loadGames() {
         if (this.isLoading) return;
         this.isLoading = true;
-
-        if (this.firstLoad && window.Notify) {
-            window.Notify.info('Games', 'Loading game library...');
-        }
 
         try {
             if (!window.Gloader) {
@@ -216,6 +217,12 @@ const Games = {
             const ugsKey = `ugs:${gameName}`;
             return this.popularityData[duration]?.[ugsKey] ?? 0;
         }
+        // Check for PeteZah games
+        const pzMatch = game.url?.match(/gh\/PeteZah-Games\/Games-lib@main\/(.+)\/index\.html$/);
+        if (pzMatch) {
+            const gameName = pzMatch[1];
+            return this.popularityData[duration][`pz:${gameName}`] ?? 0;
+        }
         return 0;
     },
 
@@ -260,14 +267,31 @@ const Games = {
 
     renderMore() {
         if (this.renderedCount >= this.filteredGames.length) return;
+        
+        const now = Date.now();
+        const delay = 1300;
+        const timeElapsed = now - this.lastRenderTime;
+
+        if (timeElapsed < delay) {
+            if (this.renderTimeout) return;
+            this.renderTimeout = setTimeout(() => {
+                this.renderTimeout = null;
+                this.renderMore();
+            }, delay - timeElapsed);
+            return;
+        }
+
+        this.lastRenderTime = now;
         const grid = document.getElementById('games-grid');
-        grid.style.display = 'grid'; // Ensure grid is restored if it was list
+        if (!grid) return;
+
+        grid.style.display = 'grid';
         const batch = this.filteredGames.slice(this.renderedCount, this.renderedCount + this.BATCH_SIZE);
 
         batch.forEach((game, index) => {
             const card = this.createCard(game);
-            // Add staggered animation delay
-            card.style.animationDelay = `${(index % this.BATCH_SIZE) * 0.03}s`;
+            // Staggered entrance
+            card.style.animationDelay = `${(index % this.BATCH_SIZE) * 0.02}s`;
             grid.appendChild(card);
         });
 
@@ -294,7 +318,10 @@ const Games = {
                 ${isRecent ? '<button class="remove-btn" title="Remove from Recent"><i class="fa-solid fa-xmark"></i></button>' : ''}
                 <button class="like-btn ${isLiked ? 'active' : ''}"><i class="fa-solid fa-heart"></i></button>
             </div>
-            <div class="game-info"><div class="game-title">${game.name}</div></div>
+            <div class="game-info">
+                <div class="game-title">${game.name}</div>
+                ${game.developer ? `<div class="game-developer">by ${game.developer}</div>` : ''}
+            </div>
         `;
 
         const open = () => this.openGame(game);
@@ -341,7 +368,14 @@ const Games = {
         // Remove if exists
         this.recent = this.recent.filter(g => g.url !== game.url);
         // Add to front
-        this.recent.unshift({ name: game.name, url: game.url, img: game.img, type: game.type });
+        this.recent.unshift({ 
+            name: game.name, 
+            url: game.url, 
+            img: game.img, 
+            type: game.type,
+            developer: game.developer,
+            developerLink: game.developerLink
+        });
         // Cap at 10 (user might prefer slightly less for row alignment)
         if (this.recent.length > 10) this.recent.pop();
         localStorage.setItem('recent_games', JSON.stringify(this.recent));
@@ -391,7 +425,14 @@ const Games = {
         if (this.isLiked(game)) {
             this.liked = this.liked.filter(g => g.url !== game.url);
         } else {
-            this.liked.push({ name: game.name, url: game.url, img: game.img, type: game.type });
+            this.liked.push({ 
+                name: game.name, 
+                url: game.url, 
+                img: game.img, 
+                type: game.type,
+                developer: game.developer,
+                developerLink: game.developerLink
+            });
         }
         localStorage.setItem('liked_games', JSON.stringify(this.liked));
 
@@ -461,8 +502,43 @@ const Games = {
         }
     },
 
+    fuzzyMatch(query, text) {
+        const q = query.toLowerCase();
+        const t = text.toLowerCase();
+        if (t === q) return 1000;
+        if (t.startsWith(q)) return 500 - t.length;
+        if (t.includes(q)) return 200 - t.length;
+
+        // subsequence match
+        let nIdx = 0;
+        let hIdx = 0;
+        let score = 0;
+        while (nIdx < q.length && hIdx < t.length) {
+            if (q[nIdx] === t[hIdx]) {
+                nIdx++;
+                score += 10;
+            } else {
+                score -= 1;
+            }
+            hIdx++;
+        }
+        if (nIdx === q.length) return score;
+        return -1;
+    },
+
     performSearch(term) {
-        let results = term ? this.allGames.filter(g => g.name.toLowerCase().includes(term)) : [...this.allGames];
+        let results = [];
+        if (!term) {
+            results = [...this.allGames];
+        } else {
+            const scored = this.allGames.map(g => ({
+                game: g,
+                score: this.fuzzyMatch(term, g.name)
+            })).filter(item => item.score > 0);
+
+            scored.sort((a, b) => b.score - a.score);
+            results = scored.map(item => item.game);
+        }
 
         if (this.showLikedOnly) {
             results = results.filter(g => this.isLiked(g));

@@ -287,6 +287,38 @@ self.addEventListener("fetch", (event) => {
         }
 
         try {
+            const url = new URL(event.request.url);
+            const isCacheable = event.request.method === "GET" && 
+                (url.pathname.endsWith('NT.html') || 
+                 url.pathname.endsWith('.css') || 
+                 (url.pathname.endsWith('.js') && !url.pathname.includes('script.js') && !url.pathname.includes('sw.js')) || 
+                 url.hostname.includes("cloudflare") || 
+                 url.hostname.includes("jsdelivr"));
+
+            if (isCacheable && !url.pathname.includes('/scramjet/')) {
+                const cachedRes = await caches.match(event.request);
+                const fetchPromise = fetch(event.request).then(async res => {
+                    if (res.ok) {
+                        const cache = await caches.open('nt-cache-v1');
+                        cache.put(event.request, res.clone());
+                    }
+                    return res;
+                }).catch(() => null);
+
+                if (cachedRes) {
+                    const clients = await self.clients.matchAll();
+                    clients.forEach(c => c.postMessage({ type: 'resource-loaded', url: event.request.url, status: cachedRes.status }));
+                    return cachedRes;
+                }
+
+                const res = await fetchPromise;
+                if (res) {
+                    const clients = await self.clients.matchAll();
+                    clients.forEach(c => c.postMessage({ type: 'resource-loaded', url: event.request.url, status: res.status }));
+                    return res;
+                }
+            }
+
             const response = await fetch(event.request);
             const clients = await self.clients.matchAll();
             clients.forEach(client => {
@@ -324,14 +356,12 @@ scramjet.addEventListener("request", async (e) => {
             const EPOXY_URL = "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
             const LIBCURL_URL = "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/libcurl.mjs";
             let transportUrl = wispConfig.transport === "libcurl" ? LIBCURL_URL : EPOXY_URL;
-            let usedFallback = false; // Track if we've already fallen back to prevent loops
 
             try {
                 await connection.setTransport(transportUrl, [{ wisp: wispConfig.wispurl }]);
             } catch (err) {
                 console.warn("SW: Transport failed, attempting fallback:", err);
                 if (wispConfig.transport === "libcurl") {
-                    // Libcurl failed - try epoxy
                     await connection.setTransport(EPOXY_URL, [{ wisp: wispConfig.wispurl }]);
                     const clients = await self.clients.matchAll();
                     clients.forEach(client => {
@@ -342,24 +372,6 @@ scramjet.addEventListener("request", async (e) => {
                             error: err.message
                         });
                     });
-                } else if (wispConfig.transport === "epoxy" && !usedFallback) {
-                    // Epoxy failed - try libcurl as fallback (only once to prevent loops)
-                    usedFallback = true;
-                    try {
-                        await connection.setTransport(LIBCURL_URL, [{ wisp: wispConfig.wispurl }]);
-                        const clients = await self.clients.matchAll();
-                        clients.forEach(client => {
-                            client.postMessage({
-                                type: 'transportFallback',
-                                original: 'epoxy',
-                                fallback: 'libcurl',
-                                error: err.message
-                            });
-                        });
-                    } catch (fallbackErr) {
-                        console.error("SW: Libcurl fallback also failed:", fallbackErr);
-                        throw new Error('SW: Both transports failed');
-                    }
                 } else {
                     throw err;
                 }

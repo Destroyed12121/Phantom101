@@ -12,6 +12,8 @@
             customCloaks: [],
             customBackgrounds: [],
             customWisps: [],
+            ambianceByDefault: true,
+            newsEnabled: true,
         };
     };
 
@@ -20,7 +22,7 @@
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
-                delete parsed.fastLeaveConfirmation;
+
                 return { ...getDefaults(), ...parsed };
             }
         } catch (e) {
@@ -31,8 +33,7 @@
 
     const save = (settings) => {
         try {
-            const { fastLeaveConfirmation, ...settingsToSave } = settings;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(settingsToSave));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
             window.dispatchEvent(new CustomEvent('settings-changed', { detail: settings }));
             if (window.parent !== window) {
                 window.parent.postMessage({ type: 'settings-update' }, '*');
@@ -94,14 +95,14 @@
 
             const themeBg = s.background || d.background || { type: 'color', value: '#0a0a0a' };
             const customBg = s.customBackground;
-            const isCustomActive = customBg && customBg.type !== 'none';
+            const isCustomActive = customBg && customBg.id !== 'none' && customBg.type !== 'none';
 
             if (themeBg.type === 'color') {
                 root.style.setProperty('--bg', themeBg.value);
             }
 
             if (isCustomActive && customBg.url) {
-                root.style.setProperty('--bg-image', `url(${customBg.url})`);
+                root.style.setProperty('--bg-image', 'none'); // Prevent raw fetching, background.js handles the elements now
 
                 let position = customBg.objectPosition;
                 if (customBg.id && customBg.id !== 'custom') {
@@ -110,12 +111,6 @@
                 }
 
                 root.style.setProperty('--bg-image-position', position || 'center');
-            } else if (themeBg.type === 'image' || themeBg.type === 'video') {
-                root.style.setProperty('--bg-image', `url(${themeBg.value || themeBg.url})`);
-                root.style.setProperty('--bg-image-position', themeBg.objectPosition || 'center');
-            } else if (themeBg.type === 'gradient') {
-                root.style.setProperty('--bg-image', themeBg.value || themeBg.url);
-                root.style.setProperty('--bg-image-position', 'center');
             } else {
                 root.style.setProperty('--bg-image', 'none');
             }
@@ -170,11 +165,17 @@
         const target = activePreset || featured;
 
         if (target?.id && target.id !== _settings.lastSeenFeatured) {
-            Settings.update({
-                customBackground: target,
-                lastSeenFeatured: target.id,
-                lastBackgroundRotation: Date.now()
-            });
+            if (_settings.backgroundRotation) {
+                Settings.update({
+                    customBackground: target,
+                    lastSeenFeatured: target.id,
+                    lastBackgroundRotation: Date.now()
+                });
+            } else {
+                Settings.update({
+                    lastSeenFeatured: target.id
+                });
+            }
         }
 
         document.addEventListener('keydown', handlePanic, true);
@@ -195,12 +196,7 @@
             }
         });
 
-        window.addEventListener('beforeunload', (e) => {
-            if (document.getElementById('main-frame') && _settings.leaveConfirmation) {
-                e.preventDefault();
-                return e.returnValue = '';
-            }
-        });
+
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -38,7 +38,7 @@
 .player-ambiance.active {
     opacity: 0.45;
     /* STRENGTH */
-    filter: blur(33px) saturate(67%) brightness(0.16);
+    filter: blur(33px) saturate(90%) brightness(0.33);
 }
 
 .player-container {
@@ -235,7 +235,7 @@ body.theater-active .player-info>* {
     line-height: 1.6;
     font-size: 0.875rem;
     margin-top: 16px;
-    font-style: italic;
+    font-style: normal;
     opacity: 0.8;
 }
 

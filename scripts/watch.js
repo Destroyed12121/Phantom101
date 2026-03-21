@@ -115,24 +115,72 @@ async function searchYouTube(query) {
     if (statusText) statusText.textContent = "";
 }
 
+function fuzzyMatch(query, text) {
+    const q = query.toLowerCase();
+    const t = text.toLowerCase();
+    if (t === q) return 1000;
+    if (t.startsWith(q)) return 500 - t.length;
+    if (t.includes(q)) return 200 - t.length;
+
+    // subsequence match
+    let nIdx = 0;
+    let hIdx = 0;
+    let score = 0;
+    while (nIdx < q.length && hIdx < t.length) {
+        if (q[nIdx] === t[hIdx]) {
+            nIdx++;
+            score += 10;
+        } else {
+            score -= 1;
+        }
+        hIdx++;
+    }
+    if (nIdx === q.length) return score;
+    return -1;
+}
+
 function searchTwitch(query) {
     if (!grid) return;
     grid.innerHTML = "";
     const input = query.toLowerCase().trim();
     if (!input) { showDefaultStreamers(); return; }
 
-    const channels = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const streamers = [
+        'Clix', 'Jynxzi', 'Lacy', 'Flight23White', 'CaseOh_', 'KaiCenat',
+        'Agent00', 'ChrisSmoove', 'Tyceno', 'TYCooN', 'PowerDF', 'itsshakedown',
+        'PlaqueboyMax', 'AdinRoss', 'IShowSpeed', 'DukeDennis', 'Fanum', 'StableRonaldo',
+        'Mongraal', 'SypherPK', 'NickEh30', 'Tfue', 'Ninja', 'xQc',
+        'Sketch', 'TenZ', 'TypicalGamer', 'Bugha', 'FaZeRug', 'YourRAGE'
+    ];
 
-    channels.forEach(channel => {
+    // Fuzzy search from default list
+    const scoredStreamers = streamers.map(s => ({ name: s, score: fuzzyMatch(input, s) }))
+        .filter(s => s.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+    const matchNames = scoredStreamers.map(s => s.name);
+    
+    // Also allow manual channelEntry (comma separated or single)
+    let manualChannels = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    
+    // Merge results, avoiding duplicates
+    const finalChannels = [...matchNames];
+    manualChannels.forEach(c => {
+        if (!finalChannels.some(f => f.toLowerCase() === c.toLowerCase())) {
+            finalChannels.push(c);
+        }
+    });
+
+    finalChannels.slice(0, 30).forEach(channel => {
         const title = `${channel}`;
-        const thumb = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channel}-440x248.jpg?t=${Date.now()}`;
+        const thumb = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channel.toLowerCase()}-440x248.jpg?t=${Date.now()}`;
         const card = createMediaCard(thumb, title, "Twitch.tv", () => {
             playMedia(title, channel, 'twitch', thumb);
         }, true);
         grid.appendChild(card);
     });
 
-    if (statusText) statusText.textContent = channels.length > 0 ? "Channels ready." : "";
+    if (statusText) statusText.textContent = finalChannels.length > 0 ? "Channels ready." : "No channels found.";
 }
 
 function createMediaCard(thumb, title, meta, onClick, isLive = false) {
@@ -142,7 +190,6 @@ function createMediaCard(thumb, title, meta, onClick, isLive = false) {
 
     card.innerHTML = `
         <img src="${thumb}" loading="lazy" alt="${title}" onerror="this.src='https://via.placeholder.com/440x248?text=Offline/Locked'">
-        ${isLive ? '<div class="live-badge">LIVE</div>' : ''}
         <div class="media-card-overlay">
             <div class="media-card-info">
                 <div class="media-card-title">${title}</div>
@@ -171,7 +218,10 @@ function playMedia(title, identifier, source = null, thumb = null) {
         params.append('img', thumb);
     }
 
-    sessionStorage.setItem('currentMovie', JSON.stringify({ overview: source === 'twitch' ? 'Twitch Stream' : 'Platform Stream' }));
+    const isYT = identifier.includes('youtube.com') || identifier.includes('youtube-nocookie.com') || identifier.includes('youtu.be');
+    const overview = isYT ? 'YouTube Video' : 'Live Stream';
+    
+    sessionStorage.setItem('currentMovie', JSON.stringify({ overview: overview }));
     window.location.href = `player.html?${params.toString()}`;
 }
 
@@ -180,7 +230,13 @@ function loadContinueWatching() {
     const container = document.getElementById('continue-watching-section');
     const grid = document.getElementById('continue-watching-grid');
 
-    if (!history.length || !container || !grid || (window.Settings && window.Settings.get('historyEnabled') === false)) {
+    const validHistory = history.filter(item => {
+        if (item.type === 'movie' || item.type === 'tv' || item.type === 'game') return false;
+        if (item.type === 'twitch' || (item.url && item.url.includes('source=twitch'))) return false;
+        return true;
+    });
+
+    if (!validHistory.length || !container || !grid || (window.Settings && window.Settings.get('historyEnabled') === false)) {
         if (container) container.style.display = 'none';
         return;
     }
@@ -188,12 +244,7 @@ function loadContinueWatching() {
     container.style.display = 'block';
     grid.innerHTML = '';
 
-    history.forEach(item => {
-        // Exclude movies and tv shows from the watch page
-        if (item.type === 'movie' || item.type === 'tv' || item.type === 'game') return;
-        // Exclude twitch
-        if (item.type === 'twitch' || item.url.includes('source=twitch')) return;
-
+    validHistory.forEach(item => {
         const thumb = item.img || 'https://via.placeholder.com/440x248?text=No+Preview';
 
         const card = document.createElement('div');
@@ -237,6 +288,20 @@ document.addEventListener('DOMContentLoaded', () => {
     loadContinueWatching();
     // Automatically search for nba 2k26 to populate the grid
     searchYouTube('nba 2k26');
+
+    // Random functionality
+    const randomBtn = document.getElementById('random-btn');
+    if (randomBtn) {
+        randomBtn.onclick = () => {
+            const cards = grid.querySelectorAll('.media-card');
+            if (cards.length > 0) {
+                const randomCard = cards[Math.floor(Math.random() * cards.length)];
+                randomCard.click();
+            }
+        };
+    }
+
+
 });
 
 // Add event listener for Enter key
